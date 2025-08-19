@@ -22,7 +22,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.22
+          go-version: 1.24
       - name: Build for Linux
         run: ./scripts/build.sh
       - name: Release for Linux
@@ -45,7 +45,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.22
+          go-version: 1.24
       - name: Build for macOS
         run: ./scripts/build.sh
       - name: Setting up Apple certificate
@@ -55,13 +55,13 @@ jobs:
       - name: Sign a amd64 macOS binary
         uses: indygreg/apple-code-sign-action@v1
         with:
-          input_path: dist/zana-darwin-amd64
+          input_path: dist/kuba-darwin-amd64
           p12_file: apple-cert.p12
           p12_password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
       - name: Sign a arm64 macOS binary
         uses: indygreg/apple-code-sign-action@v1
         with:
-          input_path: dist/zana-darwin-arm64
+          input_path: dist/kuba-darwin-arm64
           p12_file: apple-cert.p12
           p12_password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
       - name: Release for macOS
@@ -84,7 +84,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.22
+          go-version: 1.24
       - name: Build for Windows
         run: ./scripts/build.sh
       - name: Release for Windows

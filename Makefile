@@ -1,4 +1,4 @@
-BIN_NAME=zana
+BIN_NAME=kuba
 
 build:
 	./scripts/build.sh
