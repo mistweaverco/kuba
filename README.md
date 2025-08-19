@@ -53,7 +53,27 @@ in a single `kuba.yaml` file and fetch them directly from cloud providers like G
 and AWS, as well as Azure Key Vault.
 
 This eliminates the need for `.env` files and provides a more secure,
-consistent, and scalable way to manage environment variables across different environments.
+consistent, and scalable way to manage environment variables across
+different environments.
+
+### Advantages over other services
+
+To be clear, there are many other tools that can help you manage secrets:
+
+- [Doppler](https://www.doppler.com/)
+- [Vault](https://www.vaultproject.io/)
+- [1Password Secrets Automation](https://www.1password.com/secrets-automation/)
+- [Infisical](https://infisical.com/)
+
+… and many more.
+
+> [!CAUTION]
+> Most of them require a whopping subscription fee,
+> which can be a barrier for small teams or individual developers.
+
+However, Kuba is designed to be straightforward and easy to use,
+by leveraging the existing secret management systems of cloud providers,
+that you might already be using.
 
 ## Installation
 
@@ -68,7 +88,7 @@ Download the latest release from [GitHub Releases](https://github.com/mistweaver
 You can install it using `curl`:
 
 ```sh
-curl -sSL https://getkuba.net/install | sh
+curl -sSL https://kuba.mwco.app/install | sh
 ```
 
 ### Automatic Windows Installation
@@ -76,7 +96,7 @@ curl -sSL https://getkuba.net/install | sh
 Run the following command in PowerShell:
 
 ```powershell
-iwr https://getkuba.net/install -useb | iex
+iwr https://kuba.mwco.app/install -useb | iex
 ```
 
 ## Usage
@@ -99,10 +119,11 @@ kuba run -- node dist/server.js
 and your `kuba.yaml` would look something like this:
 
 ```yaml
+# yaml-language-server: $schema=https://raw.githubusercontent.com/mistweaverco/kuba/refs/heads/main/kuba.schema.json
 ---
 # Top-level sections for different environments.
 default:
-  provider: "gcp"
+  provider: gcp
   project: "my-gcp-project-default"
 
   # Mapping of cloud projects to environment variables and secret keys.
@@ -111,56 +132,80 @@ default:
       secret-key: "gcp_project_secret"
     - environment-variable: "AWS_PROJECT_ID"
       secret-key: "aws_project_secret"
-      provider: "aws"
+      provider: aws
       project: "my-aws-project-default"
     - environment-variable: "AZURE_PROJECT_ID"
       secret-key: "azure_project_secret"
-      provider: "azure"
+      provider: azure
       project: "my-azure-project-default"
 
 ---
 
 # Settings for the development environment.
 development:
-  provider: "gcp"
+  provider: gcp
   project: "my-gcp-project-development"
-  
+
   # You can override specific mappings here or add new ones.
   mappings:
     - environment-variable: "DEV_GCP_PROJECT_ID"
       secret-key: "dev_gcp_project_secret"
     - environment-variable: "DEV_AWS_PROJECT_ID"
       secret-key: "dev_aws_project_secret"
-      provider: "aws"
+      provider: aws
       project: "my-aws-project-development"
 
 ---
 
 # Settings for the staging environment.
 staging:
-  provider: "gcp"
+  provider: gcp
   project: "my-gcp-project-staging"
-  
+
   mappings:
     - environment-variable: "STAGING_GCP_PROJECT_ID"
       secret-key: "staging_gcp_project_secret"
     - environment-variable: "STAGING_AWS_PROJECT_ID"
       secret-key: "staging_aws_project_secret"
-      provider: "aws"
+      provider: aws
       project: "my-aws-project-staging"
 
 ---
 
 # Settings for the production environment.
 production:
-  provider: "gcp"
+  provider: gcp
   project: "my-gcp-project-production"
-  
+
   mappings:
     - environment-variable: "PROD_GCP_PROJECT_ID"
       secret-key: "prod_gcp_project_secret"
     - environment-variable: "PROD_AWS_PROJECT_ID"
       secret-key: "prod_aws_project_secret"
-      provider: "aws"
+      provider: aws
       project: "my-aws-project-production"
+```
+
+This `kuba.yaml` file defines the secrets for different environments
+and maps them to environment variables.
+
+### Confguration File Structure
+
+Each top-level section corresponds to a different environment,
+such as `default`, `development`, `staging`, and `production`.
+They're completely arbitrary and can be named as you wish.
+
+Each section specifies the cloud provider, the project ID,
+and a list of mappings between environment variables and secret keys.
+
+You can also specify the provider and project ID for each mapping,
+allowing you to fetch secrets from different cloud providers
+or projects as needed.
+
+### Running with a specific environment
+
+You can also specify the environment you want to use:
+
+```sh
+kuba run --env development -- node dist/server.js
 ```

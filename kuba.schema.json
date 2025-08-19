@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://kuba.mwco.app/kuba.schema.json",
+  "title": "Project Configuration File",
+  "description": "Schema for a project configuration file with multiple environments.",
+  "type": "object",
+  "patternProperties": {
+    "^[a-zA-Z0-9_-]+$": {
+      "type": "object",
+      "properties": {
+        "provider": {
+          "description": "The default cloud provider for this environment.",
+          "type": "string",
+          "enum": [
+            "gcp",
+            "azure",
+            "aws"
+          ]
+        },
+        "project": {
+          "description": "The default cloud project for this environment.",
+          "type": "string"
+        },
+        "mappings": {
+          "description": "A list of environment variable to secret key mappings.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "environment-variable": {
+                "description": "The name of the environment variable.",
+                "type": "string"
+              },
+              "secret-key": {
+                "description": "The name of the secret key.",
+                "type": "string"
+              },
+              "provider": {
+                "description": "Optional override for the cloud provider.",
+                "type": "string",
+                "enum": [
+                  "gcp",
+                  "azure",
+                  "aws"
+                ]
+              },
+              "project": {
+                "description": "Optional override for the cloud project.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "environment-variable",
+              "secret-key"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "provider",
+        "project",
+        "mappings"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
