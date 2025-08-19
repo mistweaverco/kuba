@@ -124,7 +124,7 @@ and your `kuba.yaml` would look something like this:
 # Top-level sections for different environments.
 default:
   provider: gcp
-  project: "my-gcp-project-default"
+  project: 1337
 
   # Mapping of cloud projects to environment variables and secret keys.
   mappings:
@@ -138,13 +138,15 @@ default:
       secret-key: "azure_project_secret"
       provider: azure
       project: "my-azure-project-default"
+    - environment-variable: "SOME_HARD_CODED_ENV"
+      value: "hard-coded-value"
 
 ---
 
 # Settings for the development environment.
 development:
   provider: gcp
-  project: "my-gcp-project-development"
+  project: 1337
 
   # You can override specific mappings here or add new ones.
   mappings:
@@ -160,7 +162,7 @@ development:
 # Settings for the staging environment.
 staging:
   provider: gcp
-  project: "my-gcp-project-staging"
+  project: 1337
 
   mappings:
     - environment-variable: "STAGING_GCP_PROJECT_ID"
@@ -175,7 +177,7 @@ staging:
 # Settings for the production environment.
 production:
   provider: gcp
-  project: "my-gcp-project-production"
+  project: 1337
 
   mappings:
     - environment-variable: "PROD_GCP_PROJECT_ID"
@@ -209,3 +211,44 @@ You can also specify the environment you want to use:
 ```sh
 kuba run --env development -- node dist/server.js
 ```
+
+## Cloud Provider Setup
+
+### Google Cloud Platform (GCP)
+
+Kuba supports GCP Secret Manager for fetching secrets. To use GCP:
+
+1. **Enable Secret Manager API**: Make sure the Secret Manager API is enabled in your GCP project.
+
+2. **Authentication**: Set up authentication using one of these methods:
+   - **Service Account Key**: Set the `GOOGLE_APPLICATION_CREDENTIALS` environment variable to point to your service account JSON key file:
+     ```sh
+     export GOOGLE_APPLICATION_CREDENTIALS="/path/to/service-account-key.json"
+     ```
+   - **Application Default Credentials**: Use `gcloud auth application-default login` to set up local development credentials
+   - **Workload Identity**: If running on GKE or other GCP services, use workload identity
+   - **Compute Engine**: If running on Compute Engine, the default service account will be used automatically
+
+3. **IAM Permissions**: Ensure your service account has the `Secret Manager Secret Accessor` role for the secrets you want to access.
+
+4. **Example Configuration**:
+   ```yaml
+   default:
+     provider: gcp
+     project: "my-gcp-project"
+     mappings:
+       - environment-variable: "DATABASE_URL"
+         secret-key: "database-connection-string"
+       - environment-variable: "API_KEY"
+         secret-key: "external-api-key"
+       - environment-variable: "SOME_HARD_CODED_ENV"
+         value: "hard-coded-value"
+   ```
+
+### AWS Secrets Manager
+
+AWS Secrets Manager support is planned for future releases.
+
+### Azure Key Vault
+
+Azure Key Vault support is planned for future releases.

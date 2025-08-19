@@ -102,7 +102,7 @@ func GenerateDefaultKubaConfig() bool {
 # Top-level sections for different environments.
 default:
   provider: gcp
-  project: "my-gcp-project-default"
+  project: 1337
 
   # Mapping of cloud projects to environment variables and secret keys.
   mappings:
@@ -112,6 +112,8 @@ default:
       secret-key: "aws_project_secret"
       provider: aws
       project: "my-aws-project-default"
+    - environment-variable: "SOME_HARD_CODED_ENV"
+      value: "hard-coded-value"
     - environment-variable: "AZURE_PROJECT_ID"
       secret-key: "azure_project_secret"
       provider: azure

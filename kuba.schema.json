@@ -18,11 +18,14 @@
           ]
         },
         "project": {
-          "description": "The default cloud project for this environment.",
-          "type": "string"
+          "description": "The default cloud project for this environment. This can be a string or an integer.",
+          "type": [
+            "string",
+            "integer"
+          ]
         },
         "mappings": {
-          "description": "A list of environment variable to secret key mappings.",
+          "description": "A list of environment variable to secret key or value mappings.",
           "type": "array",
           "items": {
             "type": "object",
@@ -32,8 +35,15 @@
                 "type": "string"
               },
               "secret-key": {
-                "description": "The name of the secret key.",
+                "description": "The name of the secret key. Required if no value is provided.",
                 "type": "string"
+              },
+              "value": {
+                "description": "The literal value for the environment variable. Required if no secret-key is provided.",
+                "type": [
+                  "string",
+                  "integer"
+                ]
               },
               "provider": {
                 "description": "Optional override for the cloud provider.",
@@ -46,12 +56,26 @@
               },
               "project": {
                 "description": "Optional override for the cloud project.",
-                "type": "string"
+                "type": [
+                  "string",
+                  "integer"
+                ]
               }
             },
             "required": [
-              "environment-variable",
-              "secret-key"
+              "environment-variable"
+            ],
+            "oneOf": [
+              {
+                "required": [
+                  "secret-key"
+                ]
+              },
+              {
+                "required": [
+                  "value"
+                ]
+              }
             ],
             "additionalProperties": false
           }
