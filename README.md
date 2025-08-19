@@ -235,7 +235,7 @@ Kuba supports GCP Secret Manager for fetching secrets. To use GCP:
    ```yaml
    default:
      provider: gcp
-     project: "my-gcp-project"
+     project: 1337
      mappings:
        - environment-variable: "DATABASE_URL"
          secret-key: "database-connection-string"
