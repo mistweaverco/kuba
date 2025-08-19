@@ -36,6 +36,7 @@ func Execute() {
 
 func init() {
 	rootCmd.AddCommand(versionCmd)
+	rootCmd.AddCommand(initCmd)
 	rootCmd.PersistentFlags().BoolVar(&cfg.Flags.Version, "version", false, "Kuba version")
 }
 
