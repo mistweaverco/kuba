@@ -93,7 +93,7 @@
             "properties": {
               "provider": {
                 "not": {
-                  "const": "aws"
+                  "enum": ["aws", "azure"]
                 }
               }
             }

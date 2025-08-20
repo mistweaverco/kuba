@@ -36,8 +36,18 @@ func (f *SecretManagerFactory) CreateSecretManager(ctx context.Context, provider
 		profile := os.Getenv("AWS_PROFILE")
 		return NewAWSSecretsManager(ctx, region, profile)
 	case "azure":
-		// TODO: Implement Azure Key Vault
-		return nil, fmt.Errorf("Azure Key Vault not yet implemented")
+		// Check for Azure Key Vault configuration
+		vaultURL := os.Getenv("AZURE_KEY_VAULT_URL")
+		if vaultURL == "" {
+			return nil, fmt.Errorf("AZURE_KEY_VAULT_URL environment variable is required for Azure Key Vault")
+		}
+
+		// Optional: tenant ID, client ID, and client secret for service principal auth
+		tenantID := os.Getenv("AZURE_TENANT_ID")
+		clientID := os.Getenv("AZURE_CLIENT_ID")
+		clientSecret := os.Getenv("AZURE_CLIENT_SECRET")
+
+		return NewAzureKeyVaultManager(ctx, vaultURL, tenantID, clientID, clientSecret)
 	default:
 		return nil, fmt.Errorf("unsupported cloud provider: %s", provider)
 	}
@@ -67,8 +77,8 @@ func (f *SecretManagerFactory) GetSecretsForEnvironment(ctx context.Context, env
 				project = env.Project
 			}
 
-			// For AWS, we use a default project key since AWS doesn't use projects
-			if provider == "aws" && project == "" {
+			// For AWS and Azure, we use a default project key since they don't use projects
+			if (provider == "aws" || provider == "azure") && project == "" {
 				project = "default"
 			}
 
@@ -113,8 +123,8 @@ func (f *SecretManagerFactory) GetSecretsForEnvironment(ctx context.Context, env
 						mappingProject = env.Project
 					}
 
-					// For AWS, normalize empty projects to "default"
-					if mappingProvider == "aws" && mappingProject == "" {
+					// For AWS and Azure, normalize empty projects to "default"
+					if (mappingProvider == "aws" || mappingProvider == "azure") && mappingProject == "" {
 						mappingProject = "default"
 					}
 
