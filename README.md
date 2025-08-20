@@ -297,7 +297,7 @@ Kuba supports Azure Key Vault for fetching secrets. To use Azure Key Vault:
    default:
      provider: azure
      mappings:
-       - environment-variable: "DATABASE_URL
+       - environment-variable: "DATABASE_URL"
          secret-key: "database-connection-string"
        - environment-variable: "SOME_HARD_CODED_ENV"
          value: "hard-coded-value"
