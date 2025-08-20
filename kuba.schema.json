@@ -81,10 +81,29 @@
           }
         }
       },
-      "required": [
-        "provider",
-        "project",
-        "mappings"
+      "allOf": [
+        {
+          "required": [
+            "provider",
+            "mappings"
+          ]
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "not": {
+                  "enum": ["aws", "azure"]
+                }
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "project"
+            ]
+          }
+        }
       ],
       "additionalProperties": false
     }

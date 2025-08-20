@@ -18,7 +18,7 @@ Kuba is [Swahili](https://en.wikipedia.org/wiki/Swahili_language) for "vault."
 
 Kuba helps you to get rid of `.env` files.
 
-Pass env directly from GCP, AWS and Azure Secrets to your application
+Pass env directly from GCP Secret Manager, AWS Secrets Manager, and Azure Key Vault to your application
 
 <p></p>
 
@@ -50,7 +50,7 @@ which can be problematic for several reasons:
 
 Kuba addresses these issues by allowing you to define your environment variables
 in a single `kuba.yaml` file and fetch them directly from cloud providers like GCP
-and AWS, as well as Azure Key Vault.
+Secret Manager, AWS Secrets Manager, and Azure Key Vault.
 
 This eliminates the need for `.env` files and provides a more secure,
 consistent, and scalable way to manage environment variables across
@@ -133,7 +133,6 @@ default:
     - environment-variable: "AWS_PROJECT_ID"
       secret-key: "aws_project_secret"
       provider: aws
-      project: "my-aws-project-default"
     - environment-variable: "AZURE_PROJECT_ID"
       secret-key: "azure_project_secret"
       provider: azure
@@ -155,7 +154,6 @@ development:
     - environment-variable: "DEV_AWS_PROJECT_ID"
       secret-key: "dev_aws_project_secret"
       provider: aws
-      project: "my-aws-project-development"
 
 ---
 
@@ -170,8 +168,6 @@ staging:
     - environment-variable: "STAGING_AWS_PROJECT_ID"
       secret-key: "staging_aws_project_secret"
       provider: aws
-      project: "my-aws-project-staging"
-
 ---
 
 # Settings for the production environment.
@@ -185,7 +181,6 @@ production:
     - environment-variable: "PROD_AWS_PROJECT_ID"
       secret-key: "prod_aws_project_secret"
       provider: aws
-      project: "my-aws-project-production"
 ```
 
 This `kuba.yaml` file defines the secrets for different environments
@@ -202,7 +197,8 @@ and a list of mappings between environment variables and secret keys.
 
 You can also specify the provider and project ID for each mapping,
 allowing you to fetch secrets from different cloud providers
-or projects as needed.
+or projects as needed. Kuba currently supports GCP Secret Manager,
+AWS Secrets Manager, and Azure Key Vault.
 
 ### Running with a specific environment
 
@@ -247,8 +243,62 @@ Kuba supports GCP Secret Manager for fetching secrets. To use GCP:
 
 ### AWS Secrets Manager
 
-AWS Secrets Manager support is planned for future releases.
+Kuba supports AWS Secrets Manager for fetching secrets. To use AWS:
+
+1. **Authentication**: Set up authentication using one of these methods:
+   - **Environment Variables**: Set `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`:
+     ```sh
+     export AWS_ACCESS_KEY_ID="your-access-key"
+     export AWS_SECRET_ACCESS_KEY="your-secret-key"
+     export AWS_REGION="us-east-1"
+     ```
+   - **AWS Profile**: Set `AWS_PROFILE` to use a specific profile from your AWS credentials file:
+     ```sh
+     export AWS_PROFILE="my-profile"
+     export AWS_REGION="us-east-1"
+     ```
+   - **IAM Roles**: If running on EC2, ECS, or other AWS services, use IAM roles
+   - **AWS CLI**: Use `aws configure` to set up your credentials
+
+2. **IAM Permissions**: Ensure your AWS credentials have the `secretsmanager:GetSecretValue` permission for the secrets you want to access.
+
+3. **Example Configuration**:
+   ```yaml
+   default:
+     provider: aws
+     mappings:
+       - environment-variable: "DATABASE_URL"
+         secret-key: "database-connection-string"
+       - environment-variable: "API_KEY"
+         secret-key: "external-api-key"
+       - environment-variable: "SOME_HARD_CODED_ENV"
+         value: "hard-coded-value"
+   ```
 
 ### Azure Key Vault
 
-Azure Key Vault support is planned for future releases.
+Kuba supports Azure Key Vault for fetching secrets. To use Azure Key Vault:
+
+1. **Authentication**: Kuba supports multiple authentication methods:
+   - **Service Principal**: Set the following environment variables:
+     ```bash
+     export AZURE_KEY_VAULT_URL="https://yourvault.vault.azure.net/"
+     export AZURE_TENANT_ID="your-tenant-id"
+     export AZURE_CLIENT_ID="your-client-id"
+     export AZURE_CLIENT_SECRET="your-client-secret"
+     ```
+   - **Managed Identity**: If running on Azure services with managed identity enabled
+   - **Default Azure Credential**: Uses Azure CLI, Visual Studio Code, or other Azure tools
+
+2. **Key Vault Permissions**: Ensure your Azure credentials have the `Get` and `List` permissions for secrets in your Key Vault.
+
+3. **Configuration**: In your `kuba.yaml`, specify the Azure provider:
+   ```yaml
+   default:
+     provider: azure
+     mappings:
+       - environment-variable: "DATABASE_URL
+         secret-key: "database-connection-string"
+       - environment-variable: "SOME_HARD_CODED_ENV"
+         value: "hard-coded-value"
+   ```

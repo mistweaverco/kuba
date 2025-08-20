@@ -31,11 +31,23 @@ func (f *SecretManagerFactory) CreateSecretManager(ctx context.Context, provider
 		credentialsFile := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
 		return NewGCPSecretManager(ctx, credentialsFile)
 	case "aws":
-		// TODO: Implement AWS Secrets Manager
-		return nil, fmt.Errorf("AWS secrets manager not yet implemented")
+		// Check for AWS region and profile
+		region := os.Getenv("AWS_REGION")
+		profile := os.Getenv("AWS_PROFILE")
+		return NewAWSSecretsManager(ctx, region, profile)
 	case "azure":
-		// TODO: Implement Azure Key Vault
-		return nil, fmt.Errorf("Azure Key Vault not yet implemented")
+		// Check for Azure Key Vault configuration
+		vaultURL := os.Getenv("AZURE_KEY_VAULT_URL")
+		if vaultURL == "" {
+			return nil, fmt.Errorf("AZURE_KEY_VAULT_URL environment variable is required for Azure Key Vault")
+		}
+
+		// Optional: tenant ID, client ID, and client secret for service principal auth
+		tenantID := os.Getenv("AZURE_TENANT_ID")
+		clientID := os.Getenv("AZURE_CLIENT_ID")
+		clientSecret := os.Getenv("AZURE_CLIENT_SECRET")
+
+		return NewAzureKeyVaultManager(ctx, vaultURL, tenantID, clientID, clientSecret)
 	default:
 		return nil, fmt.Errorf("unsupported cloud provider: %s", provider)
 	}
@@ -63,6 +75,11 @@ func (f *SecretManagerFactory) GetSecretsForEnvironment(ctx context.Context, env
 			project := mapping.Project
 			if project == "" {
 				project = env.Project
+			}
+
+			// For AWS and Azure, we use a default project key since they don't use projects
+			if (provider == "aws" || provider == "azure") && project == "" {
+				project = "default"
 			}
 
 			if providerGroups[provider] == nil {
@@ -96,11 +113,22 @@ func (f *SecretManagerFactory) GetSecretsForEnvironment(ctx context.Context, env
 			// Map secrets to environment variables
 			for _, mapping := range env.Mappings {
 				if mapping.SecretKey != "" {
-					if mapping.Provider == provider && mapping.Project == project {
-						if secret, exists := secrets[mapping.SecretKey]; exists {
-							allSecrets[mapping.EnvironmentVariable] = secret
-						}
-					} else if mapping.Provider == "" && mapping.Project == "" && env.Provider == provider && env.Project == project {
+					mappingProvider := mapping.Provider
+					if mappingProvider == "" {
+						mappingProvider = env.Provider
+					}
+
+					mappingProject := mapping.Project
+					if mappingProject == "" {
+						mappingProject = env.Project
+					}
+
+					// For AWS and Azure, normalize empty projects to "default"
+					if (mappingProvider == "aws" || mappingProvider == "azure") && mappingProject == "" {
+						mappingProject = "default"
+					}
+
+					if mappingProvider == provider && mappingProject == project {
 						if secret, exists := secrets[mapping.SecretKey]; exists {
 							allSecrets[mapping.EnvironmentVariable] = secret
 						}
