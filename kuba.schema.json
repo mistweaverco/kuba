@@ -81,10 +81,29 @@
           }
         }
       },
-      "required": [
-        "provider",
-        "project",
-        "mappings"
+      "allOf": [
+        {
+          "required": [
+            "provider",
+            "mappings"
+          ]
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "not": {
+                  "const": "aws"
+                }
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "project"
+            ]
+          }
+        }
       ],
       "additionalProperties": false
     }

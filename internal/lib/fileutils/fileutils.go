@@ -111,7 +111,6 @@ default:
     - environment-variable: "AWS_PROJECT_ID"
       secret-key: "aws_project_secret"
       provider: aws
-      project: "my-aws-project-default"
     - environment-variable: "SOME_HARD_CODED_ENV"
       value: "hard-coded-value"
     - environment-variable: "AZURE_PROJECT_ID"

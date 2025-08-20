@@ -257,6 +257,42 @@ func TestValidateConfig(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name: "valid AWS config without project",
+			config: &KubaConfig{
+				Environments: map[string]Environment{
+					"default": {
+						Provider: "aws",
+						Project:  "", // Empty project for AWS should be valid
+						Mappings: []Mapping{
+							{
+								EnvironmentVariable: "AWS_SECRET",
+								SecretKey:           "aws-secret-key",
+							},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "invalid GCP config without project",
+			config: &KubaConfig{
+				Environments: map[string]Environment{
+					"default": {
+						Provider: "gcp",
+						Project:  "", // Empty project for GCP should be invalid
+						Mappings: []Mapping{
+							{
+								EnvironmentVariable: "GCP_SECRET",
+								SecretKey:           "gcp-secret-key",
+							},
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
 	}
 
 	for _, tt := range tests {

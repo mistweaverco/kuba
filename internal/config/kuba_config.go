@@ -85,8 +85,9 @@ func validateConfig(config *KubaConfig) error {
 			return fmt.Errorf("environment '%s': provider is required", envName)
 		}
 
-		if env.Project == "" {
-			return fmt.Errorf("environment '%s': project is required", envName)
+		// Project is required for all providers except AWS
+		if env.Project == "" && env.Provider != "aws" {
+			return fmt.Errorf("environment '%s': project is required for provider '%s'", envName, env.Provider)
 		}
 
 		if len(env.Mappings) == 0 {
