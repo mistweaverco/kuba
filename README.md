@@ -88,7 +88,7 @@ Download the latest release from [GitHub Releases](https://github.com/mistweaver
 You can install it using `curl`:
 
 ```sh
-curl -sSL https://kuba.mwco.app/install | sh
+curl -sSL https://kuba.mwco.app/install.sh | sh
 ```
 
 ### Automatic Windows Installation
@@ -96,7 +96,7 @@ curl -sSL https://kuba.mwco.app/install | sh
 Run the following command in PowerShell:
 
 ```powershell
-iwr https://kuba.mwco.app/install -useb | iex
+iwr https://kuba.mwco.app/install.ps1 -useb | iex
 ```
 
 ## Usage
@@ -119,7 +119,7 @@ kuba run -- node dist/server.js
 and your `kuba.yaml` would look something like this:
 
 ```yaml
-# yaml-language-server: $schema=https://raw.githubusercontent.com/mistweaverco/kuba/refs/heads/main/kuba.schema.json
+# yaml-language-server: $schema=https://kuba.mwco.app/kuba.schema.json
 ---
 # Top-level sections for different environments.
 default:
