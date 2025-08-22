@@ -14,7 +14,8 @@
           "enum": [
             "gcp",
             "azure",
-            "aws"
+            "aws",
+            "openbao"
           ]
         },
         "project": {
@@ -51,7 +52,8 @@
                 "enum": [
                   "gcp",
                   "azure",
-                  "aws"
+                  "aws",
+                  "openbao"
                 ]
               },
               "project": {
@@ -93,7 +95,7 @@
             "properties": {
               "provider": {
                 "not": {
-                  "enum": ["aws", "azure"]
+                  "enum": ["aws", "azure", "openbao"]
                 }
               }
             }
