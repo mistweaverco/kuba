@@ -97,7 +97,7 @@ func GenerateDefaultKubaConfig() bool {
 		return false // File already exists, no need to create it
 	}
 
-	contents := `# yaml-language-server: $schema=https://raw.githubusercontent.com/mistweaverco/kuba/refs/heads/main/kuba.schema.json
+	contents := `# yaml-language-server: $schema=https://kuba.mwco.app/kuba.schema.json
 ---
 # Top-level sections for different environments.
 default:
