@@ -71,18 +71,34 @@
 			<p class="py-6">Install Kuba using ...</p>
 			<select on:input={onInstallUsingChange} class="select select-bordered mb-5">
 				<option value="manual" selected>manual</option>
-				<option value="curl">curl (linux/mac)</option>
-				<option value="wget">wget (linux/mac)</option>
+				<option value="curl-zsh">curl &amp; zsh (linux/mac)</option>
+				<option value="curl-bash">curl &amp; bash (linux/mac)</option>
+				<option value="wget-zsh">wget &amp; zsh (linux/mac)</option>
+				<option value="wget-bash">wget &amp; bash (linux/mac)</option>
 				<option value="pwsh">pwsh (windows)</option>
 			</select>
-			<div class={installUsing === 'curl' ? '' : 'hidden'}>
+			<div class={installUsing === 'curl-zsh' ? '' : 'hidden'}>
+				<pre><code
+						class="language-bash"
+						data-toolbar-order="copy-to-clipboard"
+						data-prismjs-copy="📋">curl -sSL https://kuba.mwco.app/install.sh | zsh</code
+					></pre>
+			</div>
+			<div class={installUsing === 'curl-bash' ? '' : 'hidden'}>
 				<pre><code
 						class="language-bash"
 						data-toolbar-order="copy-to-clipboard"
 						data-prismjs-copy="📋">curl -sSL https://kuba.mwco.app/install.sh | bash</code
 					></pre>
 			</div>
-			<div class={installUsing === 'wget' ? '' : 'hidden'}>
+			<div class={installUsing === 'wget-zsh' ? '' : 'hidden'}>
+				<pre><code
+						class="language-bash"
+						data-toolbar-order="copy-to-clipboard"
+						data-prismjs-copy="📋">wget -qO- https://kuba.mwco.app/install.sh | zsh</code
+					></pre>
+			</div>
+			<div class={installUsing === 'wget-bash' ? '' : 'hidden'}>
 				<pre><code
 						class="language-bash"
 						data-toolbar-order="copy-to-clipboard"

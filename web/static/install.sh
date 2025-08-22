@@ -142,6 +142,34 @@ get_install_location() {
     fi
 }
 
+# Function to detect shell and get RC file
+detect_shell_rc() {
+    local current_shell
+    local shell_rc
+    
+    # Try to detect the actual shell being used
+    if [ -n "$ZSH_VERSION" ]; then
+        current_shell="zsh"
+        shell_rc="${HOME}/.zshrc"
+    elif [ -n "$BASH_VERSION" ]; then
+        current_shell="bash"
+        shell_rc="${HOME}/.bashrc"
+    elif [ -n "$SHELL" ]; then
+        # Fallback to SHELL environment variable
+        case "$SHELL" in
+            */zsh)  current_shell="zsh"; shell_rc="${HOME}/.zshrc" ;;
+            */bash) current_shell="bash"; shell_rc="${HOME}/.bashrc" ;;
+            *)      current_shell="unknown"; shell_rc="${HOME}/.profile" ;;
+        esac
+    else
+        # Last resort fallback
+        current_shell="unknown"
+        shell_rc="${HOME}/.profile"
+    fi
+    
+    echo "$shell_rc"
+}
+
 # Function to install binary
 install_binary() {
     local source_path="$1"
@@ -162,12 +190,19 @@ install_binary() {
         
         # Add to PATH if installing to user directory
         if [[ "$install_path" == *"/.local/bin"* ]]; then
-            local shell_rc
-            case "$SHELL" in
-                */zsh)  shell_rc="${HOME}/.zshrc" ;;
-                */bash) shell_rc="${HOME}/.bashrc" ;;
-                *)      shell_rc="${HOME}/.profile" ;;
-            esac
+            local shell_rc=$(detect_shell_rc)
+            local current_shell
+            
+            # Determine current shell for comparison
+            if [ -n "$ZSH_VERSION" ]; then
+                current_shell="zsh"
+            elif [ -n "$BASH_VERSION" ]; then
+                current_shell="bash"
+            else
+                current_shell="unknown"
+            fi
+            
+            print_status "Detected shell: $current_shell, will update: $shell_rc"
             
             # Check if PATH already includes the user bin directory
             if ! grep -q "\.local/bin" "$shell_rc" 2>/dev/null; then
@@ -176,6 +211,19 @@ install_binary() {
                 echo "# Add local bin directory to PATH" >> "$shell_rc"
                 echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$shell_rc"
                 print_warning "Please restart your shell or run 'source ${shell_rc}' to update PATH"
+            else
+                print_status "PATH already configured in ${shell_rc}"
+            fi
+            
+            # Also try to update the current shell's RC file if different from detected
+            if [ "$current_shell" != "unknown" ] && [ -n "$ZSH_VERSION" ] && [ "$shell_rc" != "${HOME}/.zshrc" ]; then
+                print_warning "You're running zsh but the script detected a different shell"
+                print_warning "You may also want to add this to your ~/.zshrc:"
+                echo 'export PATH="$HOME/.local/bin:$PATH"' | sed 's/^/  /'
+            elif [ "$current_shell" != "unknown" ] && [ -n "$BASH_VERSION" ] && [ "$shell_rc" != "${HOME}/.bashrc" ]; then
+                print_warning "You're running bash but the script detected a different shell"
+                print_warning "You may also want to add this to your ~/.bashrc:"
+                echo 'export PATH="$HOME/.local/bin:$PATH"' | sed 's/^/  /'
             fi
         fi
     else
@@ -225,6 +273,25 @@ main() {
     verify_installation "$install_path"
     
     print_success "${BINARY_NAME} installation completed successfully!"
+    
+    # Provide additional guidance for user installations
+    if [[ "$install_path" == *"/.local/bin"* ]]; then
+        local shell_rc=$(detect_shell_rc)
+        print_status "Installation completed! To use ${BINARY_NAME} from any location:"
+        print_status "1. Restart your terminal, OR"
+        print_status "2. Run: source $shell_rc"
+        
+        # Check if we're running in a different shell than detected
+        if [ -n "$ZSH_VERSION" ] && [ "$shell_rc" != "${HOME}/.zshrc" ]; then
+            print_warning "Note: You're running zsh but the script updated $shell_rc"
+            print_warning "You may also want to add this to your ~/.zshrc:"
+            echo 'export PATH="$HOME/.local/bin:$PATH"' | sed 's/^/  /'
+        elif [ -n "$BASH_VERSION" ] && [ "$shell_rc" != "${HOME}/.bashrc" ]; then
+            print_warning "Note: You're running bash but the script updated $shell_rc"
+            print_warning "You may also want to add this to your ~/.bashrc:"
+            echo 'export PATH="$HOME/.local/bin:$PATH"' | sed 's/^/  /'
+        fi
+    fi
 }
 
 # Check if running on Windows
