@@ -48,6 +48,18 @@ func (f *SecretManagerFactory) CreateSecretManager(ctx context.Context, provider
 		clientSecret := os.Getenv("AZURE_CLIENT_SECRET")
 
 		return NewAzureKeyVaultManager(ctx, vaultURL, tenantID, clientID, clientSecret)
+	case "openbao":
+		// Check for OpenBao configuration
+		address := os.Getenv("OPENBAO_ADDR")
+		if address == "" {
+			return nil, fmt.Errorf("OPENBAO_ADDR environment variable is required for OpenBao")
+		}
+
+		// Optional: token and namespace
+		token := os.Getenv("OPENBAO_TOKEN")
+		namespace := os.Getenv("OPENBAO_NAMESPACE")
+
+		return NewOpenBaoManager(ctx, address, token, namespace)
 	default:
 		return nil, fmt.Errorf("unsupported cloud provider: %s", provider)
 	}
@@ -77,8 +89,8 @@ func (f *SecretManagerFactory) GetSecretsForEnvironment(ctx context.Context, env
 				project = env.Project
 			}
 
-			// For AWS and Azure, we use a default project key since they don't use projects
-			if (provider == "aws" || provider == "azure") && project == "" {
+			// For AWS, Azure, and OpenBao, we use a default project key since they don't use projects in the same way as GCP
+			if (provider == "aws" || provider == "azure" || provider == "openbao") && project == "" {
 				project = "default"
 			}
 
@@ -123,8 +135,8 @@ func (f *SecretManagerFactory) GetSecretsForEnvironment(ctx context.Context, env
 						mappingProject = env.Project
 					}
 
-					// For AWS and Azure, normalize empty projects to "default"
-					if (mappingProvider == "aws" || mappingProvider == "azure") && mappingProject == "" {
+					// For AWS, Azure, and OpenBao, normalize empty projects to "default"
+					if (mappingProvider == "aws" || mappingProvider == "azure" || mappingProvider == "openbao") && mappingProject == "" {
 						mappingProject = "default"
 					}
 

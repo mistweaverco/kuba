@@ -18,7 +18,9 @@ Kuba is [Swahili](https://en.wikipedia.org/wiki/Swahili_language) for "vault."
 
 Kuba helps you to get rid of `.env` files.
 
-Pass env directly from GCP Secret Manager, AWS Secrets Manager, and Azure Key Vault to your application
+Pass env directly from GCP Secret Manager,
+AWS Secrets Manager,
+Azure Key Vault, and OpenBao to your application
 
 <p></p>
 
@@ -50,7 +52,7 @@ which can be problematic for several reasons:
 
 Kuba addresses these issues by allowing you to define your environment variables
 in a single `kuba.yaml` file and fetch them directly from cloud providers like GCP
-Secret Manager, AWS Secrets Manager, and Azure Key Vault.
+Secret Manager, AWS Secrets Manager, Azure Key Vault, and OpenBao.
 
 This eliminates the need for `.env` files and provides a more secure,
 consistent, and scalable way to manage environment variables across
@@ -137,6 +139,9 @@ default:
       secret-key: "azure_project_secret"
       provider: azure
       project: "my-azure-project-default"
+    - environment-variable: "OPENBAO_SECRET"
+      secret-key: "secret/openbao-secret"
+      provider: openbao
     - environment-variable: "SOME_HARD_CODED_ENV"
       value: "hard-coded-value"
 
@@ -198,7 +203,7 @@ and a list of mappings between environment variables and secret keys.
 You can also specify the provider and project ID for each mapping,
 allowing you to fetch secrets from different cloud providers
 or projects as needed. Kuba currently supports GCP Secret Manager,
-AWS Secrets Manager, and Azure Key Vault.
+AWS Secrets Manager, Azure Key Vault, and OpenBao.
 
 ### Running with a specific environment
 
@@ -302,3 +307,45 @@ Kuba supports Azure Key Vault for fetching secrets. To use Azure Key Vault:
        - environment-variable: "SOME_HARD_CODED_ENV"
          value: "hard-coded-value"
    ```
+
+### OpenBao
+
+Kuba supports OpenBao for fetching secrets.
+OpenBao is a fork of HashiCorp Vault that provides secure secret storage and access.
+
+To use OpenBao:
+
+1. **Setup**: Make sure you have an OpenBao server running and accessible.
+
+2. **Authentication**: Set up authentication using environment variables:
+   ```bash
+   export OPENBAO_ADDR="http://localhost:8200"  # Required: OpenBao server address
+   export OPENBAO_TOKEN="your-openbao-token"    # Optional: Authentication token
+   export OPENBAO_NAMESPACE="your-namespace"     # Optional: Namespace (if using enterprise features)
+   ```
+
+3. **Permissions**: Ensure your OpenBao token has read permissions for the secrets you want to access.
+
+4. **Configuration**: In your `kuba.yaml`, specify the OpenBao provider:
+   ```yaml
+   default:
+     provider: openbao
+     mappings:
+       - environment-variable: "DATABASE_URL"
+         secret-key: "secret/database-url"
+       - environment-variable: "API_KEY"
+         secret-key: "secret/api-key"
+       - environment-variable: "SOME_HARD_CODED_ENV"
+         value: "hard-coded-value"
+   ```
+
+**Note**: OpenBao secrets are stored as key-value pairs. If a secret contains multiple keys, Kuba will return the first string value it finds. For more precise control, structure your secrets with single values or use the project field to namespace your secrets:
+
+```yaml
+default:
+  provider: openbao
+  mappings:
+    - environment-variable: "DATABASE_URL"
+      secret-key: "database-url"
+      project: "secret"  # This will look for secret/database-url
+```

@@ -29,16 +29,19 @@
 	};
 
 	onMount(() => {
-		Prism.plugins.toolbar.registerButton('fullscreen-code', function (env: {element: HTMLElement}) {
-			const button = document.createElement('button');
-			button.innerHTML = '🔍';
-			button.addEventListener('click', function () {
-				const parent = env.element.parentNode as HTMLElement;
-				parent.requestFullscreen();
-			});
+		Prism.plugins.toolbar.registerButton(
+			'fullscreen-code',
+			function (env: { element: HTMLElement }) {
+				const button = document.createElement('button');
+				button.innerHTML = '🔍';
+				button.addEventListener('click', function () {
+					const parent = env.element.parentNode as HTMLElement;
+					parent.requestFullscreen();
+				});
 
-			return button;
-		});
+				return button;
+			}
+		);
 
 		Prism.highlightAll();
 	});
@@ -48,7 +51,7 @@
 	data={{
 		title: 'Kuba - Securely and easily access your environment variables',
 		description:
-			'Pass env directly from GCP Secret Manager, AWS Secrets Manager, and Azure Key Vault to your application.',
+			'Pass env directly from GCP Secret Manager, AWS Secrets Manager, Azure Key Vault and OpenBao to your application.'
 	}}
 />
 
@@ -114,7 +117,10 @@
 			</div>
 			<div class={installUsing === 'manual' ? '' : 'hidden'}>
 				<p class="py-6">
-					Download the latest release from the <a class="text-secondary" href="/download">download page</a>.
+					Download the latest release from the <a class="text-secondary" href="/download"
+						>download page</a
+					>.
+				</p>
 			</div>
 			<p>
 				<a href="#configure" on:click={handleAnchorClick}
@@ -153,8 +159,8 @@
 					></path>
 				</svg>
 				<span>
-					This will generate a default configuration file for you (if it does not yet exist),
-					which you can customize to your needs.
+					This will generate a default configuration file for you (if it does not yet exist), which
+					you can customize to your needs.
 				</span>
 			</div>
 			<p>
@@ -172,8 +178,7 @@
 			<p class="py-6">
 				Once you have your <code>kuba.yaml</code> file set up, you can run
 				<code>kuba run -- &lt;your-command&gt;</code>
-				to execute any command with the secrets
-				from your cloud provider's secret management system.
+				to execute any command with the secrets from your cloud provider's secret management system.
 			</p>
 			<p>
 				<a href="#why" on:click={handleAnchorClick}
@@ -189,18 +194,16 @@
 			<h1 class="text-5xl font-bold">Why? 🤔</h1>
 			<p class="py-6">What are the benefits of using Kuba?</p>
 			<p class="py-6">
-				Environment variables are a common way to manage configuration in applications,
-				especially when deploying to different environments like development,
-				staging, and production.
+				Environment variables are a common way to manage configuration in applications, especially
+				when deploying to different environments like development, staging, and production.
 			</p>
 			<p class="py-6">
-				However, managing these variables can become cumbersome,
-				especially when dealing with multiple cloud providers and
-				secret management systems.
+				However, managing these variables can become cumbersome, especially when dealing with
+				multiple cloud providers and secret management systems.
 			</p>
 			<p class="py-6">
-				This often leads to the use of <code>.env</code> files,
-				which can be problematic for several reasons:
+				This often leads to the use of <code>.env</code> files, which can be problematic for several
+				reasons:
 			</p>
 			<ul class="list-disc list-inside">
 				<li>Insecure sharing of secrets</li>
@@ -209,8 +212,8 @@
 				<li>Lack of standardization across cloud providers</li>
 			</ul>
 			<p class="py-6">
-				Kuba is designed to address these issues by providing a unified way to
-				manage environment variables across different cloud providers.
+				Kuba is designed to address these issues by providing a unified way to manage environment
+				variables across different cloud providers.
 			</p>
 			<p>
 				<a href="#get-involved" on:click={handleAnchorClick}
