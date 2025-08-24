@@ -205,6 +205,45 @@ allowing you to fetch secrets from different cloud providers
 or projects as needed. Kuba currently supports GCP Secret Manager,
 AWS Secrets Manager, Azure Key Vault, and OpenBao.
 
+### Environment Variable Interpolation
+
+Kuba supports environment variable interpolation in the `value` field using `${VAR_NAME}` syntax. This allows you to:
+
+- Reference previously defined environment variables from the same configuration
+- Use system environment variables
+- Build complex connection strings and URLs dynamically
+
+**Example with interpolation:**
+```yaml
+default:
+  provider: gcp
+  project: 1337
+  mappings:
+    - environment-variable: "DB_PASSWORD"
+      secret-key: "db-password"
+    - environment-variable: "DB_HOST"
+      value: "mydbhost"
+    - environment-variable: "DB_CONNECTION_STRING"
+      value: "postgresql://user:${DB_PASSWORD}@${DB_HOST}:5432/mydb"
+    - environment-variable: "API_URL"
+      value: "https://api.${DOMAIN}/v1"
+    - environment-variable: "APP_ENV"
+      value: "${NODE_ENV:-development}"
+    - environment-variable: "REDIS_URL"
+      value: "redis://${REDIS_HOST:-localhost}:${REDIS_PORT:-6379}/0"
+```
+
+In this example:
+- `${DB_PASSWORD}` will be replaced with the value from the secret
+- `${DB_HOST}` will be replaced with the literal value "mydbhost"
+- `${DOMAIN}` will be replaced with the system environment variable if it exists
+- `${NODE_ENV:-development}` will use the `NODE_ENV` environment variable if set, otherwise default to "development"
+- `${REDIS_HOST:-localhost}` will use the `REDIS_HOST` environment variable if set, otherwise default to "localhost"
+
+**Note**: Interpolation is processed in order, so you can reference variables defined earlier in the same configuration. Unresolved variables will remain unchanged in the output.
+
+**Shell-style default values**: You can use `${VAR_NAME:-default}` syntax to provide fallback values when environment variables are not set. This is particularly useful for providing sensible defaults while allowing overrides through environment variables.
+
 ### Running with a specific environment
 
 You can also specify the environment you want to use:

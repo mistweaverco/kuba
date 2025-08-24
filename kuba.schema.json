@@ -44,7 +44,7 @@
                 "type": "string"
               },
               "value": {
-                "description": "The literal value for the environment variable. Required if no secret-key is provided.",
+                "description": "The literal value for the environment variable. Required if no secret-key is provided. Supports environment variable interpolation using ${VAR_NAME} syntax, which can reference previously defined environment variables from the same configuration or system environment variables.",
                 "type": [
                   "string",
                   "integer"

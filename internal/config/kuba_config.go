@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -30,6 +32,123 @@ type Mapping struct {
 	Project             string      `yaml:"project,omitempty"`
 }
 
+// interpolateEnvVars replaces ${VAR_NAME} patterns with actual environment variable values
+// It also supports previously resolved variables from the same configuration
+// Supports both ${VAR_NAME} and ${VAR_NAME:-default} syntax
+func interpolateEnvVars(value string, resolvedVars map[string]string) string {
+	// Regex to match ${VAR_NAME} and ${VAR_NAME:-default} patterns
+	re := regexp.MustCompile(`\$\{([^}]+)\}`)
+
+	return re.ReplaceAllStringFunc(value, func(match string) string {
+		// Extract the variable name and optional default from ${VAR_NAME} or ${VAR_NAME:-default}
+		content := match[2 : len(match)-1]
+
+		// Check if there's a default value specified
+		if strings.Contains(content, ":-") {
+			parts := strings.SplitN(content, ":-", 2)
+			varName := parts[0]
+			defaultValue := parts[1]
+
+			// First check if we have this variable from previously resolved mappings
+			if resolvedValue, exists := resolvedVars[varName]; exists {
+				return resolvedValue
+			}
+
+			// Then check if it's an environment variable
+			if envValue := os.Getenv(varName); envValue != "" {
+				return envValue
+			}
+
+			// If not found, return the default value
+			return defaultValue
+		}
+
+		// No default value specified, use original logic
+		varName := content
+
+		// First check if we have this variable from previously resolved mappings
+		if resolvedValue, exists := resolvedVars[varName]; exists {
+			return resolvedValue
+		}
+
+		// Then check if it's an environment variable
+		if envValue := os.Getenv(varName); envValue != "" {
+			return envValue
+		}
+
+		// If not found, return the original pattern (could be useful for debugging)
+		return match
+	})
+}
+
+// processValueInterpolations processes all value fields in mappings to resolve environment variable interpolations
+func processValueInterpolations(config *KubaConfig) error {
+	// Process environments in order to handle dependencies correctly
+	// We'll process each environment multiple times until no more interpolations are possible
+	// or until we detect a circular dependency
+
+	for envName, env := range config.Environments {
+		// Track resolved variables for this environment
+		resolvedVars := make(map[string]string)
+
+		// Process mappings multiple times to handle dependencies
+		maxIterations := len(env.Mappings) * 2 // Allow for some dependency depth
+		for iteration := 0; iteration < maxIterations; iteration++ {
+			changed := false
+
+			for i, mapping := range env.Mappings {
+				if mapping.Value != nil {
+					// Convert value to string for processing
+					var strValue string
+					switch v := mapping.Value.(type) {
+					case string:
+						strValue = v
+					case int, int32, int64:
+						strValue = fmt.Sprintf("%d", v)
+					case float32, float64:
+						strValue = fmt.Sprintf("%g", v)
+					default:
+						strValue = fmt.Sprintf("%v", v)
+					}
+
+					// Check if this value contains interpolation patterns
+					if strings.Contains(strValue, "${") {
+						// Interpolate the value
+						interpolatedValue := interpolateEnvVars(strValue, resolvedVars)
+
+						// If the value changed, update it
+						if interpolatedValue != strValue {
+							// Update the mapping value
+							env.Mappings[i].Value = interpolatedValue
+							// Update our resolved vars map
+							resolvedVars[mapping.EnvironmentVariable] = interpolatedValue
+							changed = true
+						}
+					} else {
+						// No interpolation needed, but convert numeric values to strings for consistency
+						if mapping.Value != strValue {
+							env.Mappings[i].Value = strValue
+							changed = true
+						}
+						// Store the value in resolved vars
+						resolvedVars[mapping.EnvironmentVariable] = strValue
+					}
+				}
+			}
+
+			// If no changes were made in this iteration, we're done
+			if !changed {
+				break
+			}
+		}
+
+		// Update the environment in the config
+		config.Environments[envName] = env
+	}
+
+	return nil
+}
+
 // LoadKubaConfig loads the kuba.yaml configuration file
 func LoadKubaConfig(configPath string) (*KubaConfig, error) {
 	if configPath == "" {
@@ -51,6 +170,11 @@ func LoadKubaConfig(configPath string) (*KubaConfig, error) {
 	var config KubaConfig
 	if err := yaml.Unmarshal(data, &config); err != nil {
 		return nil, fmt.Errorf("failed to parse configuration file: %w", err)
+	}
+
+	// Process environment variable interpolations
+	if err := processValueInterpolations(&config); err != nil {
+		return nil, fmt.Errorf("failed to process environment variable interpolations: %w", err)
 	}
 
 	// Validate configuration
