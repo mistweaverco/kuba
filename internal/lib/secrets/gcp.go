@@ -3,9 +3,11 @@ package secrets
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
 	"cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
+	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
 
@@ -67,6 +69,48 @@ func (g *GCPSecretManager) GetSecrets(projectID string, secretIDs []string) (map
 			return nil, fmt.Errorf("failed to get secret '%s': %w", secretID, err)
 		}
 		secrets[secretID] = secret
+	}
+
+	return secrets, nil
+}
+
+// GetSecretsByPath retrieves all secrets that start with the given path prefix
+func (g *GCPSecretManager) GetSecretsByPath(projectID, secretPath string) (map[string]string, error) {
+	secrets := make(map[string]string)
+
+	// List all secrets in the project
+	req := &secretmanagerpb.ListSecretsRequest{
+		Parent: fmt.Sprintf("projects/%s", projectID),
+	}
+
+	it := g.client.ListSecrets(g.ctx, req)
+	for {
+		secret, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, fmt.Errorf("failed to iterate secrets: %w", err)
+		}
+
+		// Check if the secret name starts with the path prefix
+		secretName := secret.Name
+		if strings.HasPrefix(secretName, secretPath) {
+			// Extract just the secret ID from the full path
+			secretID := extractSecretNameFromPath(secretName)
+
+			// Get the actual secret value
+			secretValue, err := g.GetSecret(projectID, secretID)
+			if err != nil {
+				// Log warning but continue with other secrets
+				fmt.Printf("Warning: failed to get secret '%s': %v\n", secretID, err)
+				continue
+			}
+
+			// Sanitize the secret ID for use as an environment variable name
+			envVarName := sanitizeEnvVarName(secretID)
+			secrets[envVarName] = secretValue
+		}
 	}
 
 	return secrets, nil

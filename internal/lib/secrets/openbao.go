@@ -113,6 +113,34 @@ func (o *OpenBaoManager) GetSecrets(projectID string, secretIDs []string) (map[s
 	return secrets, nil
 }
 
+// GetSecretsByPath retrieves all secrets that start with the given path prefix
+func (o *OpenBaoManager) GetSecretsByPath(projectID, secretPath string) (map[string]string, error) {
+	secrets := make(map[string]string)
+
+	// List all secrets at the path
+	secretNames, err := o.ListSecrets(secretPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list secrets at path '%s': %w", secretPath, err)
+	}
+
+	// Get each secret and add it to the result
+	for _, secretName := range secretNames {
+		// Get the actual secret value
+		secretValue, err := o.GetSecret(projectID, secretName)
+		if err != nil {
+			// Log warning but continue with other secrets
+			fmt.Printf("Warning: failed to get secret '%s': %v\n", secretName, err)
+			continue
+		}
+
+		// Sanitize the secret name for use as an environment variable name
+		envVarName := sanitizeEnvVarName(secretName)
+		secrets[envVarName] = secretValue
+	}
+
+	return secrets, nil
+}
+
 // Close closes the OpenBao client
 func (o *OpenBaoManager) Close() error {
 	// OpenBao client doesn't require explicit closing
