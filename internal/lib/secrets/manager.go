@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/mistweaverco/kuba/internal/config"
 )
@@ -12,6 +13,7 @@ import (
 type SecretManager interface {
 	GetSecret(projectID, secretID string) (string, error)
 	GetSecrets(projectID string, secretIDs []string) (map[string]string, error)
+	GetSecretsByPath(projectID, secretPath string) (map[string]string, error)
 	Close() error
 }
 
@@ -70,6 +72,9 @@ func (f *SecretManagerFactory) GetSecretsForEnvironment(ctx context.Context, env
 	// Group mappings by provider and project for secret-based mappings
 	providerGroups := make(map[string]map[string][]string)
 
+	// Group mappings by provider and project for path-based mappings
+	pathGroups := make(map[string]map[string]string)
+
 	// Process all mappings to separate secret-based and value-based ones
 	for _, mapping := range env.Mappings {
 		// Handle direct values first
@@ -77,7 +82,7 @@ func (f *SecretManagerFactory) GetSecretsForEnvironment(ctx context.Context, env
 			continue // Skip secret processing for value-based mappings
 		}
 
-		// Process secret-based mappings
+		// Process secret-based mappings (single key)
 		if mapping.SecretKey != "" {
 			provider := mapping.Provider
 			if provider == "" {
@@ -99,6 +104,31 @@ func (f *SecretManagerFactory) GetSecretsForEnvironment(ctx context.Context, env
 			}
 
 			providerGroups[provider][project] = append(providerGroups[provider][project], mapping.SecretKey)
+		}
+
+		// Process path-based mappings
+		if mapping.SecretPath != "" {
+			provider := mapping.Provider
+			if provider == "" {
+				provider = env.Provider
+			}
+
+			project := mapping.Project
+			if project == "" {
+				project = env.Project
+			}
+
+			// For AWS, Azure, and OpenBao, we use a default project key since they don't use projects in the same way as GCP
+			if (provider == "aws" || provider == "azure" || provider == "openbao") && project == "" {
+				project = "default"
+			}
+
+			// Create a separate group for path-based lookups
+			pathKey := fmt.Sprintf("%s:%s", provider, project)
+			if pathGroups[pathKey] == nil {
+				pathGroups[pathKey] = make(map[string]string)
+			}
+			pathGroups[pathKey][mapping.EnvironmentVariable] = mapping.SecretPath
 		}
 	}
 
@@ -146,6 +176,45 @@ func (f *SecretManagerFactory) GetSecretsForEnvironment(ctx context.Context, env
 						}
 					}
 				}
+			}
+		}
+	}
+
+	// Process path-based mappings
+	for pathKey, pathMappings := range pathGroups {
+		// Parse the path key to get provider and project
+		parts := strings.Split(pathKey, ":")
+		if len(parts) != 2 {
+			fmt.Printf("Warning: invalid path key format: %s\n", pathKey)
+			continue
+		}
+
+		provider := parts[0]
+		project := parts[1]
+
+		secretManager, err := f.CreateSecretManager(ctx, provider, project)
+		if err != nil {
+			// Log warning but continue with other providers
+			fmt.Printf("Warning: failed to create secret manager for %s: %v\n", provider, err)
+			continue
+		}
+		defer secretManager.Close()
+
+		// Process each path mapping
+		for envVar, secretPath := range pathMappings {
+			secrets, err := secretManager.GetSecretsByPath(project, secretPath)
+			if err != nil {
+				// Log warning but continue with other paths
+				fmt.Printf("Warning: failed to get secrets from path '%s': %v\n", secretPath, err)
+				continue
+			}
+
+			// Add all secrets from this path to the result
+			// The environment variable name from the mapping is used as a prefix
+			for secretName, secretValue := range secrets {
+				// Create a unique environment variable name by combining the mapping's env var and the secret name
+				finalEnvVarName := envVar + "_" + secretName
+				allSecrets[finalEnvVarName] = secretValue
 			}
 		}
 	}

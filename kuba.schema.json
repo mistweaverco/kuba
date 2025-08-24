@@ -39,6 +39,10 @@
                 "description": "The name of the secret key. Required if no value is provided.",
                 "type": "string"
               },
+              "secret-path": {
+                "description": "The path prefix to lookup all secrets starting with this string. Required if no secret-key or value is provided.",
+                "type": "string"
+              },
               "value": {
                 "description": "The literal value for the environment variable. Required if no secret-key is provided.",
                 "type": [
@@ -71,6 +75,11 @@
               {
                 "required": [
                   "secret-key"
+                ]
+              },
+              {
+                "required": [
+                  "secret-path"
                 ]
               },
               {

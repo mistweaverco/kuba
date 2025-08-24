@@ -24,6 +24,7 @@ type Environment struct {
 type Mapping struct {
 	EnvironmentVariable string      `yaml:"environment-variable"`
 	SecretKey           string      `yaml:"secret-key,omitempty"`
+	SecretPath          string      `yaml:"secret-path,omitempty"`
 	Value               interface{} `yaml:"value,omitempty"`
 	Provider            string      `yaml:"provider,omitempty"`
 	Project             string      `yaml:"project,omitempty"`
@@ -99,17 +100,28 @@ func validateConfig(config *KubaConfig) error {
 				return fmt.Errorf("environment '%s': mapping %d: environment-variable is required", envName, i+1)
 			}
 
-			// Either secret-key or value must be provided, but not both
-			if mapping.SecretKey == "" && mapping.Value == nil {
-				return fmt.Errorf("environment '%s': mapping %d: either secret-key or value is required", envName, i+1)
+			// Either secret-key, secret-path, or value must be provided, but not multiple
+			secretFields := 0
+			if mapping.SecretKey != "" {
+				secretFields++
+			}
+			if mapping.SecretPath != "" {
+				secretFields++
+			}
+			if mapping.Value != nil {
+				secretFields++
 			}
 
-			if mapping.SecretKey != "" && mapping.Value != nil {
-				return fmt.Errorf("environment '%s': mapping %d: cannot specify both secret-key and value", envName, i+1)
+			if secretFields == 0 {
+				return fmt.Errorf("environment '%s': mapping %d: either secret-key, secret-path, or value is required", envName, i+1)
 			}
 
-			// Validate provider if specified and secret-key is used
-			if mapping.Provider != "" && mapping.SecretKey != "" {
+			if secretFields > 1 {
+				return fmt.Errorf("environment '%s': mapping %d: cannot specify multiple of secret-key, secret-path, or value", envName, i+1)
+			}
+
+			// Validate provider if specified and secret fields are used
+			if mapping.Provider != "" && (mapping.SecretKey != "" || mapping.SecretPath != "") {
 				if !isValidProvider(mapping.Provider) {
 					return fmt.Errorf("environment '%s': mapping %d: invalid provider '%s'", envName, i+1, mapping.Provider)
 				}

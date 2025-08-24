@@ -3,6 +3,7 @@ package secrets
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -88,6 +89,36 @@ func (a *AWSSecretsManager) GetSecrets(projectID string, secretIDs []string) (ma
 			return nil, fmt.Errorf("failed to get secret '%s': %w", secretID, err)
 		}
 		secrets[secretID] = secret
+	}
+
+	return secrets, nil
+}
+
+// GetSecretsByPath retrieves all secrets that start with the given path prefix
+func (a *AWSSecretsManager) GetSecretsByPath(projectID, secretPath string) (map[string]string, error) {
+	secrets := make(map[string]string)
+
+	// List all secrets
+	secretNames, err := a.ListSecrets()
+	if err != nil {
+		return nil, fmt.Errorf("failed to list secrets: %w", err)
+	}
+
+	// Filter secrets that start with the path prefix
+	for _, secretName := range secretNames {
+		if strings.HasPrefix(secretName, secretPath) {
+			// Get the actual secret value
+			secretValue, err := a.GetSecret(projectID, secretName)
+			if err != nil {
+				// Log warning but continue with other secrets
+				fmt.Printf("Warning: failed to get secret '%s': %v\n", secretName, err)
+				continue
+			}
+
+			// Sanitize the secret name for use as an environment variable name
+			envVarName := sanitizeEnvVarName(secretName)
+			secrets[envVarName] = secretValue
+		}
 	}
 
 	return secrets, nil
