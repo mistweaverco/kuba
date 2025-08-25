@@ -47,108 +47,108 @@
 		bind:this={element}
 		{id}
 		on:click={handleClick}
-		class="clickable-headline cursor-pointer hover:text-primary transition-colors duration-200 group relative w-full text-left bg-transparent border-none p-0 {className}"
+		class="clickable-headline cursor-pointer hover:text-primary transition-colors duration-200 group relative bg-transparent border-none p-0 {className}"
 		title="Click to copy link to this section"
 		aria-label="Copy link to this section"
 	>
-		<h1 class="m-0">
-			<slot />
-		</h1>
 		<span
-			class="absolute right-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-primary text-sm"
+			class="absolute right-[-2rem] opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-primary text-sm"
 		>
 			🔗
 		</span>
+		<h1 class="m-0">
+			<slot />
+		</h1>
 	</button>
 {:else if level === 2}
 	<button
 		bind:this={element}
 		{id}
 		on:click={handleClick}
-		class="clickable-headline cursor-pointer hover:text-primary transition-colors duration-200 group relative w-full text-left bg-transparent border-none p-0 {className}"
+		class="clickable-headline cursor-pointer hover:text-primary transition-colors duration-200 group relative bg-transparent border-none p-0 {className}"
 		title="Click to copy link to this section"
 		aria-label="Copy link to this section"
 	>
-		<h2 class="m-0">
-			<slot />
-		</h2>
 		<span
-			class="absolute right-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-primary text-sm"
+			class="absolute right-[-2rem] opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-primary text-sm"
 		>
 			🔗
 		</span>
+		<h2 class="m-0">
+			<slot />
+		</h2>
 	</button>
 {:else if level === 3}
 	<button
 		bind:this={element}
 		{id}
 		on:click={handleClick}
-		class="clickable-headline cursor-pointer hover:text-primary transition-colors duration-200 group relative w-full text-left bg-transparent border-none p-0 {className}"
+		class="clickable-headline cursor-pointer hover:text-primary transition-colors duration-200 group relative bg-transparent border-none p-0 {className}"
 		title="Click to copy link to this section"
 		aria-label="Copy link to this section"
 	>
-		<h3 class="m-0">
-			<slot />
-		</h3>
 		<span
-			class="absolute right-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-primary text-sm"
+			class="absolute right-[-2rem] opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-primary text-sm"
 		>
 			🔗
 		</span>
+		<h3 class="m-0">
+			<slot />
+		</h3>
 	</button>
 {:else if level === 4}
 	<button
 		bind:this={element}
 		{id}
 		on:click={handleClick}
-		class="clickable-headline cursor-pointer hover:text-primary transition-colors duration-200 group relative w-full text-left bg-transparent border-none p-0 {className}"
+		class="clickable-headline cursor-pointer hover:text-primary transition-colors duration-200 group relative bg-transparent border-none p-0 {className}"
 		title="Click to copy link to this section"
 		aria-label="Copy link to this section"
 	>
-		<h4 class="m-0">
-			<slot />
-		</h4>
 		<span
-			class="absolute right-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-primary text-sm"
+			class="absolute right-[-2rem] opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-primary text-sm"
 		>
 			🔗
 		</span>
+		<h4 class="m-0">
+			<slot />
+		</h4>
 	</button>
 {:else if level === 5}
 	<button
 		bind:this={element}
 		{id}
 		on:click={handleClick}
-		class="clickable-headline cursor-pointer hover:text-primary transition-colors duration-200 group relative w-full text-left bg-transparent border-none p-0 {className}"
+		class="clickable-headline cursor-pointer hover:text-primary transition-colors duration-200 group relative bg-transparent border-none p-0 {className}"
 		title="Click to copy link to this section"
 		aria-label="Copy link to this section"
 	>
-		<h5 class="m-0">
-			<slot />
-		</h5>
 		<span
-			class="absolute right-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-primary text-sm"
+			class="absolute right-[-2rem] opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-primary text-sm"
 		>
 			🔗
 		</span>
+		<h5 class="m-0">
+			<slot />
+		</h5>
 	</button>
 {:else}
 	<button
 		bind:this={element}
 		{id}
 		on:click={handleClick}
-		class="clickable-headline cursor-pointer hover:text-primary transition-colors duration-200 group relative w-full text-left bg-transparent border-none p-0 {className}"
+		class="clickable-headline cursor-pointer hover:text-primary transition-colors duration-200 group relative bg-transparent border-none p-0 {className}"
 		title="Click to copy link to this section"
 		aria-label="Copy link to this section"
 	>
-		<h6 class="m-0">
-			<slot />
-		</h6>
 		<span
-			class="absolute right-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-primary text-sm"
+			class="absolute right-[-2rem] opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-primary text-sm"
 		>
 			🔗
 		</span>
+		<h6 class="m-0">
+			<slot />
+		</h6>
 	</button>
 {/if}
 
