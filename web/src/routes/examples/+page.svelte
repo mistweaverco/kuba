@@ -1,5 +1,6 @@
 <script lang="ts">
 	import HeadComponent from '$lib/HeadComponent.svelte';
+	import ClickableHeadline from '$lib/ClickableHeadline.svelte';
 	import Prism from 'prismjs';
 	import 'prismjs/plugins/toolbar/prism-toolbar';
 	import 'prismjs/plugins/copy-to-clipboard/prism-copy-to-clipboard';
@@ -40,7 +41,9 @@
 <div class="container mx-auto px-4 py-8">
 	<div class="max-w-4xl mx-auto">
 		<div class="text-center mb-12">
-			<h1 class="text-4xl font-bold mb-4">Examples & Use Cases</h1>
+			<ClickableHeadline level={1} id="examples-and-use-cases" className="text-4xl font-bold mb-4"
+				>Examples &amp; Use Cases</ClickableHeadline
+			>
 			<p class="text-xl text-base-content/70">
 				See practical examples of how to use Kuba with different applications, frameworks, and
 				deployment scenarios.
