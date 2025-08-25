@@ -1,50 +1,6 @@
 <script lang="ts">
-	import Prism from 'prismjs';
-	import 'prismjs/plugins/toolbar/prism-toolbar';
-	import 'prismjs/plugins/copy-to-clipboard/prism-copy-to-clipboard';
-	import 'prismjs/components/prism-json';
-	import 'prismjs/components/prism-yaml';
-	import 'prismjs/components/prism-bash';
-	import 'prismjs/components/prism-powershell';
-	import 'prismjs/themes/prism-okaidia.css';
 	import { onMount } from 'svelte';
 	import HeadComponent from '$lib/HeadComponent.svelte';
-
-	let installUsing = 'manual';
-
-	const handleAnchorClick = (evt: Event) => {
-		evt.preventDefault();
-		const link = evt.currentTarget as HTMLAnchorElement;
-		const anchorId = new URL(link.href).hash.replace('#', '');
-		const anchor = document.getElementById(anchorId);
-		window.scrollTo({
-			top: anchor?.offsetTop,
-			behavior: 'smooth'
-		});
-	};
-
-	const onInstallUsingChange = (evt: Event) => {
-		const select = evt.currentTarget as HTMLSelectElement;
-		installUsing = select.value;
-	};
-
-	onMount(() => {
-		Prism.plugins.toolbar.registerButton(
-			'fullscreen-code',
-			function (env: { element: HTMLElement }) {
-				const button = document.createElement('button');
-				button.innerHTML = '🔍';
-				button.addEventListener('click', function () {
-					const parent = env.element.parentNode as HTMLElement;
-					parent.requestFullscreen();
-				});
-
-				return button;
-			}
-		);
-
-		Prism.highlightAll();
-	});
 </script>
 
 <HeadComponent
@@ -55,183 +11,112 @@
 	}}
 />
 
-<div id="start" class="hero bg-base-200 min-h-screen">
+<div class="hero bg-base-200 min-h-screen">
 	<div class="hero-content text-center">
-		<div class="max-w-md">
+		<div class="max-w-4xl">
 			<img src="/logo.svg" alt="Kuba" class="m-5 mx-auto w-64" />
 			<h1 class="text-5xl font-bold">Kuba</h1>
-			<p class="py-6">Securely and easily access your environment variables</p>
-			<a href="#install" on:click={handleAnchorClick}
-				><button class="btn btn-primary">Get Started</button></a
+			<p class="py-6 text-xl">Securely and easily access your environment variables</p>
+			<p class="py-4 text-lg">
+				Kuba is <a href="https://en.wikipedia.org/wiki/Swahili_language" class="link link-primary"
+					>Swahili</a
+				> for "vault."
+			</p>
+			<p class="py-4">
+				Kuba helps you to get rid of <code>.env</code> files. Pass env directly from GCP Secret Manager,
+				AWS Secrets Manager, Azure Key Vault, and OpenBao to your application.
+			</p>
+			<div class="flex gap-4 justify-center mt-8">
+				<a href="/installation" class="btn btn-primary">Get Started</a>
+				<a href="/usage" class="btn btn-secondary">Learn More</a>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="py-16 bg-base-100">
+	<div class="container mx-auto px-4">
+		<h2 class="text-3xl font-bold text-center mb-12">Why Choose Kuba?</h2>
+		<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+			<div class="card bg-base-200 shadow-xl">
+				<div class="card-body">
+					<h3 class="card-title">🔒 Secure</h3>
+					<p>
+						Eliminate insecure <code>.env</code> files and leverage your existing cloud provider security
+					</p>
+				</div>
+			</div>
+			<div class="card bg-base-200 shadow-xl">
+				<div class="card-body">
+					<h3 class="card-title">🚀 Simple</h3>
+					<p>Single binary with a simple YAML configuration file</p>
+				</div>
+			</div>
+			<div class="card bg-base-200 shadow-xl">
+				<div class="card-body">
+					<h3 class="card-title">☁️ Multi-Cloud</h3>
+					<p>Support for GCP, AWS, Azure, and OpenBao all in one tool</p>
+				</div>
+			</div>
+			<div class="card bg-base-200 shadow-xl">
+				<div class="card-body">
+					<h3 class="card-title">💰 Free</h3>
+					<p>No subscription fees - leverage your existing cloud infrastructure</p>
+				</div>
+			</div>
+			<div class="card bg-base-200 shadow-xl">
+				<div class="card-body">
+					<h3 class="card-title">⚡ Fast</h3>
+					<p>Single binary written in Go for optimal performance</p>
+				</div>
+			</div>
+			<div class="card bg-base-200 shadow-xl">
+				<div class="card-body">
+					<h3 class="card-title">🔧 Flexible</h3>
+					<p>Environment-specific configurations with variable interpolation</p>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="py-16 bg-base-200">
+	<div class="container mx-auto px-4">
+		<h2 class="text-3xl font-bold text-center mb-12">Quick Start</h2>
+		<div class="grid md:grid-cols-3 gap-8">
+			<div class="text-center">
+				<div class="text-4xl mb-4">1️⃣</div>
+				<h3 class="text-xl font-bold mb-4">Install</h3>
+				<p class="mb-4">Download and install Kuba on your system</p>
+				<a href="/installation" class="btn btn-primary">Installation Guide</a>
+			</div>
+			<div class="text-center">
+				<div class="text-4xl mb-4">2️⃣</div>
+				<h3 class="text-xl font-bold mb-4">Configure</h3>
+				<p class="mb-4">Set up your <code>kuba.yaml</code> configuration file</p>
+				<a href="/configuration" class="btn btn-primary">Configuration Guide</a>
+			</div>
+			<div class="text-center">
+				<div class="text-4xl mb-4">3️⃣</div>
+				<h3 class="text-xl font-bold mb-4">Run</h3>
+				<p class="mb-4">Execute your applications with secure environment variables</p>
+				<a href="/usage" class="btn btn-primary">Usage Guide</a>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="py-16 bg-base-100">
+	<div class="container mx-auto px-4 text-center">
+		<h2 class="text-3xl font-bold mb-8">Ready to Get Started?</h2>
+		<p class="text-lg mb-8">
+			Join the community and start managing your secrets securely with Kuba.
+		</p>
+		<div class="flex gap-4 justify-center">
+			<a href="/installation" class="btn btn-primary btn-lg">Install Kuba</a>
+			<a href="https://github.com/mistweaverco/kuba" class="btn btn-outline btn-lg"
+				>View on GitHub</a
 			>
-		</div>
-	</div>
-</div>
-<div id="install" class="hero bg-base-200 min-h-screen">
-	<div class="hero-content text-center">
-		<div class="max-w-md">
-			<h1 class="text-5xl font-bold">Install ⚡</h1>
-			<p class="py-6">Install Kuba using ...</p>
-			<select on:input={onInstallUsingChange} class="select select-bordered mb-5">
-				<option value="manual" selected>manual</option>
-				<option value="curl-zsh">curl &amp; zsh (linux/mac)</option>
-				<option value="curl-bash">curl &amp; bash (linux/mac)</option>
-				<option value="wget-zsh">wget &amp; zsh (linux/mac)</option>
-				<option value="wget-bash">wget &amp; bash (linux/mac)</option>
-				<option value="pwsh">pwsh (windows)</option>
-			</select>
-			<div class={installUsing === 'curl-zsh' ? '' : 'hidden'}>
-				<pre><code
-						class="language-bash"
-						data-toolbar-order="copy-to-clipboard"
-						data-prismjs-copy="📋">curl -sSL https://kuba.mwco.app/install.sh | zsh</code
-					></pre>
-			</div>
-			<div class={installUsing === 'curl-bash' ? '' : 'hidden'}>
-				<pre><code
-						class="language-bash"
-						data-toolbar-order="copy-to-clipboard"
-						data-prismjs-copy="📋">curl -sSL https://kuba.mwco.app/install.sh | bash</code
-					></pre>
-			</div>
-			<div class={installUsing === 'wget-zsh' ? '' : 'hidden'}>
-				<pre><code
-						class="language-bash"
-						data-toolbar-order="copy-to-clipboard"
-						data-prismjs-copy="📋">wget -qO- https://kuba.mwco.app/install.sh | zsh</code
-					></pre>
-			</div>
-			<div class={installUsing === 'wget-bash' ? '' : 'hidden'}>
-				<pre><code
-						class="language-bash"
-						data-toolbar-order="copy-to-clipboard"
-						data-prismjs-copy="📋">wget -qO- https://kuba.mwco.app/install.sh | bash</code
-					></pre>
-			</div>
-			<div class={installUsing === 'pwsh' ? '' : 'hidden'}>
-				<pre><code
-						class="language-powershell"
-						data-toolbar-order="copy-to-clipboard"
-						data-prismjs-copy="📋">iwr https://kuba.mwco.app/install.ps1 -useb | iex</code
-					></pre>
-			</div>
-			<div class={installUsing === 'manual' ? '' : 'hidden'}>
-				<p class="py-6">
-					Download the latest release from the <a class="text-secondary" href="/download"
-						>download page</a
-					>.
-				</p>
-			</div>
-			<p>
-				<a href="#configure" on:click={handleAnchorClick}
-					><button class="btn btn-primary mt-5">Configure</button></a
-				>
-			</p>
-		</div>
-	</div>
-</div>
-<div id="configure" class="hero bg-base-200 min-h-screen">
-	<div class="hero-content text-center">
-		<div class="max-w-md">
-			<h1 class="text-5xl font-bold">Configure 🔧</h1>
-			<p class="py-6">
-				Configure Kuba using a simple configuration file <code>kuba.yaml</code>.
-			</p>
-			<div class="mb-5">
-				<pre><code
-						class="language-bash"
-						data-toolbar-order="copy-to-clipboard"
-						data-prismjs-copy="📋">kuba init</code
-					></pre>
-			</div>
-			<div role="alert" class="alert alert-info">
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					fill="none"
-					viewBox="0 0 24 24"
-					class="h-6 w-6 shrink-0 stroke-current"
-				>
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-					></path>
-				</svg>
-				<span>
-					This will generate a default configuration file for you (if it does not yet exist), which
-					you can customize to your needs.
-				</span>
-			</div>
-			<p>
-				<a href="#usage" on:click={handleAnchorClick}
-					><button class="btn btn-primary mt-5">Usage</button></a
-				>
-			</p>
-		</div>
-	</div>
-</div>
-<div id="usage" class="hero bg-base-200 min-h-screen">
-	<div class="hero-content text-center">
-		<div class="max-w-md">
-			<h1 class="text-5xl font-bold">Usage 🔐</h1>
-			<p class="py-6">
-				Once you have your <code>kuba.yaml</code> file set up, you can run
-				<code>kuba run -- &lt;your-command&gt;</code>
-				to execute any command with the secrets from your cloud provider's secret management system.
-			</p>
-			<p>
-				<a href="#why" on:click={handleAnchorClick}
-					><button class="btn btn-secondary mt-5">Why?</button></a
-				>
-			</p>
-		</div>
-	</div>
-</div>
-<div id="why" class="hero bg-base-200 min-h-screen">
-	<div class="hero-content text-center">
-		<div class="max-w-md">
-			<h1 class="text-5xl font-bold">Why? 🤔</h1>
-			<p class="py-6">What are the benefits of using Kuba?</p>
-			<p class="py-6">
-				Environment variables are a common way to manage configuration in applications, especially
-				when deploying to different environments like development, staging, and production.
-			</p>
-			<p class="py-6">
-				However, managing these variables can become cumbersome, especially when dealing with
-				multiple cloud providers and secret management systems.
-			</p>
-			<p class="py-6">
-				This often leads to the use of <code>.env</code> files, which can be problematic for several
-				reasons:
-			</p>
-			<ul class="list-disc list-inside">
-				<li>Insecure sharing of secrets</li>
-				<li>Manual management of secrets</li>
-				<li>Security risks of committing secrets to version control</li>
-				<li>Lack of standardization across cloud providers</li>
-			</ul>
-			<p class="py-6">
-				Kuba is designed to address these issues by providing a unified way to manage environment
-				variables across different cloud providers.
-			</p>
-			<p>
-				<a href="#get-involved" on:click={handleAnchorClick}
-					><button class="btn btn-secondary mt-5">Get involved</button></a
-				>
-			</p>
-		</div>
-	</div>
-</div>
-<div id="get-involved" class="hero bg-base-200 min-h-screen">
-	<div class="hero-content text-center">
-		<div class="max-w-md">
-			<h1 class="text-5xl font-bold">Get involved 📦</h1>
-			<p class="py-6">Kuba is open-source and we welcome contributions.</p>
-			<p>
-				View the <a class="text-secondary" href="https://github.com/mistweaverco/kuba">code</a>,
-				and/or check out the <a class="text-secondary" href="https://kuba.mwco.app/docs">docs</a>.
-			</p>
 		</div>
 	</div>
 </div>
