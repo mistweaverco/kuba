@@ -1,11 +1,13 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 
 	export let level: 1 | 2 | 3 | 4 | 5 | 6 = 2;
 	export let id: string;
 	export let className: string = '';
 
 	let element: HTMLElement;
+	let showToast = false;
+	let toastTimeout: ReturnType<typeof setTimeout>;
 
 	onMount(() => {
 		// Scroll to element if hash matches on page load
@@ -18,6 +20,25 @@
 			}
 		}
 	});
+
+	onDestroy(() => {
+		// Clean up timeout when component is destroyed
+		if (toastTimeout) {
+			clearTimeout(toastTimeout);
+		}
+	});
+
+	function showToastNotification() {
+		showToast = true;
+		// Clear any existing timeout
+		if (toastTimeout) {
+			clearTimeout(toastTimeout);
+		}
+		// Hide toast after 3 seconds
+		toastTimeout = setTimeout(() => {
+			showToast = false;
+		}, 3000);
+	}
 
 	function handleClick() {
 		// Update URL hash
@@ -33,14 +54,43 @@
 		navigator.clipboard
 			.writeText(url)
 			.then(() => {
-				// Show a brief tooltip or notification (optional)
-				console.log('Link copied to clipboard:', url);
+				// Show toast notification
+				showToastNotification();
 			})
 			.catch((err) => {
 				console.error('Failed to copy link:', err);
 			});
 	}
 </script>
+
+<!-- Toast notification -->
+{#if showToast}
+	<div class="toast toast-top toast-end z-50" role="alert" aria-live="polite">
+		<div class="alert alert-success shadow-lg">
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				class="stroke-current shrink-0 h-6 w-6"
+				fill="none"
+				viewBox="0 0 24 24"
+			>
+				<path
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					stroke-width="2"
+					d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+				/>
+			</svg>
+			<span>Link copied to clipboard!</span>
+			<button 
+				class="btn btn-sm btn-ghost" 
+				on:click={() => showToast = false}
+				aria-label="Close notification"
+			>
+				✕
+			</button>
+		</div>
+	</div>
+{/if}
 
 {#if level === 1}
 	<button
@@ -157,5 +207,30 @@
 		text-decoration: underline;
 		text-decoration-color: hsl(var(--p));
 		text-underline-offset: 4px;
+	}
+
+	/* Toast animation styles */
+	.toast {
+		animation: slideInRight 0.3s ease-out;
+	}
+
+	@keyframes slideInRight {
+		from {
+			transform: translateX(100%);
+			opacity: 0;
+		}
+		to {
+			transform: translateX(0);
+			opacity: 1;
+		}
+	}
+
+	.alert {
+		transition: all 0.2s ease-in-out;
+	}
+
+	.alert:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 	}
 </style>
