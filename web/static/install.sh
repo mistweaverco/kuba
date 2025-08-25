@@ -34,7 +34,7 @@ print_error() {
 detect_platform() {
     local os
     local arch
-    
+
     # Detect OS
     case "$(uname -s)" in
         Linux*)     os="linux" ;;
@@ -42,7 +42,7 @@ detect_platform() {
         CYGWIN*|MINGW*|MSYS*) os="windows" ;;
         *)          print_error "Unsupported operating system: $(uname -s)"; exit 1 ;;
     esac
-    
+
     # Detect architecture
     case "$(uname -m)" in
         x86_64|amd64)  arch="amd64" ;;
@@ -51,14 +51,14 @@ detect_platform() {
         armv7l)        arch="armv7" ;;
         *)             print_error "Unsupported architecture: $(uname -m)"; exit 1 ;;
     esac
-    
+
     # Handle special cases
     if [ "$os" = "darwin" ] && [ "$arch" = "arm64" ]; then
         arch="arm64"
     elif [ "$os" = "darwin" ] && [ "$arch" = "amd64" ]; then
         arch="amd64"
     fi
-    
+
     echo "${os}-${arch}"
 }
 
@@ -68,7 +68,7 @@ get_latest_version() {
     # We can extract the version from the redirect URL
     local version
     local redirect_url
-    
+
     if command -v curl >/dev/null 2>&1; then
         redirect_url=$(curl -s -I "https://github.com/${REPO}/releases/latest" | grep -i "location:" | sed 's/.*\/releases\/tag\///' | tr -d '\r')
     elif command -v wget >/dev/null 2>&1; then
@@ -77,12 +77,12 @@ get_latest_version() {
         print_error "Neither curl nor wget is available. Please install one of them."
         exit 1
     fi
-    
+
     if [ -z "$redirect_url" ]; then
         print_error "Failed to get latest version from GitHub"
         exit 1
     fi
-    
+
     echo "$redirect_url"
 }
 
@@ -91,20 +91,20 @@ download_binary() {
     local version="$1"
     local platform="$2"
     local download_url="https://github.com/${REPO}/releases/download/${version}/kuba-${platform}"
-    
+
     if [ "$platform" = *"windows"* ]; then
         download_url="${download_url}.exe"
     fi
-    
+
     print_status "Downloading ${BINARY_NAME} ${version} for ${platform}..."
-    
+
     # Create temporary directory
     local temp_dir=$(mktemp -d)
     local binary_path="${temp_dir}/${BINARY_NAME}"
-    
+
     # Download binary using available downloader
     local download_success=false
-    
+
     if command -v curl >/dev/null 2>&1; then
         if curl -L -o "$binary_path" "$download_url"; then
             download_success=true
@@ -114,18 +114,18 @@ download_binary() {
             download_success=true
         fi
     fi
-    
+
     if [ "$download_success" = false ]; then
         print_error "Failed to download binary from ${download_url}"
         rm -rf "$temp_dir"
         exit 1
     fi
-    
+
     # Make binary executable (for Unix-like systems)
-    if [ "$platform" != *"windows"* ]; then
+    if [[ "$platform" != *"windows"* ]]; then
         chmod +x "$binary_path"
     fi
-    
+
     echo "$binary_path"
 }
 
@@ -146,7 +146,7 @@ get_install_location() {
 detect_shell_rc() {
     local current_shell
     local shell_rc
-    
+
     # Try to detect the actual shell being used
     if [ -n "$ZSH_VERSION" ]; then
         current_shell="zsh"
@@ -166,7 +166,7 @@ detect_shell_rc() {
         current_shell="unknown"
         shell_rc="${HOME}/.profile"
     fi
-    
+
     echo "$shell_rc"
 }
 
@@ -174,25 +174,25 @@ detect_shell_rc() {
 install_binary() {
     local source_path="$1"
     local install_path="$2"
-    
+
     print_status "Installing ${BINARY_NAME} to ${install_path}..."
-    
+
     # Create backup if binary already exists
     if [ -f "$install_path" ]; then
         local backup_path="${install_path}.backup.$(date +%Y%m%d_%H%M%S)"
         print_warning "Backing up existing binary to ${backup_path}"
         cp "$install_path" "$backup_path"
     fi
-    
+
     # Install binary
     if cp "$source_path" "$install_path"; then
         print_success "${BINARY_NAME} installed successfully to ${install_path}"
-        
+
         # Add to PATH if installing to user directory
         if [[ "$install_path" == *"/.local/bin"* ]]; then
             local shell_rc=$(detect_shell_rc)
             local current_shell
-            
+
             # Determine current shell for comparison
             if [ -n "$ZSH_VERSION" ]; then
                 current_shell="zsh"
@@ -201,9 +201,9 @@ install_binary() {
             else
                 current_shell="unknown"
             fi
-            
+
             print_status "Detected shell: $current_shell, will update: $shell_rc"
-            
+
             # Check if PATH already includes the user bin directory
             if ! grep -q "\.local/bin" "$shell_rc" 2>/dev/null; then
                 print_status "Adding ${HOME}/.local/bin to PATH in ${shell_rc}"
@@ -214,7 +214,7 @@ install_binary() {
             else
                 print_status "PATH already configured in ${shell_rc}"
             fi
-            
+
             # Also try to update the current shell's RC file if different from detected
             if [ "$current_shell" != "unknown" ] && [ -n "$ZSH_VERSION" ] && [ "$shell_rc" != "${HOME}/.zshrc" ]; then
                 print_warning "You're running zsh but the script detected a different shell"
@@ -235,7 +235,7 @@ install_binary() {
 # Function to verify installation
 verify_installation() {
     local install_path="$1"
-    
+
     if [ -f "$install_path" ] && [ -x "$install_path" ]; then
         print_success "Installation verified successfully!"
         print_status "You can now run: ${BINARY_NAME} --version"
@@ -248,39 +248,39 @@ verify_installation() {
 # Main installation function
 main() {
     print_status "Installing ${BINARY_NAME}..."
-    
+
     # Detect platform
     local platform=$(detect_platform)
     print_status "Detected platform: ${platform}"
-    
+
     # Get latest version
     local version=$(get_latest_version)
     print_status "Latest version: ${version}"
-    
+
     # Download binary
     local temp_binary=$(download_binary "$version" "$platform")
-    
+
     # Determine install location
     local install_path=$(get_install_location)
-    
+
     # Install binary
     install_binary "$temp_binary" "$install_path"
-    
+
     # Clean up temporary files
     rm -rf "$(dirname "$temp_binary")"
-    
+
     # Verify installation
     verify_installation "$install_path"
-    
+
     print_success "${BINARY_NAME} installation completed successfully!"
-    
+
     # Provide additional guidance for user installations
     if [[ "$install_path" == *"/.local/bin"* ]]; then
         local shell_rc=$(detect_shell_rc)
         print_status "Installation completed! To use ${BINARY_NAME} from any location:"
         print_status "1. Restart your terminal, OR"
         print_status "2. Run: source $shell_rc"
-        
+
         # Check if we're running in a different shell than detected
         if [ -n "$ZSH_VERSION" ] && [ "$shell_rc" != "${HOME}/.zshrc" ]; then
             print_warning "Note: You're running zsh but the script updated $shell_rc"

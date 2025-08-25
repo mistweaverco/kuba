@@ -5,7 +5,7 @@
 	import 'prismjs/plugins/copy-to-clipboard/prism-copy-to-clipboard';
 	import 'prismjs/components/prism-bash';
 	import 'prismjs/components/prism-yaml';
-	import 'prismjs/themes/prism-okaidia.css';
+	import 'dracula-prism/dist/css/dracula-prism.css';
 	import { onMount } from 'svelte';
 
 	onMount(() => {
@@ -333,7 +333,7 @@ kuba run -- docker build --build-arg DATABASE_URL --build-arg API_KEY .</code
 				<h2 class="text-3xl font-bold mb-6">Next Steps</h2>
 
 				<div class="grid md:grid-cols-2 gap-6">
-					<div class="card bg-base-200 text-primary-content">
+					<div class="card bg-base-200">
 						<div class="card-body">
 							<h3 class="card-title">Configuration Guide</h3>
 							<p>Learn how to set up your <code>kuba.yaml</code> configuration file.</p>
@@ -341,7 +341,7 @@ kuba run -- docker build --build-arg DATABASE_URL --build-arg API_KEY .</code
 						</div>
 					</div>
 
-					<div class="card bg-base-200 text-secondary-content">
+					<div class="card bg-base-200">
 						<div class="card-body">
 							<h3 class="card-title">Cloud Providers</h3>
 							<p>Set up authentication and permissions for your cloud providers.</p>

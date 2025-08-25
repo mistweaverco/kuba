@@ -1,12 +1,13 @@
 @import 'tailwindcss';
 @plugin 'daisyui' {
-	themes: dark --default;
+	themes: dracula --default;
 }
 
 div.code-toolbar {
 	position: relative;
 	display: grid;
 }
+
 div.code-toolbar > .toolbar {
 	position: absolute;
 	z-index: 10;
@@ -15,20 +16,40 @@ div.code-toolbar > .toolbar {
 	transition: opacity 0.3s ease-in-out;
 	opacity: 1;
 }
+
 div.code-toolbar > .toolbar > .toolbar-item {
 	display: inline-block;
 }
+
 div.code-toolbar > .toolbar > .toolbar-item > a {
 	cursor: pointer;
 }
+
 /* icon copy */
 div.code-toolbar > .toolbar > .toolbar-item > button {
 	font-size: 2rem;
 	color: #e6caa8;
+	background: none;
 }
+
+/* icon copy when clicked */
+div.code-toolbar > .toolbar span {
+	background-color: #50fa7b;
+}
+
+/* icon copy hover */
+div.code-toolbar > .toolbar > .toolbar-item > button:hover {
+	color: #f8f8f2;
+	background: none;
+}
+
 /* color of "Copied!" */
+.copy-to-clipboard-button[data-copy-state~='copy-success'] {
+	background-color: #50fa7b;
+}
+
 .copy-to-clipboard-button[data-copy-state~='copy-success'] > span {
-	color: #10b981;
+	background-color: #50fa7b;
 }
 
 /* default item color */

@@ -7,7 +7,7 @@
 	import 'prismjs/components/prism-bash';
 	import 'prismjs/components/prism-javascript';
 	import 'prismjs/components/prism-python';
-	import 'prismjs/themes/prism-okaidia.css';
+	import 'dracula-prism/dist/css/dracula-prism.css';
 	import { onMount } from 'svelte';
 
 	onMount(() => {
@@ -663,7 +663,7 @@ development:
 				<h2 class="text-3xl font-bold mb-6">Next Steps</h2>
 
 				<div class="grid md:grid-cols-2 gap-6">
-					<div class="card bg-base-200 text-primary-content">
+					<div class="card bg-base-200">
 						<div class="card-body">
 							<h3 class="card-title">Configuration Guide</h3>
 							<p>Learn more about advanced configuration options and best practices.</p>
@@ -671,7 +671,7 @@ development:
 						</div>
 					</div>
 
-					<div class="card bg-base-200 text-primary-content">
+					<div class="card bg-base-200">
 						<div class="card-body">
 							<h3 class="card-title">Cloud Providers</h3>
 							<p>Set up authentication and permissions for your cloud providers.</p>

@@ -5,7 +5,7 @@
 	import 'prismjs/plugins/copy-to-clipboard/prism-copy-to-clipboard';
 	import 'prismjs/components/prism-bash';
 	import 'prismjs/components/prism-powershell';
-	import 'prismjs/themes/prism-okaidia.css';
+	import 'dracula-prism/dist/css/dracula-prism.css';
 	import { onMount } from 'svelte';
 
 	let installUsing = 'manual';
@@ -197,7 +197,7 @@
 			<h2 class="text-2xl font-bold mb-6">Next Steps</h2>
 
 			<div class="grid md:grid-cols-2 gap-6">
-				<div class="card bg-base-200 text-primary-content">
+				<div class="card bg-base-200">
 					<div class="card-body">
 						<h3 class="card-title">Configure Kuba</h3>
 						<p>Set up your configuration file to start using Kuba with your cloud providers.</p>
@@ -205,7 +205,7 @@
 					</div>
 				</div>
 
-				<div class="card bg-base-200 text-primary-content">
+				<div class="card bg-base-200">
 					<div class="card-body">
 						<h3 class="card-title">Learn Usage</h3>
 						<p>
