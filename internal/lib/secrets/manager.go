@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/mistweaverco/kuba/internal/config"
+	"github.com/mistweaverco/kuba/internal/lib/log"
 )
 
 // SecretManager defines the interface for secret management operations
@@ -69,16 +70,23 @@ func (f *SecretManagerFactory) CreateSecretManager(ctx context.Context, provider
 
 // GetSecretsForEnvironment retrieves all secrets and values for a given environment configuration
 func (f *SecretManagerFactory) GetSecretsForEnvironment(ctx context.Context, env *config.Environment) (map[string]string, error) {
+	logger := log.NewLogger()
+
 	// Group mappings by provider and project for secret-based mappings
 	providerGroups := make(map[string]map[string][]string)
 
 	// Group mappings by provider and project for path-based mappings
 	pathGroups := make(map[string]map[string]string)
 
+	logger.Debug("Processing environment mappings", "total_mappings", len(env.Mappings))
+
 	// Process all mappings to separate secret-based and value-based ones
-	for _, mapping := range env.Mappings {
+	for i, mapping := range env.Mappings {
+		logger.Debug("Processing mapping", "index", i, "env_var", mapping.EnvironmentVariable, "has_secret_key", mapping.SecretKey != "", "has_secret_path", mapping.SecretPath != "", "has_value", mapping.Value != nil)
+
 		// Handle direct values first
 		if mapping.Value != nil {
+			logger.Debug("Skipping secret processing for value-based mapping", "env_var", mapping.EnvironmentVariable)
 			continue // Skip secret processing for value-based mappings
 		}
 
@@ -98,6 +106,8 @@ func (f *SecretManagerFactory) GetSecretsForEnvironment(ctx context.Context, env
 			if (provider == "aws" || provider == "azure" || provider == "openbao") && project == "" {
 				project = "default"
 			}
+
+			logger.Debug("Adding secret-based mapping to provider group", "provider", provider, "project", project, "secret_key", mapping.SecretKey)
 
 			if providerGroups[provider] == nil {
 				providerGroups[provider] = make(map[string][]string)
@@ -123,6 +133,8 @@ func (f *SecretManagerFactory) GetSecretsForEnvironment(ctx context.Context, env
 				project = "default"
 			}
 
+			logger.Debug("Adding path-based mapping to provider group", "provider", provider, "project", project, "secret_path", mapping.SecretPath)
+
 			// Create a separate group for path-based lookups
 			pathKey := fmt.Sprintf("%s:%s", provider, project)
 			if pathGroups[pathKey] == nil {
@@ -132,25 +144,34 @@ func (f *SecretManagerFactory) GetSecretsForEnvironment(ctx context.Context, env
 		}
 	}
 
+	logger.Debug("Provider groups created", "secret_providers", len(providerGroups), "path_providers", len(pathGroups))
+
 	// Fetch secrets from each provider
 	allSecrets := make(map[string]string)
 
 	for provider, projects := range providerGroups {
 		for project, secretIDs := range projects {
+			logger.Debug("Creating secret manager", "provider", provider, "project", project, "secret_count", len(secretIDs))
+
 			secretManager, err := f.CreateSecretManager(ctx, provider, project)
 			if err != nil {
+				logger.Debug("Failed to create secret manager", "provider", provider, "project", project, "error", err)
 				// Log warning but continue with other providers
 				fmt.Printf("Warning: failed to create secret manager for %s: %v\n", provider, err)
 				continue
 			}
 			defer secretManager.Close()
 
+			logger.Debug("Fetching secrets from provider", "provider", provider, "project", project, "secret_ids", secretIDs)
 			secrets, err := secretManager.GetSecrets(project, secretIDs)
 			if err != nil {
+				logger.Debug("Failed to get secrets from provider", "provider", provider, "project", project, "error", err)
 				// Log warning but continue with other providers
 				fmt.Printf("Warning: failed to get secrets from %s project %s: %v\n", provider, project, err)
 				continue
 			}
+
+			logger.Debug("Successfully retrieved secrets from provider", "provider", provider, "project", project, "retrieved_count", len(secrets))
 
 			// Map secrets to environment variables
 			for _, mapping := range env.Mappings {
@@ -165,14 +186,18 @@ func (f *SecretManagerFactory) GetSecretsForEnvironment(ctx context.Context, env
 						mappingProject = env.Project
 					}
 
-					// For AWS, Azure, and OpenBao, normalize empty projects to "default"
+					// For AWS, Azure, and OpenBao, we use a default project key since they don't use projects in the same way as GCP
 					if (mappingProvider == "aws" || mappingProvider == "azure" || mappingProvider == "openbao") && mappingProject == "" {
 						mappingProject = "default"
 					}
 
+					// Only process mappings that match the current provider and project
 					if mappingProvider == provider && mappingProject == project {
-						if secret, exists := secrets[mapping.SecretKey]; exists {
-							allSecrets[mapping.EnvironmentVariable] = secret
+						if secretValue, exists := secrets[mapping.SecretKey]; exists {
+							allSecrets[mapping.EnvironmentVariable] = secretValue
+							logger.Debug("Mapped secret to environment variable", "env_var", mapping.EnvironmentVariable, "secret_key", mapping.SecretKey, "provider", provider, "project", project)
+						} else {
+							logger.Debug("Secret key not found in provider response", "env_var", mapping.EnvironmentVariable, "secret_key", mapping.SecretKey, "provider", provider, "project", project)
 						}
 					}
 				}
