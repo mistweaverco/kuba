@@ -129,9 +129,61 @@ iwr https://kuba.mwco.app/install.ps1 -useb | iex
 kuba run -- <your-command>
 ```
 
-This will fetch all secrets definded in
+This will fetch all secrets defined in
 `kuba.yaml` and pass them as
 environment variables to any arbitrary command.
+
+### Debug Mode
+
+For troubleshooting configuration issues and seeing detailed execution steps, you can enable debug mode:
+
+```sh
+kuba --debug run -- <your-command>
+# or use the short form
+kuba -d run -- <your-command>
+```
+
+Debug mode provides verbose logging that shows:
+- Configuration file discovery and loading
+- Environment selection and validation
+- Secret provider initialization
+- Secret retrieval attempts and results
+- Environment variable mapping
+- Command execution details
+
+This is particularly useful for:
+- Diagnosing cloud provider authentication issues
+- Troubleshooting configuration file syntax errors
+- Understanding why certain secrets aren't being loaded
+- Verifying environment variable interpolation
+- Debugging provider-specific errors
+
+### Available Commands and Flags
+
+Kuba provides several commands to help you manage your configuration:
+
+```sh
+# Initialize a new configuration file
+kuba init
+
+# Run a command with secrets
+kuba run -- <command>
+
+# Show version information
+kuba version
+
+# Get help
+kuba --help
+```
+
+**Global Flags:**
+- `--debug, -d`: Enable debug mode for verbose logging
+- `--version`: Show version information
+- `--help, -h`: Show help information
+
+**Run Command Flags:**
+- `--env, -e`: Specify environment (default: "default")
+- `--config, -c`: Path to configuration file
 
 Let's say you want to pass
 some secrets from GCP to your node application.

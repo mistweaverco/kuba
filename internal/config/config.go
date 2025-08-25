@@ -2,6 +2,7 @@ package config
 
 type ConfigFlags struct {
 	Version bool
+	Debug   bool
 }
 
 type Config struct {

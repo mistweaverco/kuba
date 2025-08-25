@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/mistweaverco/kuba/internal/lib/log"
 	"gopkg.in/yaml.v3"
 )
 
@@ -151,52 +152,88 @@ func processValueInterpolations(config *KubaConfig) error {
 
 // LoadKubaConfig loads the kuba.yaml configuration file
 func LoadKubaConfig(configPath string) (*KubaConfig, error) {
+	logger := log.NewLogger()
+
 	if configPath == "" {
 		configPath = "kuba.yaml"
 	}
 
+	logger.Debug("Loading configuration file", "path", configPath)
+
 	// Check if file exists
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		logger.Debug("Configuration file not found", "path", configPath)
 		return nil, fmt.Errorf("configuration file not found: %s", configPath)
 	}
 
 	// Read file
+	logger.Debug("Reading configuration file")
 	data, err := os.ReadFile(configPath)
 	if err != nil {
+		logger.Debug("Failed to read configuration file", "path", configPath, "error", err)
 		return nil, fmt.Errorf("failed to read configuration file: %w", err)
 	}
 
+	logger.Debug("Configuration file read successfully", "size_bytes", len(data))
+
 	// Parse YAML
+	logger.Debug("Parsing YAML configuration")
 	var config KubaConfig
 	if err := yaml.Unmarshal(data, &config); err != nil {
+		logger.Debug("Failed to parse YAML configuration", "error", err)
 		return nil, fmt.Errorf("failed to parse configuration file: %w", err)
 	}
 
+	logger.Debug("YAML parsed successfully", "environments_count", len(config.Environments))
+
 	// Process environment variable interpolations
+	logger.Debug("Processing environment variable interpolations")
 	if err := processValueInterpolations(&config); err != nil {
+		logger.Debug("Failed to process environment variable interpolations", "error", err)
 		return nil, fmt.Errorf("failed to process environment variable interpolations: %w", err)
 	}
 
+	logger.Debug("Environment variable interpolations processed successfully")
+
 	// Validate configuration
+	logger.Debug("Validating configuration")
 	if err := validateConfig(&config); err != nil {
+		logger.Debug("Configuration validation failed", "error", err)
 		return nil, fmt.Errorf("invalid configuration: %w", err)
 	}
 
+	logger.Debug("Configuration validation passed")
 	return &config, nil
 }
 
 // GetEnvironment returns the configuration for a specific environment
 func (c *KubaConfig) GetEnvironment(envName string) (*Environment, error) {
+	logger := log.NewLogger()
+
 	if envName == "" {
 		envName = "default"
+		logger.Debug("No environment specified, using default")
 	}
+
+	logger.Debug("Getting environment configuration", "requested_env", envName, "available_environments", len(c.Environments))
 
 	env, exists := c.Environments[envName]
 	if !exists {
+		logger.Debug("Environment not found in configuration", "requested_env", envName, "available_environments", getEnvironmentNames(c.Environments))
 		return nil, fmt.Errorf("environment '%s' not found in configuration", envName)
 	}
 
+	logger.Debug("Environment configuration retrieved", "environment", envName, "provider", env.Provider, "project", env.Project, "mappings_count", len(env.Mappings))
 	return &env, nil
+}
+
+// getEnvironmentNames returns a slice of available environment names
+func getEnvironmentNames(environments map[string]Environment) []string {
+	names := make([]string, 0, len(environments))
+	for name := range environments {
+		names = append(names, name)
+	}
+	return names
 }
 
 // validateConfig validates the configuration structure
