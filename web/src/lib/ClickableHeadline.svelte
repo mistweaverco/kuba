@@ -81,9 +81,9 @@
 				/>
 			</svg>
 			<span>Link copied to clipboard!</span>
-			<button 
-				class="btn btn-sm btn-ghost" 
-				on:click={() => showToast = false}
+			<button
+				class="btn btn-sm btn-ghost"
+				on:click={() => (showToast = false)}
 				aria-label="Close notification"
 			>
 				✕
@@ -231,6 +231,8 @@
 
 	.alert:hover {
 		transform: translateY(-2px);
-		box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+		box-shadow:
+			0 10px 25px -5px rgba(0, 0, 0, 0.1),
+			0 10px 10px -5px rgba(0, 0, 0, 0.04);
 	}
 </style>
