@@ -537,19 +537,19 @@ export OPENBAO_NAMESPACE="your-namespace"     # Optional: Namespace (if using en
 				<h2 class="text-3xl font-bold mb-6">Next Steps</h2>
 
 				<div class="grid md:grid-cols-2 gap-6">
-					<div class="card bg-primary text-primary-content">
+					<div class="card bg-base-200 text-primary-content">
 						<div class="card-body">
 							<h3 class="card-title">Configuration Guide</h3>
 							<p>Learn how to set up your <code>kuba.yaml</code> configuration file.</p>
-							<a href="/configuration" class="btn btn-secondary">Configuration Guide</a>
+							<a href="/configuration" class="btn btn-outline bg-lg">Configuration Guide</a>
 						</div>
 					</div>
 
-					<div class="card bg-secondary text-secondary-content">
+					<div class="card bg-base-200 text-primary-content">
 						<div class="card-body">
 							<h3 class="card-title">Usage Examples</h3>
 							<p>See practical examples of how to use your configured providers.</p>
-							<a href="/examples" class="btn btn-primary">Examples Guide</a>
+							<a href="/examples" class="btn btn-outline bg-lg">Examples Guide</a>
 						</div>
 					</div>
 				</div>

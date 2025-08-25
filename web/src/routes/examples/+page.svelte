@@ -353,7 +353,7 @@ services:
     depends_on:
       - db
       - redis
-  
+
   db:
     image: postgres:15
     environment:
@@ -362,7 +362,7 @@ services:
       - POSTGRES_PASSWORD
     volumes:
       - postgres_data:/var/lib/postgresql/data
-  
+
   redis:
     image: redis:7-alpine
     ports:
@@ -587,23 +587,23 @@ development:
     # Individual secrets
     - environment-variable: "APP_ENV"
       value: "production"
-    
+
     # Database secrets (bulk load)
     - environment-variable: "DB"
       secret-path: "database"
-    
+
     # API keys (bulk load)
     - environment-variable: "API"
       secret-path: "external-apis"
-    
+
     # Service secrets (bulk load)
     - environment-variable: "SERVICE"
       secret-path: "microservices"
-    
+
     # Interpolated connection strings
     - environment-variable: "DATABASE_URL"
       value: "postgresql://$&lbrace;DB_USERNAME&rbrace;:$&lbrace;DB_PASSWORD&rbrace;@$&lbrace;DB_HOST&rbrace;:$&lbrace;DB_PORT&rbrace;/$&lbrace;DB_NAME&rbrace;"
-    
+
     - environment-variable: "REDIS_URL"
       value: "redis://$&lbrace;REDIS_HOST:-localhost&rbrace;:$&lbrace;REDIS_PORT:-6379&rbrace;/0"</code
 								></pre>
@@ -631,23 +631,23 @@ development:
     # GCP secrets
     - environment-variable: "GCP_PROJECT_ID"
       secret-key: "project-id"
-    
+
     # AWS secrets
     - environment-variable: "AWS_ACCESS_KEY"
       secret-key: "aws-access-key"
       provider: aws
-    
+
     # Azure secrets
     - environment-variable: "AZURE_TENANT_ID"
       secret-key: "tenant-id"
       provider: azure
       project: "my-azure-project"
-    
+
     # OpenBao secrets
     - environment-variable: "INTERNAL_API_KEY"
       secret-key: "internal-api-key"
       provider: openbao
-    
+
     # Hard-coded values
     - environment-variable: "APP_ENV"
       value: "production"
@@ -663,19 +663,19 @@ development:
 				<h2 class="text-3xl font-bold mb-6">Next Steps</h2>
 
 				<div class="grid md:grid-cols-2 gap-6">
-					<div class="card bg-primary text-primary-content">
+					<div class="card bg-base-200 text-primary-content">
 						<div class="card-body">
 							<h3 class="card-title">Configuration Guide</h3>
 							<p>Learn more about advanced configuration options and best practices.</p>
-							<a href="/configuration" class="btn btn-secondary">Configuration Guide</a>
+							<a href="/configuration" class="btn btn-outline bg-lg">Configuration Guide</a>
 						</div>
 					</div>
 
-					<div class="card bg-secondary text-secondary-content">
+					<div class="card bg-base-200 text-primary-content">
 						<div class="card-body">
 							<h3 class="card-title">Cloud Providers</h3>
 							<p>Set up authentication and permissions for your cloud providers.</p>
-							<a href="/providers" class="btn btn-primary">Cloud Providers Guide</a>
+							<a href="/providers" class="btn btn-outline bg-lg">Cloud Providers Guide</a>
 						</div>
 					</div>
 				</div>

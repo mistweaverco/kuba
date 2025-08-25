@@ -197,21 +197,21 @@
 			<h2 class="text-2xl font-bold mb-6">Next Steps</h2>
 
 			<div class="grid md:grid-cols-2 gap-6">
-				<div class="card bg-primary text-primary-content">
+				<div class="card bg-base-200 text-primary-content">
 					<div class="card-body">
 						<h3 class="card-title">Configure Kuba</h3>
 						<p>Set up your configuration file to start using Kuba with your cloud providers.</p>
-						<a href="/configuration" class="btn btn-secondary">Configuration Guide</a>
+						<a href="/configuration" class="btn btn-outline bg-lg">Configuration Guide</a>
 					</div>
 				</div>
 
-				<div class="card bg-secondary text-secondary-content">
+				<div class="card bg-base-200 text-primary-content">
 					<div class="card-body">
 						<h3 class="card-title">Learn Usage</h3>
 						<p>
 							Discover how to use Kuba to run your applications with secure environment variables.
 						</p>
-						<a href="/usage" class="btn btn-primary">Usage Guide</a>
+						<a href="/usage" class="btn btn-outline bg-lg">Usage Guide</a>
 					</div>
 				</div>
 			</div>

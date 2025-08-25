@@ -333,19 +333,19 @@ kuba run -- docker build --build-arg DATABASE_URL --build-arg API_KEY .</code
 				<h2 class="text-3xl font-bold mb-6">Next Steps</h2>
 
 				<div class="grid md:grid-cols-2 gap-6">
-					<div class="card bg-primary text-primary-content">
+					<div class="card bg-base-200 text-primary-content">
 						<div class="card-body">
 							<h3 class="card-title">Configuration Guide</h3>
 							<p>Learn how to set up your <code>kuba.yaml</code> configuration file.</p>
-							<a href="/configuration" class="btn btn-secondary">Configuration Guide</a>
+							<a href="/configuration" class="btn btn-outline bg-lg">Configuration Guide</a>
 						</div>
 					</div>
 
-					<div class="card bg-secondary text-secondary-content">
+					<div class="card bg-base-200 text-secondary-content">
 						<div class="card-body">
 							<h3 class="card-title">Cloud Providers</h3>
 							<p>Set up authentication and permissions for your cloud providers.</p>
-							<a href="/providers" class="btn btn-primary">Cloud Providers Guide</a>
+							<a href="/providers" class="btn btn-outline btn-lg">Cloud Providers Guide</a>
 						</div>
 					</div>
 				</div>

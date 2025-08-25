@@ -343,19 +343,19 @@ default:
       secret-key: "database-connection-string"
     - environment-variable: "STRIPE_API_KEY"
       secret-key: "stripe-api-key"
-    
+
     # Secret paths for bulk loading
     - environment-variable: "DB"
       secret-path: "database"
     - environment-variable: "API"
       secret-path: "external-apis"
-    
+
     # Hard-coded values
     - environment-variable: "APP_ENV"
       value: "development"
     - environment-variable: "DEBUG"
       value: "true"
-    
+
     # Interpolated values
     - environment-variable: "REDIS_URL"
       value: "redis://$&lbrace;REDIS_HOST:-localhost$&rbrace;:$&lbrace;REDIS_PORT:-6379&rbrace;/0"
@@ -455,19 +455,19 @@ production:
 				<h2 class="text-3xl font-bold mb-6">Next Steps</h2>
 
 				<div class="grid md:grid-cols-2 gap-6">
-					<div class="card bg-primary text-primary-content">
+					<div class="card bg-base-200 text-primary-content">
 						<div class="card-body">
 							<h3 class="card-title">Cloud Providers Setup</h3>
 							<p>Configure authentication and permissions for your cloud providers.</p>
-							<a href="/providers" class="btn btn-secondary">Cloud Providers Guide</a>
+							<a href="/providers" class="btn btn-outline bg-lg">Cloud Providers Guide</a>
 						</div>
 					</div>
 
-					<div class="card bg-secondary text-secondary-content">
+					<div class="card bg-base-200 text-primary-content">
 						<div class="card-body">
 							<h3 class="card-title">Usage Examples</h3>
 							<p>See practical examples of how to use your configuration.</p>
-							<a href="/examples" class="btn btn-primary">Examples Guide</a>
+							<a href="/examples" class="btn btn-outline bg-lg">Examples Guide</a>
 						</div>
 					</div>
 				</div>
