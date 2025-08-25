@@ -1,5 +1,6 @@
 <script lang="ts">
 	import HeadComponent from '$lib/HeadComponent.svelte';
+	import ClickableHeadline from '$lib/ClickableHeadline.svelte';
 </script>
 
 <HeadComponent
@@ -35,7 +36,11 @@
 
 <div class="py-16 bg-base-100">
 	<div class="container mx-auto px-4">
-		<h2 class="text-3xl font-bold text-center mb-12">Why Choose Kuba?</h2>
+		<ClickableHeadline
+			level={2}
+			id="why-choose-kuba"
+			className="text-3xl font-bold text-center mb-12">Why Choose Kuba?</ClickableHeadline
+		>
 		<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
 			<div class="card bg-base-200 shadow-xl">
 				<div class="card-body">
@@ -81,7 +86,9 @@
 
 <div class="py-16 bg-base-200">
 	<div class="container mx-auto px-4">
-		<h2 class="text-3xl font-bold text-center mb-12">Quick Start</h2>
+		<ClickableHeadline level={2} id="quick-start" className="text-3xl font-bold text-center mb-12"
+			>Quick Start</ClickableHeadline
+		>
 		<div class="grid md:grid-cols-3 gap-8">
 			<div class="text-center">
 				<div class="text-4xl mb-4">1️⃣</div>
@@ -107,7 +114,9 @@
 
 <div class="py-16 bg-base-100">
 	<div class="container mx-auto px-4 text-center">
-		<h2 class="text-3xl font-bold mb-8">Ready to Get Started?</h2>
+		<ClickableHeadline level={2} id="ready-to-get-started" className="text-3xl font-bold mb-8"
+			>Ready to Get Started?</ClickableHeadline
+		>
 		<p class="text-lg mb-8">
 			Join the community and start managing your secrets securely with Kuba.
 		</p>

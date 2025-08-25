@@ -1,5 +1,6 @@
 <script lang="ts">
 	import HeadComponent from '$lib/HeadComponent.svelte';
+	import ClickableHeadline from '$lib/ClickableHeadline.svelte';
 	import Prism from 'prismjs';
 	import 'prismjs/plugins/toolbar/prism-toolbar';
 	import 'prismjs/plugins/copy-to-clipboard/prism-copy-to-clipboard';
@@ -39,7 +40,9 @@
 <div class="container mx-auto px-4 py-8">
 	<div class="max-w-4xl mx-auto">
 		<div class="text-center mb-12">
-			<h1 class="text-4xl font-bold mb-4">Cloud Providers Setup</h1>
+			<ClickableHeadline level={1} id="cloud-providers-setup" className="text-4xl font-bold mb-4"
+				>Cloud Providers Setup</ClickableHeadline
+			>
 			<p class="text-xl text-base-content/70">
 				Configure authentication and permissions for your cloud providers to start using Kuba
 				securely.
@@ -48,7 +51,9 @@
 
 		<div class="space-y-12">
 			<section>
-				<h2 class="text-3xl font-bold mb-6">Supported Providers</h2>
+				<ClickableHeadline level={2} id="supported-providers" className="text-3xl font-bold mb-6"
+					>Supported Providers</ClickableHeadline
+				>
 
 				<div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
 					<div class="card bg-base-200 text-center">
@@ -88,7 +93,9 @@
 			</section>
 
 			<section>
-				<h2 class="text-3xl font-bold mb-6">Google Cloud Platform (GCP)</h2>
+				<ClickableHeadline level={2} id="google-cloud-platform" className="text-3xl font-bold mb-6"
+					>Google Cloud Platform (GCP)</ClickableHeadline
+				>
 
 				<div class="space-y-6">
 					<div class="card bg-base-200">
@@ -185,7 +192,9 @@
 			</section>
 
 			<section>
-				<h2 class="text-3xl font-bold mb-6">AWS Secrets Manager</h2>
+				<ClickableHeadline level={2} id="aws-secrets-manager" className="text-3xl font-bold mb-6"
+					>AWS Secrets Manager</ClickableHeadline
+				>
 
 				<div class="space-y-6">
 					<div class="card bg-base-200">
@@ -275,7 +284,9 @@ export AWS_REGION="us-east-1"</code
 			</section>
 
 			<section>
-				<h2 class="text-3xl font-bold mb-6">Azure Key Vault</h2>
+				<ClickableHeadline level={2} id="azure-key-vault" className="text-3xl font-bold mb-6"
+					>Azure Key Vault</ClickableHeadline
+				>
 
 				<div class="space-y-6">
 					<div class="card bg-base-200">
@@ -340,7 +351,9 @@ export AZURE_CLIENT_SECRET="your-client-secret"</code
 			</section>
 
 			<section>
-				<h2 class="text-3xl font-bold mb-6">OpenBao</h2>
+				<ClickableHeadline level={2} id="openbao" className="text-3xl font-bold mb-6"
+					>OpenBao</ClickableHeadline
+				>
 
 				<div class="space-y-6">
 					<div class="card bg-base-200">

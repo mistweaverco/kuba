@@ -1,5 +1,6 @@
 <script lang="ts">
 	import HeadComponent from '$lib/HeadComponent.svelte';
+	import ClickableHeadline from '$lib/ClickableHeadline.svelte';
 	import Prism from 'prismjs';
 	import 'prismjs/plugins/toolbar/prism-toolbar';
 	import 'prismjs/plugins/copy-to-clipboard/prism-copy-to-clipboard';
@@ -44,7 +45,9 @@
 <div class="container mx-auto px-4 py-8">
 	<div class="max-w-4xl mx-auto">
 		<div class="text-center mb-12">
-			<h1 class="text-4xl font-bold mb-4">Installation Guide</h1>
+			<ClickableHeadline level={1} id="installation-guide" className="text-4xl font-bold mb-4"
+				>Installation Guide</ClickableHeadline
+			>
 			<p class="text-xl text-base-content/70">
 				Get Kuba up and running on your system with these simple installation methods.
 			</p>
@@ -52,7 +55,9 @@
 
 		<div class="grid lg:grid-cols-2 gap-8">
 			<div>
-				<h2 class="text-2xl font-bold mb-6">Automatic Installation</h2>
+				<ClickableHeadline level={2} id="automatic-installation" className="text-2xl font-bold mb-6"
+					>Automatic Installation</ClickableHeadline
+				>
 
 				<div class="mb-6">
 					<label for="install-method" class="block text-sm font-medium mb-2">
@@ -144,7 +149,9 @@
 			</div>
 
 			<div>
-				<h2 class="text-2xl font-bold mb-6">System Requirements</h2>
+				<ClickableHeadline level={2} id="system-requirements" className="text-2xl font-bold mb-6"
+					>System Requirements</ClickableHeadline
+				>
 
 				<div class="space-y-4">
 					<div class="card bg-base-200">
@@ -176,7 +183,9 @@
 		</div>
 
 		<div class="mt-12">
-			<h2 class="text-2xl font-bold mb-6">Verification</h2>
+			<ClickableHeadline level={2} id="verification" className="text-2xl font-bold mb-6"
+				>Verification</ClickableHeadline
+			>
 
 			<div class="card bg-base-200">
 				<div class="card-body">
@@ -194,7 +203,9 @@
 		</div>
 
 		<div class="mt-12">
-			<h2 class="text-2xl font-bold mb-6">Next Steps</h2>
+			<ClickableHeadline level={2} id="next-steps" className="text-2xl font-bold mb-6"
+				>Next Steps</ClickableHeadline
+			>
 
 			<div class="grid md:grid-cols-2 gap-6">
 				<div class="card bg-base-200">

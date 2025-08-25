@@ -1,5 +1,6 @@
 <script lang="ts">
 	import HeadComponent from '$lib/HeadComponent.svelte';
+	import ClickableHeadline from '$lib/ClickableHeadline.svelte';
 	import Prism from 'prismjs';
 	import 'prismjs/plugins/toolbar/prism-toolbar';
 	import 'prismjs/plugins/copy-to-clipboard/prism-copy-to-clipboard';
@@ -38,7 +39,9 @@
 <div class="container mx-auto px-4 py-8">
 	<div class="max-w-4xl mx-auto">
 		<div class="text-center mb-12">
-			<h1 class="text-4xl font-bold mb-4">Usage Guide</h1>
+			<ClickableHeadline level={1} id="usage-guide" className="text-4xl font-bold mb-4"
+				>Usage Guide</ClickableHeadline
+			>
 			<p class="text-xl text-base-content/70">
 				Learn how to use Kuba to securely run your applications with environment variables from
 				cloud providers.
@@ -47,7 +50,9 @@
 
 		<div class="space-y-12">
 			<section>
-				<h2 class="text-3xl font-bold mb-6">Basic Usage</h2>
+				<ClickableHeadline level={2} id="basic-usage" className="text-3xl font-bold mb-6"
+					>Basic Usage</ClickableHeadline
+				>
 
 				<div class="card bg-base-200 mb-6">
 					<div class="card-body">
@@ -113,7 +118,11 @@
 			</section>
 
 			<section>
-				<h2 class="text-3xl font-bold mb-6">Environment-Specific Usage</h2>
+				<ClickableHeadline
+					level={2}
+					id="environment-specific-usage"
+					className="text-3xl font-bold mb-6">Environment-Specific Usage</ClickableHeadline
+				>
 
 				<div class="card bg-base-200 mb-6">
 					<div class="card-body">
@@ -161,7 +170,11 @@
 			</section>
 
 			<section>
-				<h2 class="text-3xl font-bold mb-6">Advanced Usage Patterns</h2>
+				<ClickableHeadline
+					level={2}
+					id="advanced-usage-patterns"
+					className="text-3xl font-bold mb-6">Advanced Usage Patterns</ClickableHeadline
+				>
 
 				<div class="space-y-6">
 					<div class="card bg-base-200">
@@ -225,7 +238,9 @@ kuba run -- docker build --build-arg DATABASE_URL --build-arg API_KEY .</code
 			</section>
 
 			<section>
-				<h2 class="text-3xl font-bold mb-6">Troubleshooting</h2>
+				<ClickableHeadline level={2} id="troubleshooting" className="text-3xl font-bold mb-6"
+					>Troubleshooting</ClickableHeadline
+				>
 
 				<div class="space-y-6">
 					<div class="card bg-base-200">
@@ -276,7 +291,9 @@ kuba run -- docker build --build-arg DATABASE_URL --build-arg API_KEY .</code
 			</section>
 
 			<section>
-				<h2 class="text-3xl font-bold mb-6">Best Practices</h2>
+				<ClickableHeadline level={2} id="best-practices" className="text-3xl font-bold mb-6"
+					>Best Practices</ClickableHeadline
+				>
 
 				<div class="grid md:grid-cols-2 gap-6">
 					<div class="card bg-base-200">
@@ -330,7 +347,9 @@ kuba run -- docker build --build-arg DATABASE_URL --build-arg API_KEY .</code
 			</section>
 
 			<section>
-				<h2 class="text-3xl font-bold mb-6">Next Steps</h2>
+				<ClickableHeadline level={2} id="next-steps" className="text-3xl font-bold mb-6"
+					>Next Steps</ClickableHeadline
+				>
 
 				<div class="grid md:grid-cols-2 gap-6">
 					<div class="card bg-base-200">

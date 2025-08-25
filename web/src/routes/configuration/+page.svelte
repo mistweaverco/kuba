@@ -1,5 +1,6 @@
 <script lang="ts">
 	import HeadComponent from '$lib/HeadComponent.svelte';
+	import ClickableHeadline from '$lib/ClickableHeadline.svelte';
 	import Prism from 'prismjs';
 	import 'prismjs/plugins/toolbar/prism-toolbar';
 	import 'prismjs/plugins/copy-to-clipboard/prism-copy-to-clipboard';
@@ -38,7 +39,9 @@
 <div class="container mx-auto px-4 py-8">
 	<div class="max-w-4xl mx-auto">
 		<div class="text-center mb-12">
-			<h1 class="text-4xl font-bold mb-4">Configuration Guide</h1>
+			<ClickableHeadline level={1} id="configuration-guide" className="text-4xl font-bold mb-4"
+				>Configuration Guide</ClickableHeadline
+			>
 			<p class="text-xl text-base-content/70">
 				Learn how to configure Kuba with the <code>kuba.yaml</code> file and understand advanced features
 				like variable interpolation and secret paths.
@@ -47,7 +50,9 @@
 
 		<div class="space-y-12">
 			<section>
-				<h2 class="text-3xl font-bold mb-6">Getting Started</h2>
+				<ClickableHeadline level={2} id="getting-started" className="text-3xl font-bold mb-6"
+					>Getting Started</ClickableHeadline
+				>
 
 				<div class="card bg-base-200 mb-6">
 					<div class="card-body">
@@ -69,7 +74,11 @@
 			</section>
 
 			<section>
-				<h2 class="text-3xl font-bold mb-6">Configuration File Structure</h2>
+				<ClickableHeadline
+					level={2}
+					id="configuration-file-structure"
+					className="text-3xl font-bold mb-6">Configuration File Structure</ClickableHeadline
+				>
 
 				<div class="card bg-base-200 mb-6">
 					<div class="card-body">
@@ -153,7 +162,9 @@ production:
 			</section>
 
 			<section>
-				<h2 class="text-3xl font-bold mb-6">Mapping Types</h2>
+				<ClickableHeadline level={2} id="mapping-types" className="text-3xl font-bold mb-6"
+					>Mapping Types</ClickableHeadline
+				>
 
 				<div class="space-y-6">
 					<div class="card bg-base-200">
@@ -214,7 +225,11 @@ production:
 			</section>
 
 			<section>
-				<h2 class="text-3xl font-bold mb-6">Environment Variable Interpolation</h2>
+				<ClickableHeadline
+					level={2}
+					id="environment-variable-interpolation"
+					className="text-3xl font-bold mb-6">Environment Variable Interpolation</ClickableHeadline
+				>
 
 				<div class="card bg-base-200 mb-6">
 					<div class="card-body">
@@ -291,7 +306,11 @@ production:
 			</section>
 
 			<section>
-				<h2 class="text-3xl font-bold mb-6">Cross-Provider Mappings</h2>
+				<ClickableHeadline
+					level={2}
+					id="cross-provider-mappings"
+					className="text-3xl font-bold mb-6">Cross-Provider Mappings</ClickableHeadline
+				>
 
 				<div class="card bg-base-200 mb-6">
 					<div class="card-body">
@@ -322,7 +341,9 @@ production:
 			</section>
 
 			<section>
-				<h2 class="text-3xl font-bold mb-6">Complete Example</h2>
+				<ClickableHeadline level={2} id="complete-example" className="text-3xl font-bold mb-6"
+					>Complete Example</ClickableHeadline
+				>
 
 				<div class="card bg-base-200">
 					<div class="card-body">
@@ -398,7 +419,9 @@ production:
 			</section>
 
 			<section>
-				<h2 class="text-3xl font-bold mb-6">Best Practices</h2>
+				<ClickableHeadline level={2} id="best-practices" className="text-3xl font-bold mb-6"
+					>Best Practices</ClickableHeadline
+				>
 
 				<div class="grid md:grid-cols-2 gap-6">
 					<div class="card bg-base-200">
@@ -452,7 +475,9 @@ production:
 			</section>
 
 			<section>
-				<h2 class="text-3xl font-bold mb-6">Next Steps</h2>
+				<ClickableHeadline level={2} id="next-steps" className="text-3xl font-bold mb-6"
+					>Next Steps</ClickableHeadline
+				>
 
 				<div class="grid md:grid-cols-2 gap-6">
 					<div class="card bg-base-200">
