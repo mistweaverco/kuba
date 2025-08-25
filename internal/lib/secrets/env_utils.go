@@ -7,6 +7,7 @@ import (
 
 // sanitizeEnvVarName sanitizes a string to be a valid POSIX environment variable name
 // POSIX rules: must begin with a letter or underscore, and contain only letters, numbers, or underscores
+// Also make sure it's all uppercase for convention
 func sanitizeEnvVarName(name string) string {
 	if name == "" {
 		return "_"
@@ -29,7 +30,8 @@ func sanitizeEnvVarName(name string) string {
 		return "_"
 	}
 
-	return sanitized
+	// Convert to uppercase for convention
+	return strings.ToUpper(sanitized)
 }
 
 // extractSecretNameFromPath extracts the secret name from a full secret path

@@ -64,13 +64,14 @@ To be clear, there are many other tools that can help you manage secrets:
 
 - [Doppler](https://www.doppler.com/)
 - [Vault](https://www.vaultproject.io/)
-- [1Password Secrets Automation](https://www.1password.com/secrets-automation/)
+- [1Password Secrets Automation](https://developer.1password.com/docs/secrets-automation/)
 - [Infisical](https://infisical.com/)
 
 … and many more.
 
 > [!CAUTION]
 > Most of them require a whopping subscription fee,
+> or setting up and maintaining a separate service yourself,
 > which can be a barrier for small teams or individual developers.
 
 However, Kuba is designed to be straightforward and easy to use,
@@ -142,6 +143,11 @@ default:
     - environment-variable: "OPENBAO_SECRET"
       secret-key: "secret/openbao-secret"
       provider: openbao
+    - environment-variable: "DATABASE_CONFIG"
+      secret-path: "database"
+    - environment-variable: "API_KEYS"
+      secret-path: "external-apis"
+      provider: aws
     - environment-variable: "SOME_HARD_CODED_ENV"
       value: "hard-coded-value"
 
@@ -189,7 +195,15 @@ production:
 ```
 
 This `kuba.yaml` file defines the secrets for different environments
-and maps them to environment variables.
+and maps them to environment variables. The example includes:
+
+- **Individual secrets** using `secret-key`
+  (e.g., GCP_PROJECT_ID, AWS_PROJECT_ID)
+- **Secret paths** using `secret-path` to
+  fetch all secrets under a prefix (e.g., DATABASE_CONFIG, API_KEYS)
+- **Hard-coded values** using `value` for static configuration
+- **Cross-provider mappings** where different secrets come
+  from different cloud providers
 
 ### Confguration File Structure
 
@@ -207,13 +221,17 @@ AWS Secrets Manager, Azure Key Vault, and OpenBao.
 
 ### Environment Variable Interpolation
 
-Kuba supports environment variable interpolation in the `value` field using `${VAR_NAME}` syntax. This allows you to:
+Kuba supports environment variable interpolation
+in the `value` field using `${VAR_NAME}` syntax.
+
+This allows you to:
 
 - Reference previously defined environment variables from the same configuration
 - Use system environment variables
 - Build complex connection strings and URLs dynamically
 
 **Example with interpolation:**
+
 ```yaml
 default:
   provider: gcp
@@ -234,15 +252,111 @@ default:
 ```
 
 In this example:
+
 - `${DB_PASSWORD}` will be replaced with the value from the secret
 - `${DB_HOST}` will be replaced with the literal value "mydbhost"
 - `${DOMAIN}` will be replaced with the system environment variable if it exists
 - `${NODE_ENV:-development}` will use the `NODE_ENV` environment variable if set, otherwise default to "development"
 - `${REDIS_HOST:-localhost}` will use the `REDIS_HOST` environment variable if set, otherwise default to "localhost"
 
-**Note**: Interpolation is processed in order, so you can reference variables defined earlier in the same configuration. Unresolved variables will remain unchanged in the output.
+**Note**: Interpolation is processed in order,
+so you can reference variables defined earlier in the same configuration.
+Unresolved variables will remain unchanged in the output.
 
-**Shell-style default values**: You can use `${VAR_NAME:-default}` syntax to provide fallback values when environment variables are not set. This is particularly useful for providing sensible defaults while allowing overrides through environment variables.
+**Shell-style default values**: You can use `${VAR_NAME:-default}` syntax to
+provide fallback values when environment variables aren't set.
+
+This is particularly useful for providing sensible defaults
+while allowing overrides through environment variables.
+
+**Environment variable naming**:
+All environment variable names (including those from secrets) are
+automatically sanitized to be valid POSIX environment variable names.
+
+This means:
+
+- Names are converted to uppercase
+- Non-alphanumeric characters are replaced with underscores
+- Names that don't start with a letter or underscore get a leading underscore
+- This ensures compatibility across different operating systems and shells
+
+### Secret Path Mapping
+
+In addition to individual secret keys, Kuba supports **secret path mapping** using the `secret-path` field.
+This feature allows you to fetch all secrets that start with a given path prefix,
+which is particularly useful for:
+
+- **Bulk secret retrieval**: Fetch all secrets under a specific namespace or directory
+- **Organized secret management**: Group related secrets under common path prefixes
+- **Environment-specific configurations**: Load all secrets for a specific environment or service
+
+**How it works:**
+- When you specify a `secret-path`, Kuba will fetch all secrets that start with that path
+- Each secret found will be converted to an environment variable using the pattern: `{ENVIRONMENT_VARIABLE}_{SECRET_NAME}`
+- Secret names are automatically sanitized to be valid POSIX environment variable names (uppercase, underscores only)
+
+**Example with secret paths:**
+
+```yaml
+default:
+  provider: gcp
+  project: 1337
+  mappings:
+    - environment-variable: "DB"
+      secret-path: "database"
+    - environment-variable: "API"
+      secret-path: "external-apis"
+    - environment-variable: "SERVICE"
+      secret-path: "microservices"
+    - environment-variable: "HARD_CODED"
+      value: "static-value"
+```
+
+If your GCP Secret Manager contains secrets like:
+
+- `database-connection-string`
+- `database-username`
+- `database-password`
+- `external-apis-stripe-key`
+- `external-apis-sendgrid-key`
+- `microservices-auth-service-token`
+- `microservices-user-service-token`
+
+Kuba will create these environment variables:
+
+- `DB_CONNECTION_STRING` = value of `database-connection-string`
+- `DB_USERNAME` = value of `database-username`
+- `DB_PASSWORD` = value of `database-password`
+- `API_STRIPE_KEY` = value of `external-apis-stripe-key`
+- `API_SENDGRID_KEY` = value of `external-apis-sendgrid-key`
+- `SERVICE_AUTH_SERVICE_TOKEN` = value of `microservices-auth-service-token`
+- `SERVICE_USER_SERVICE_TOKEN` = value of `microservices-user-service-token`
+
+**Cross-provider secret paths:**
+You can also use secret paths with different providers:
+
+```yaml
+default:
+  provider: gcp
+  project: 1337
+  mappings:
+    - environment-variable: "GCP_SECRETS"
+      secret-path: "app-config"
+      provider: gcp
+    - environment-variable: "AWS_SECRETS"
+      secret-path: "app-config"
+      provider: aws
+    - environment-variable: "AZURE_SECRETS"
+      secret-path: "app-config"
+      provider: azure
+      project: "my-azure-project"
+```
+
+**Important notes:**
+- Secret paths work with all supported providers (GCP, AWS, Azure, OpenBao)
+- The resulting environment variable names are automatically sanitized and uppercased
+- You can mix `secret-key`, `secret-path`, and `value` mappings in the same configuration
+- Secret paths are processed after individual secret keys, so you can reference path-based variables in value interpolations
 
 ### Running with a specific environment
 
@@ -272,6 +386,7 @@ Kuba supports GCP Secret Manager for fetching secrets. To use GCP:
 3. **IAM Permissions**: Ensure your service account has the `Secret Manager Secret Accessor` role for the secrets you want to access.
 
 4. **Example Configuration**:
+
    ```yaml
    default:
      provider: gcp
@@ -307,6 +422,7 @@ Kuba supports AWS Secrets Manager for fetching secrets. To use AWS:
 2. **IAM Permissions**: Ensure your AWS credentials have the `secretsmanager:GetSecretValue` permission for the secrets you want to access.
 
 3. **Example Configuration**:
+
    ```yaml
    default:
      provider: aws
