@@ -7,7 +7,7 @@
 [![Made with love](assets/badge-made-with-love.svg)](https://github.com/mistweaverco/kuba/graphs/contributors)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/mistweaverco/kuba?style=for-the-badge)](https://github.com/mistweaverco/kuba/releases/latest)
 [![License](https://img.shields.io/github/license/mistweaverco/kuba?style=for-the-badge)](./LICENSE)
-[![GitHub issues](https://img.shields.io/github/issues/mistweaverco/kuba?style=for-the-badge)](https//:github.com/mistweaverco/kuba/issues)
+[![GitHub issues](https://img.shields.io/github/issues/mistweaverco/kuba?style=for-the-badge)](https://github.com/mistweaverco/kuba/issues)
 [![Discord](assets/badge-discord.svg)](https://mistweaverco.com/discord)
 
 [Why?](#why) • [Installation](#installation) • [Usage](#usage)
@@ -25,6 +25,27 @@ Azure Key Vault, and OpenBao to your application
 <p></p>
 
 </div>
+
+## Table of Contents
+
+- [Why?](#why)
+  - [Advantages over other services](#advantages-over-other-services)
+- [Installation](#installation)
+  - [Manual Installation](#manual-installation)
+  - [Automatic Linux and macOS Installation](#automatic-linux-and-macos-installation)
+  - [Automatic Windows Installation](#automatic-windows-installation)
+- [Usage](#usage)
+  - [Configuration File Structure](#configuration-file-structure)
+  - [Environment Variable Interpolation](#environment-variable-interpolation)
+  - [Secret Path Mapping](#secret-path-mapping)
+  - [Running with a specific environment](#running-with-a-specific-environment)
+- [Cloud Provider Setup](#cloud-provider-setup)
+  - [Google Cloud Platform (GCP)](#google-cloud-platform-gcp)
+  - [AWS Secrets Manager](#aws-secrets-manager)
+  - [Azure Key Vault](#azure-key-vault)
+  - [OpenBao](#openbao)
+
+---
 
 ## Why?
 
