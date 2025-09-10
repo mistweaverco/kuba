@@ -92,14 +92,15 @@ download_binary() {
     local platform="$2"
     local download_url="https://github.com/${REPO}/releases/download/${version}/kuba-${platform}"
 
-    if [ "$platform" = *"windows"* ]; then
+    if [[ "$platform" = *"windows"* ]]; then
         download_url="${download_url}.exe"
     fi
 
     print_status "Downloading ${BINARY_NAME} ${version} for ${platform}..."
 
     # Create temporary directory
-    local temp_dir=$(mktemp -d)
+    local temp_dir
+    temp_dir=$(mktemp -d)
     local binary_path="${temp_dir}/${BINARY_NAME}"
 
     # Download binary using available downloader
@@ -179,7 +180,8 @@ install_binary() {
 
     # Create backup if binary already exists
     if [ -f "$install_path" ]; then
-        local backup_path="${install_path}.backup.$(date +%Y%m%d_%H%M%S)"
+        local backup_path
+        backup_path="${install_path}.backup.$(date +%Y%m%d_%H%M%S)"
         print_warning "Backing up existing binary to ${backup_path}"
         cp "$install_path" "$backup_path"
     fi
@@ -190,7 +192,8 @@ install_binary() {
 
         # Add to PATH if installing to user directory
         if [[ "$install_path" == *"/.local/bin"* ]]; then
-            local shell_rc=$(detect_shell_rc)
+            local shell_rc
+            shell_rc=$(detect_shell_rc)
             local current_shell
 
             # Determine current shell for comparison
@@ -207,9 +210,11 @@ install_binary() {
             # Check if PATH already includes the user bin directory
             if ! grep -q "\.local/bin" "$shell_rc" 2>/dev/null; then
                 print_status "Adding ${HOME}/.local/bin to PATH in ${shell_rc}"
-                echo "" >> "$shell_rc"
-                echo "# Add local bin directory to PATH" >> "$shell_rc"
-                echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$shell_rc"
+                {
+                  echo ""
+                  echo "# Add local bin directory to PATH"
+                  echo "export PATH=$HOME/.local/bin:$PATH"
+                } >> "$shell_rc"
                 print_warning "Please restart your shell or run 'source ${shell_rc}' to update PATH"
             else
                 print_status "PATH already configured in ${shell_rc}"
@@ -219,11 +224,11 @@ install_binary() {
             if [ "$current_shell" != "unknown" ] && [ -n "$ZSH_VERSION" ] && [ "$shell_rc" != "${HOME}/.zshrc" ]; then
                 print_warning "You're running zsh but the script detected a different shell"
                 print_warning "You may also want to add this to your ~/.zshrc:"
-                echo 'export PATH="$HOME/.local/bin:$PATH"' | sed 's/^/  /'
+                echo "export PATH=$HOME/.local/bin:$PATH" | sed 's/^/  /'
             elif [ "$current_shell" != "unknown" ] && [ -n "$BASH_VERSION" ] && [ "$shell_rc" != "${HOME}/.bashrc" ]; then
                 print_warning "You're running bash but the script detected a different shell"
                 print_warning "You may also want to add this to your ~/.bashrc:"
-                echo 'export PATH="$HOME/.local/bin:$PATH"' | sed 's/^/  /'
+                echo "export PATH=$HOME/.local/bin:$PATH" | sed 's/^/  /'
             fi
         fi
     else
@@ -250,18 +255,22 @@ main() {
     print_status "Installing ${BINARY_NAME}..."
 
     # Detect platform
-    local platform=$(detect_platform)
+    local platform
+    platform=$(detect_platform)
     print_status "Detected platform: ${platform}"
 
     # Get latest version
-    local version=$(get_latest_version)
+    local version
+    version=$(get_latest_version)
     print_status "Latest version: ${version}"
 
     # Download binary
-    local temp_binary=$(download_binary "$version" "$platform")
+    local temp_binary
+    temp_binary=$(download_binary "$version" "$platform")
 
     # Determine install location
-    local install_path=$(get_install_location)
+    local install_path
+    install_path=$(get_install_location)
 
     # Install binary
     install_binary "$temp_binary" "$install_path"
@@ -276,7 +285,8 @@ main() {
 
     # Provide additional guidance for user installations
     if [[ "$install_path" == *"/.local/bin"* ]]; then
-        local shell_rc=$(detect_shell_rc)
+        local shell_rc
+        shell_rc=$(detect_shell_rc)
         print_status "Installation completed! To use ${BINARY_NAME} from any location:"
         print_status "1. Restart your terminal, OR"
         print_status "2. Run: source $shell_rc"
@@ -285,11 +295,11 @@ main() {
         if [ -n "$ZSH_VERSION" ] && [ "$shell_rc" != "${HOME}/.zshrc" ]; then
             print_warning "Note: You're running zsh but the script updated $shell_rc"
             print_warning "You may also want to add this to your ~/.zshrc:"
-            echo 'export PATH="$HOME/.local/bin:$PATH"' | sed 's/^/  /'
+            echo "export PATH=$HOME/.local/bin:$PATH" | sed 's/^/  /'
         elif [ -n "$BASH_VERSION" ] && [ "$shell_rc" != "${HOME}/.bashrc" ]; then
             print_warning "Note: You're running bash but the script updated $shell_rc"
             print_warning "You may also want to add this to your ~/.bashrc:"
-            echo 'export PATH="$HOME/.local/bin:$PATH"' | sed 's/^/  /'
+            echo "export PATH=$HOME/.local/bin:$PATH" | sed 's/^/  /'
         fi
     fi
 }
