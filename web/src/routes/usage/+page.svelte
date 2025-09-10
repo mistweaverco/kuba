@@ -118,6 +118,35 @@
 			</section>
 
 			<section>
+				<ClickableHeadline level={2} id="testing-configuration" className="text-3xl font-bold mb-6"
+					>Testing Configuration</ClickableHeadline
+				>
+
+				<div class="card bg-base-200 mb-6">
+					<div class="card-body">
+						<h3 class="card-title">Validate Access and Mappings</h3>
+						<p class="mb-4">
+							Use the <code>test</code> subcommand to verify that Kuba can load your configuration and
+							retrieve all mapped values for an environment without executing a program.
+						</p>
+						<pre><code
+								class="language-bash"
+								data-toolbar-order="copy-to-clipboard"
+								data-prismjs-copy="📋"
+								># Use default environment
+kuba test
+
+# Specify an environment
+kuba test --env staging
+
+# Point to a specific configuration file
+kuba test --config ./config/kuba.yaml --env production</code
+							></pre>
+					</div>
+				</div>
+			</section>
+
+			<section>
 				<ClickableHeadline
 					level={2}
 					id="environment-specific-usage"

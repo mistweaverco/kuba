@@ -39,6 +39,7 @@ Azure Key Vault, and OpenBao to your application
   - [Environment Variable Interpolation](#environment-variable-interpolation)
   - [Secret Path Mapping](#secret-path-mapping)
   - [Running with a specific environment](#running-with-a-specific-environment)
+  - [Testing configuration and access](#testing-configuration-and-access)
 - [Cloud Provider Setup](#cloud-provider-setup)
   - [Google Cloud Platform (GCP)](#google-cloud-platform-gcp)
   - [AWS Secrets Manager](#aws-secrets-manager)
@@ -169,6 +170,9 @@ kuba init
 # Run a command with secrets
 kuba run -- <command>
 
+# Test secret retrieval without running a command
+kuba test --env <environment>
+
 # Show version information
 kuba version
 
@@ -182,6 +186,10 @@ kuba --help
 - `--help, -h`: Show help information
 
 **Run Command Flags:**
+- `--env, -e`: Specify environment (default: "default")
+- `--config, -c`: Path to configuration file
+
+**Test Command Flags:**
 - `--env, -e`: Specify environment (default: "default")
 - `--config, -c`: Path to configuration file
 
@@ -438,6 +446,25 @@ You can also specify the environment you want to use:
 ```sh
 kuba run --env development -- node dist/server.js
 ```
+
+### Testing configuration and access
+
+Use the `test` subcommand to verify that Kuba can load your configuration and
+retrieve all mapped values for an environment without executing any program:
+
+```sh
+# Use default environment
+kuba test
+
+# Specify an environment
+kuba test --env staging
+
+# Point to a specific configuration file
+kuba test --config ./config/kuba.yaml --env production
+```
+
+This is useful for validating credentials, permissions, and
+configuration mappings during setup or CI.
 
 ## Cloud Provider Setup
 
