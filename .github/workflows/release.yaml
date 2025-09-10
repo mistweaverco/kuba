@@ -48,22 +48,62 @@ jobs:
           go-version: 1.24
       - name: Build for macOS
         run: ./scripts/build.sh
-      - name: Setting up Apple certificate
+      - name: Install the Apple certificate, provisioning profile, and API key
+        id: keychain
+        env:
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.APPLE_BUILD_CERTIFICATE_BASE64 }}
+          P12_PASSWORD: ${{ secrets.APPLE_P12_PASSWORD }}
+          BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.APPLE_BUILD_PROVISION_PROFILE_BASE64 }}
+          AUTH_KEY_BASE64: ${{ secrets.APPLE_AUTH_KEY_BASE64 }}
+        run: ./scripts/ci-import-apple-certs.sh
+      - name: Sign the amd64 binary
+        env:
+          CODESIGN_IDENTITY: ${{ secrets.APPLE_CODESIGN_IDENTITY }}
+          CODESIGN_PREFIX: ${{ secrets.APPLE_CODESIGN_PREFIX }}
         run: |
-          echo "${{ secrets.APPLE_CERTIFICATE_BASE64 }}" > apple-cert.p12.base64
-          base64 -d apple-cert.p12.base64 > apple-cert.p12
-      - name: Sign a amd64 macOS binary
-        uses: indygreg/apple-code-sign-action@v1
-        with:
-          input_path: dist/kuba-darwin-amd64
-          p12_file: apple-cert.p12
-          p12_password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-      - name: Sign a arm64 macOS binary
-        uses: indygreg/apple-code-sign-action@v1
-        with:
-          input_path: dist/kuba-darwin-arm64
-          p12_file: apple-cert.p12
-          p12_password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          export CODESIGN_IDENTITY=$(base64 --decode <<< "$CODESIGN_IDENTITY")
+          export CODESIGN_PREFIX=$(base64 --decode <<< "$CODESIGN_PREFIX")
+          codesign --sign "$CODESIGN_IDENTITY" \
+            --prefix "$CODESIGN_PREFIX" \
+            --options runtime dist/kuba-darwin-amd64
+      - name: Sign the arm64 binary
+        env:
+          CODESIGN_IDENTITY: ${{ secrets.APPLE_CODESIGN_IDENTITY }}
+          CODESIGN_PREFIX: ${{ secrets.APPLE_CODESIGN_PREFIX }}
+        run: |
+          export CODESIGN_IDENTITY=$(base64 --decode <<< "$CODESIGN_IDENTITY")
+          export CODESIGN_PREFIX=$(base64 --decode <<< "$CODESIGN_PREFIX")
+          codesign --sign "$CODESIGN_IDENTITY" \
+            --prefix "$CODESIGN_PREFIX" \
+            --options runtime dist/kuba-darwin-arm64
+      - name: Zip the amd64 binary for notarization
+        run: zip -r dist/kuba-darwin-amd64.zip dist/kuba-darwin-amd64
+      - name: Zip the arm64 binary for notarization
+        run: zip -r dist/kuba-darwin-arm64.zip dist/kuba-darwin-arm64
+      - name: Upload the amd64 binary for notarization
+        env:
+          KEY_ID: ${{ secrets.APPLE_KEY_ID }}
+          ISSUER: ${{ secrets.APPLE_ISSUER }}
+        run: |
+          export KEY_ID=$(base64 --decode <<< "$KEY_ID")
+          export ISSUER=$(base64 --decode <<< "$ISSUER")
+          xcrun notarytool submit dist/kuba-darwin-amd64.zip \
+            --key "${{ steps.keychain.outputs.auth_key_path }}" \
+            --key-id "$KEY_ID" \
+            --issuer "$ISSUER" \
+            --wait
+      - name: Upload the arm64 binary for notarization
+        env:
+          KEY_ID: ${{ secrets.APPLE_KEY_ID }}
+          ISSUER: ${{ secrets.APPLE_ISSUER }}
+        run: |
+          export KEY_ID=$(base64 --decode <<< "$KEY_ID")
+          export ISSUER=$(base64 --decode <<< "$ISSUER")
+          xcrun notarytool submit dist/kuba-darwin-arm64.zip \
+            --key "${{ steps.keychain.outputs.auth_key_path }}" \
+            --key-id "$KEY_ID" \
+            --issuer "$ISSUER" \
+            --wait
       - name: Release for macOS
         run: ./scripts/release.sh
         env:
