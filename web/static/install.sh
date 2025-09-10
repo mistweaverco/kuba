@@ -96,8 +96,6 @@ download_binary() {
         download_url="${download_url}.exe"
     fi
 
-    print_status "Downloading ${BINARY_NAME} ${version} for ${platform}..."
-
     # Create temporary directory
     local temp_dir
     temp_dir=$(mktemp -d)
@@ -264,6 +262,7 @@ main() {
     version=$(get_latest_version)
     print_status "Latest version: ${version}"
 
+    print_status "Downloading ${BINARY_NAME} ${version} for ${platform}..."
     # Download binary
     local temp_binary
     temp_binary=$(download_binary "$version" "$platform")
