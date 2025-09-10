@@ -58,23 +58,23 @@ jobs:
         run: ./scripts/ci-import-apple-certs.sh
       - name: Sign the amd64 binary
         env:
-          CODESIGN_IDENTITY: ${{ secrets.APPLE_CODESIGN_IDENTITY }}
-          CODESIGN_PREFIX: ${{ secrets.APPLE_CODESIGN_PREFIX }}
+          CODESIGNING_IDENTITY: ${{ secrets.APPLE_CODESIGNING_IDENTITY }}
+          CODESIGNING_PREFIX: ${{ secrets.APPLE_CODESIGNING_PREFIX }}
         run: |
-          export CODESIGN_IDENTITY=$(base64 --decode <<< "$CODESIGN_IDENTITY")
-          export CODESIGN_PREFIX=$(base64 --decode <<< "$CODESIGN_PREFIX")
-          codesign --sign "$CODESIGN_IDENTITY" \
-            --prefix "$CODESIGN_PREFIX" \
+          export CODESIGNING_IDENTITY=$(base64 --decode <<< "$CODESIGNING_IDENTITY")
+          export CODESIGNING_PREFIX=$(base64 --decode <<< "$CODESIGNING_PREFIX")
+          codesign --sign "$CODESIGNING_IDENTITY" \
+            --prefix "$CODESIGNING_PREFIX" \
             --options runtime dist/kuba-darwin-amd64
       - name: Sign the arm64 binary
         env:
-          CODESIGN_IDENTITY: ${{ secrets.APPLE_CODESIGN_IDENTITY }}
-          CODESIGN_PREFIX: ${{ secrets.APPLE_CODESIGN_PREFIX }}
+          CODESIGNING_IDENTITY: ${{ secrets.APPLE_CODESIGNING_IDENTITY }}
+          CODESIGNING_PREFIX: ${{ secrets.APPLE_CODESIGNING_PREFIX }}
         run: |
-          export CODESIGN_IDENTITY=$(base64 --decode <<< "$CODESIGN_IDENTITY")
-          export CODESIGN_PREFIX=$(base64 --decode <<< "$CODESIGN_PREFIX")
-          codesign --sign "$CODESIGN_IDENTITY" \
-            --prefix "$CODESIGN_PREFIX" \
+          export CODESIGNING_IDENTITY=$(base64 --decode <<< "$CODESIGNING_IDENTITY")
+          export CODESIGNING_PREFIX=$(base64 --decode <<< "$CODESIGNING_PREFIX")
+          codesign --sign "$CODESIGNING_IDENTITY" \
+            --prefix "$CODESIGNING_PREFIX" \
             --options runtime dist/kuba-darwin-arm64
       - name: Zip the amd64 binary for notarization
         run: zip -r dist/kuba-darwin-amd64.zip dist/kuba-darwin-amd64

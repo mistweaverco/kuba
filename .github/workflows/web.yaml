@@ -3,6 +3,10 @@ name: Deploy Website
 
 on:
   push:
+    paths:
+      - '.github/workflows/web.yaml'
+      - 'web/**'
+      - 'kuba.schema.json'
     branches:
       - main
 

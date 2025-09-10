@@ -17,6 +17,7 @@ PP_PATH=$RUNNER_TEMP/build_pp.provisionprofile
 KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
 AUTH_KEY_PATH=$RUNNER_TEMP/AuthKey.p8
 KEYCHAIN_PASSWORD=$(date +%s | sha256sum | base64 | head -c 32)
+P12_PASSWORD=$(echo -n "$P12_PASSWORD" | base64 --decode)
 
 # import certificate and provisioning profile from secrets
 echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o "$CERTIFICATE_PATH"
