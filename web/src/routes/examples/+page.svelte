@@ -345,10 +345,10 @@ kuba run --env production -- docker run \
   myapp
 
 # Use --contain to avoid inheriting host environment
-docker run --env-file &lt;(kuba run --env production --contain -- env) myapp
+docker run --env-file=&lt;(kuba run --env production --contain -- env) myapp
 
 # or pass full host environment including Kuba-managed vars
-docker run --env-file &lt;( kuba run --env production -- env) myapp
+docker run --env-file=&lt;(kuba run --env production -- env) myapp
 							</code></pre>
 
 							<ClickableHeadline level={4} id="dockerfile" className="font-bold mt-4 mb-2 text-left"

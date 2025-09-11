@@ -210,7 +210,7 @@ The `--contain` flag prevents the merging of the current OS environment with the
 kuba run --contain -- node dist/server.js
 
 # Useful for Docker containers to avoid inheriting host environment
-docker run --env-file <( kuba run --contain -- env) your-container
+docker run --env-file=<(kuba run --contain -- env) your-container
 ```
 
 and your `kuba.yaml` would look something like this:
