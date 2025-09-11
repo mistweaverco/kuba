@@ -52,12 +52,17 @@
 
 		<div class="space-y-12">
 			<section>
-				<h2 class="text-3xl font-bold mb-6">Web Application Examples</h2>
-
+				<ClickableHeadline
+					level={2}
+					id="web-application-examples"
+					className="text-3xl font-bold mb-6">Web Application Examples</ClickableHeadline
+				>
 				<div class="space-y-6">
 					<div class="card bg-base-200">
 						<div class="card-body">
-							<h3 class="card-title">Node.js Express Application</h3>
+							<ClickableHeadline level={3} id="nodejs-express-application" className="card-title"
+								>Node.js Express Application</ClickableHeadline
+							>
 							<p class="mb-4">
 								Run a Node.js Express application with database credentials and API keys:
 							</p>
@@ -67,14 +72,19 @@
 									data-prismjs-copy="📋">kuba run --env production -- node app.js</code
 								></pre>
 
-							<h4 class="font-bold mt-4 mb-2">Configuration (kuba.yaml):</h4>
+							<ClickableHeadline
+								level={4}
+								id="nodejs-kuba-configuration"
+								className="font-bold mt-4 mb-2 text-left"
+								>Configuration (kuba.yaml):</ClickableHeadline
+							>
 							<pre><code
 									class="language-yaml"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
 									>production:
   provider: gcp
-  project: my-project
+  project: 1337
   mappings:
     - environment-variable: "DATABASE_URL"
       secret-key: "prod-database-url"
@@ -86,7 +96,11 @@
       value: "redis://$&lbrace;REDIS_HOST:-localhost&rbrace;:6379"</code
 								></pre>
 
-							<h4 class="font-bold mt-4 mb-2">Application Code:</h4>
+							<ClickableHeadline
+								level={4}
+								id="nodejs-application-code"
+								className="font-bold mt-4 mb-2 text-left">Application Code:</ClickableHeadline
+							>
 							<pre><code
 									class="language-javascript"
 									data-toolbar-order="copy-to-clipboard"
@@ -122,7 +136,12 @@ app.listen(3000, () => &lbrace;
 									data-prismjs-copy="📋">kuba run --env development -- python app.py</code
 								></pre>
 
-							<h4 class="font-bold mt-4 mb-2">Configuration (kuba.yaml):</h4>
+							<ClickableHeadline
+								level={4}
+								id="python-kuba-configuration"
+								className="font-bold mt-4 mb-2 text-left"
+								>Configuration (kuba.yaml):</ClickableHeadline
+							>
 							<pre><code
 									class="language-yaml"
 									data-toolbar-order="copy-to-clipboard"
@@ -140,7 +159,11 @@ app.listen(3000, () => &lbrace;
       value: "true"</code
 								></pre>
 
-							<h4 class="font-bold mt-4 mb-2">Application Code:</h4>
+							<ClickableHeadline
+								level={4}
+								id="python-application-code"
+								className="font-bold mt-4 mb-2 text-left">Application Code:</ClickableHeadline
+							>
 							<pre><code
 									class="language-python"
 									data-toolbar-order="copy-to-clipboard"
@@ -167,12 +190,18 @@ if __name__ == '__main__':
 			</section>
 
 			<section>
-				<h2 class="text-3xl font-bold mb-6">Database & API Examples</h2>
+				<ClickableHeadline
+					level={2}
+					id="database-and-api-examples"
+					className="text-3xl font-bold mb-6">Database Migrations</ClickableHeadline
+				>
 
 				<div class="space-y-6">
 					<div class="card bg-base-200">
 						<div class="card-body">
-							<h3 class="card-title">Database Migrations</h3>
+							<ClickableHeadline level={3} id="database-migrations" className="card-title"
+								>Database Migrations</ClickableHeadline
+							>
 							<p class="mb-4">Run database migrations with production credentials:</p>
 							<pre><code
 									class="language-bash"
@@ -185,14 +214,19 @@ kuba run --env production -- npm run migrate
 kuba run --env development -- npm run seed</code
 								></pre>
 
-							<h4 class="font-bold mt-4 mb-2">Configuration:</h4>
+							<ClickableHeadline
+								level={4}
+								id="database-migrations-kuba-configuraton"
+								className="font-bold mt-4 mb-2 text-left"
+								>Configuration (kuba.yaml):</ClickableHeadline
+							>
 							<pre><code
 									class="language-yaml"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
 									>production:
   provider: gcp
-  project: my-project
+  project: 1337
   mappings:
     - environment-variable: "DATABASE_URL"
       secret-key: "prod-postgres-url"
@@ -212,7 +246,9 @@ development:
 
 					<div class="card bg-base-200">
 						<div class="card-body">
-							<h3 class="card-title">External API Integration</h3>
+							<ClickableHeadline level={3} id="external-api-integration" className="card-title"
+								>External API Integration</ClickableHeadline
+							>
 							<p class="mb-4">Connect to external APIs with secure keys:</p>
 							<pre><code
 									class="language-bash"
@@ -220,7 +256,12 @@ development:
 									data-prismjs-copy="📋">kuba run --env staging -- python api_client.py</code
 								></pre>
 
-							<h4 class="font-bold mt-4 mb-2">Configuration:</h4>
+							<ClickableHeadline
+								level={4}
+								id="external-api-integration-kuba-configuration"
+								className="font-bold mt-4 mb-2 text-left"
+								>Configuration (kuba.yaml):</ClickableHeadline
+							>
 							<pre><code
 									class="language-yaml"
 									data-toolbar-order="copy-to-clipboard"
@@ -238,7 +279,11 @@ development:
       secret-key: "twilio-auth-token"</code
 								></pre>
 
-							<h4 class="font-bold mt-4 mb-2">API Client Code:</h4>
+							<ClickableHeadline
+								level={4}
+								id="external-api-integration-api-client-code"
+								className="font-bold mt-4 mb-2 text-left">API Client Code:</ClickableHeadline
+							>
 							<pre><code
 									class="language-python"
 									data-toolbar-order="copy-to-clipboard"
@@ -268,12 +313,18 @@ print("Twilio credentials configured:", bool(os.environ.get('TWILIO_ACCOUNT_SID'
 			</section>
 
 			<section>
-				<h2 class="text-3xl font-bold mb-6">Docker & Container Examples</h2>
+				<ClickableHeadline
+					level={2}
+					id="docker-and-container-examples"
+					className="text-3xl font-bold mb-6">Docker &amp; Container Examples</ClickableHeadline
+				>
 
 				<div class="space-y-6">
 					<div class="card bg-base-200">
 						<div class="card-body">
-							<h3 class="card-title">Docker Container with Secrets</h3>
+							<ClickableHeadline level={3} id="docker-container-with-secrets" className="card-title"
+								>Docker Container with Secrets</ClickableHeadline
+							>
 							<p class="mb-4">Run Docker containers with environment variables from Kuba:</p>
 							<pre><code
 									class="language-bash"
@@ -291,10 +342,18 @@ kuba run --env production -- docker run \
   -e API_KEY \
   -e REDIS_URL \
   -p 3000:3000 \
-  myapp</code
-								></pre>
+  myapp
 
-							<h4 class="font-bold mt-4 mb-2">Dockerfile:</h4>
+# Use --contain to avoid inheriting host environment
+docker run --env-file &lt;( kuba run --env production --contain -- env | cut -f1 -d= ) myapp
+
+# or pass full host environment including Kuba-managed vars
+docker run --env-file &lt;( kuba run --env production -- env | cut -f1 -d= ) myapp
+							</code></pre>
+
+							<ClickableHeadline level={4} id="dockerfile" className="font-bold mt-4 mb-2 text-left"
+								>Dockerfile:</ClickableHeadline
+							>
 							<pre><code
 									class="language-dockerfile"
 									data-toolbar-order="copy-to-clipboard"
@@ -325,7 +384,9 @@ CMD ["npm", "start"]</code
 
 					<div class="card bg-base-200">
 						<div class="card-body">
-							<h3 class="card-title">Docker Compose Integration</h3>
+							<ClickableHeadline level={3} id="docker-compose-integration" className="card-title"
+								>Docker Compose Integration</ClickableHeadline
+							>
 							<p class="mb-4">Use Kuba with Docker Compose for multi-service applications:</p>
 							<pre><code
 									class="language-bash"
@@ -338,7 +399,11 @@ kuba run --env production -- docker-compose up -d
 kuba run --env development -- docker-compose up web</code
 								></pre>
 
-							<h4 class="font-bold mt-4 mb-2">docker-compose.yml:</h4>
+							<ClickableHeadline
+								level={4}
+								id="docker-compose-yaml"
+								className="font-bold mt-4 mb-2 text-left">docker-compose.yml:</ClickableHeadline
+							>
 							<pre><code
 									class="language-yaml"
 									data-toolbar-order="copy-to-clipboard"
@@ -380,12 +445,18 @@ volumes:
 			</section>
 
 			<section>
-				<h2 class="text-3xl font-bold mb-6">CI/CD Pipeline Examples</h2>
+				<ClickableHeadline
+					level={2}
+					id="ci-cd-pipeline-examples"
+					className="text-3xl font-bold mb-6">CI/CD Pipeline Examples</ClickableHeadline
+				>
 
 				<div class="space-y-6">
 					<div class="card bg-base-200">
 						<div class="card-body">
-							<h3 class="card-title">GitHub Actions</h3>
+							<ClickableHeadline level={3} id="github-actions" className="card-title"
+								>GitHub Actions</ClickableHeadline
+							>
 							<p class="mb-4">Integrate Kuba into GitHub Actions workflows:</p>
 							<pre><code
 									class="language-yaml"
@@ -402,23 +473,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
           go-version: '1.21'
-      
+
       - name: Install Kuba
         run: |
           curl -sSL https://kuba.mwco.app/install.sh | bash
-      
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: $&lbrace;&lbrace; secrets.AWS_ACCESS_KEY_ID &rbrace;&rbrace;
           aws-secret-access-key: $&lbrace;&lbrace; secrets.AWS_SECRET_ACCESS_KEY &rbrace;&rbrace;
           aws-region: us-east-1
-      
+
       - name: Build and deploy
         run: |
           kuba run --env production -- npm run build
@@ -429,7 +500,9 @@ jobs:
 
 					<div class="card bg-base-200">
 						<div class="card-body">
-							<h3 class="card-title">GitLab CI</h3>
+							<ClickableHeadline level={3} id="gitlab-ci" className="card-title"
+								>GitLab CI</ClickableHeadline
+							>
 							<p class="mb-4">Use Kuba in GitLab CI/CD pipelines:</p>
 							<pre><code
 									class="language-yaml"
@@ -468,12 +541,18 @@ deploy:
 			</section>
 
 			<section>
-				<h2 class="text-3xl font-bold mb-6">Development Workflow Examples</h2>
+				<ClickableHeadline
+					level={3}
+					id="development-workflow-examples"
+					className="text-3xl font-bold mb-6">Development Workflow Examples</ClickableHeadline
+				>
 
 				<div class="space-y-6">
 					<div class="card bg-base-200">
 						<div class="card-body">
-							<h3 class="card-title">Local Development</h3>
+							<ClickableHeadline level={3} id="local-development" className="card-title"
+								>Local Development</ClickableHeadline
+							>
 							<p class="mb-4">
 								Use Kuba for local development without managing <code>.env</code> files:
 							</p>
@@ -494,14 +573,19 @@ kuba run --env development -- npm run migrate
 kuba run --env development -- npm run start:services</code
 								></pre>
 
-							<h4 class="font-bold mt-4 mb-2">Development Configuration:</h4>
+							<ClickableHeadline
+								level={4}
+								id="local-development-kuba-configuration"
+								className="font-bold mt-4 mb-2 text-left"
+								>Configuration (kuba.yaml):</ClickableHeadline
+							>
 							<pre><code
 									class="language-yaml"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
 									>development:
   provider: gcp
-  project: my-dev-project
+  project: 1337
   mappings:
     - environment-variable: "DATABASE_URL"
       secret-key: "dev-database-url"
@@ -514,7 +598,7 @@ kuba run --env development -- npm run start:services</code
 
 testing:
   provider: gcp
-  project: my-dev-project
+  project: 1337
   mappings:
     - environment-variable: "DATABASE_URL"
       secret-key: "test-database-url"
@@ -528,16 +612,18 @@ testing:
 
 					<div class="card bg-base-200">
 						<div class="card-body">
-							<h3 class="card-title">Team Collaboration</h3>
+							<ClickableHeadline level={3} id="team-collaboration" className="card-title"
+								>Team Collaboration</ClickableHeadline
+							>
 							<p class="mb-4">Share configuration templates with your team:</p>
 							<pre><code
 									class="language-yaml"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
-									># kuba.yaml.template (commit this to version control)
+									># kuba.yaml (commit this to version control)
 default:
   provider: gcp
-  project: YOUR_PROJECT_ID
+  project: 1337
   mappings:
     - environment-variable: "DATABASE_URL"
       secret-key: "database-url"
@@ -548,7 +634,7 @@ default:
 
 development:
   provider: gcp
-  project: YOUR_PROJECT_ID
+  project: 1337
   mappings:
     - environment-variable: "DATABASE_URL"
       secret-key: "dev-database-url"
@@ -560,8 +646,6 @@ development:
 								<strong>Instructions for team members:</strong>
 							</p>
 							<ol class="list-decimal list-inside space-y-2">
-								<li>Copy <code>kuba.yaml.template</code> to <code>kuba.yaml</code></li>
-								<li>Replace <code>YOUR_PROJECT_ID</code> with your actual project ID</li>
 								<li>Set up authentication for your cloud provider</li>
 								<li>Create the necessary secrets in your cloud provider</li>
 								<li>Run <code>kuba run --env development -- npm run dev</code></li>
@@ -572,12 +656,18 @@ development:
 			</section>
 
 			<section>
-				<h2 class="text-3xl font-bold mb-6">Advanced Configuration Examples</h2>
+				<ClickableHeadline level={2} id="advanced-configuration" className="text-3xl font-bold mb-6"
+					>Advanced Configuration</ClickableHeadline
+				>
 
 				<div class="space-y-6">
 					<div class="card bg-base-200">
 						<div class="card-body">
-							<h3 class="card-title">Multi-Environment with Secret Paths</h3>
+							<ClickableHeadline
+								level={3}
+								id="multi-environment-with-secret-paths"
+								className="card-title">Multi-Environment with Secret Paths</ClickableHeadline
+							>
 							<p class="mb-4">Use secret paths to bulk-load related secrets:</p>
 							<pre><code
 									class="language-yaml"
@@ -585,7 +675,7 @@ development:
 									data-prismjs-copy="📋"
 									>production:
   provider: gcp
-  project: my-project
+  project: 1337
   mappings:
     # Individual secrets
     - environment-variable: "APP_ENV"
@@ -621,7 +711,9 @@ development:
 
 					<div class="card bg-base-200">
 						<div class="card-body">
-							<h3 class="card-title">Cross-Provider Configuration</h3>
+							<ClickableHeadline level={3} id="cross-provider-configuration" className="card-title"
+								>Cross-Provider Configuration</ClickableHeadline
+							>
 							<p class="mb-4">Use different cloud providers for different types of secrets:</p>
 							<pre><code
 									class="language-yaml"
@@ -629,7 +721,7 @@ development:
 									data-prismjs-copy="📋"
 									>production:
   provider: gcp
-  project: my-gcp-project
+  project: 1337
   mappings:
     # GCP secrets
     - environment-variable: "GCP_PROJECT_ID"
