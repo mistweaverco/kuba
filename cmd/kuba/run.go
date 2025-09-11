@@ -15,6 +15,7 @@ import (
 var (
 	environment string
 	configFile  string
+	contain     bool
 )
 
 var runCmd = &cobra.Command{
@@ -28,10 +29,14 @@ This command will:
 3. Set the secrets as environment variables
 4. Execute the provided command with those environment variables
 
+By default, secrets are merged with the current OS environment. Use --contain to only use
+environment variables from kuba.yaml.
+
 Example:
   kuba run -- node server.js
   kuba run --env production -- python app.py
-  kuba run --config ./config/kuba.yaml -- docker-compose up`,
+  kuba run --config ./config/kuba.yaml -- docker-compose up
+  kuba run --contain -- node server.js`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runCommand(args)
@@ -41,6 +46,7 @@ Example:
 func init() {
 	runCmd.Flags().StringVarP(&environment, "env", "e", "default", "Environment to use (default: default)")
 	runCmd.Flags().StringVarP(&configFile, "config", "c", "", "Path to kuba.yaml configuration file")
+	runCmd.Flags().BoolVar(&contain, "contain", false, "Only use environment variables from kuba.yaml, do not merge with OS environment")
 	rootCmd.AddCommand(runCmd)
 }
 
@@ -101,7 +107,14 @@ func runCommand(args []string) error {
 	cmd.Stderr = os.Stderr
 
 	// Set environment variables
-	cmd.Env = os.Environ()
+	if contain {
+		// Only use secrets from kuba.yaml, do not merge with OS environment
+		cmd.Env = make([]string, 0, len(secrets))
+	} else {
+		// Default behavior: merge OS environment with secrets
+		cmd.Env = os.Environ()
+	}
+
 	for key, value := range secrets {
 		cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, value))
 	}

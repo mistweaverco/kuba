@@ -56,7 +56,9 @@
 
 				<div class="card bg-base-200 mb-6">
 					<div class="card-body">
-						<h3 class="card-title">Running Commands with Kuba</h3>
+						<ClickableHeadline level={3} id="running-commands-with-kuba" className="card-title"
+							>Running Commands with Kuba</ClickableHeadline
+						>
 						<p class="mb-4">The basic syntax for using Kuba is:</p>
 						<pre><code
 								class="language-bash"
@@ -65,8 +67,33 @@
 							></pre>
 						<p class="mt-4">
 							This will fetch all secrets defined in your <code>kuba.yaml</code> file and pass them as
-							environment variables to your command.
+							environment variables to your command. By default, these secrets are merged with your current
+							OS environment.
 						</p>
+					</div>
+				</div>
+
+				<div class="card bg-base-200 mb-6">
+					<div class="card-body">
+						<ClickableHeadline level={3} id="using-the-contain-flag" className="card-title"
+							>Using the --contain Flag</ClickableHeadline
+						>
+						<p class="mb-4">
+							The <code>--contain</code> flag prevents the merging of the current OS environment
+							with the environment variables from <code>kuba.yaml</code>. This is useful when you
+							want to ensure only the secrets defined in your configuration are available to the
+							command.
+						</p>
+						<pre><code
+								class="language-bash"
+								data-toolbar-order="copy-to-clipboard"
+								data-prismjs-copy="📋"
+								># Only use environment variables from kuba.yaml
+kuba run --contain -- node dist/server.js
+
+# Useful for Docker containers to avoid inheriting host environment
+docker run --env-file &lt;( kuba run --contain -- env | cut -f1 -d= ) myapp</code
+							></pre>
 					</div>
 				</div>
 
@@ -99,7 +126,8 @@
 							<pre><code
 									class="language-bash"
 									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋">kuba run -- docker run myapp</code
+									data-prismjs-copy="📋"
+									>docker run --env-file &lt;( kuba run --contain -- env | cut -f1 -d= ) myapp</code
 								></pre>
 						</div>
 					</div>
@@ -136,6 +164,9 @@
 								># Use default environment
 kuba test
 
+# Also test with verbose/debug output
+kuba test --debug
+
 # Specify an environment
 kuba test --env staging
 
@@ -155,7 +186,9 @@ kuba test --config ./config/kuba.yaml --env production</code
 
 				<div class="card bg-base-200 mb-6">
 					<div class="card-body">
-						<h3 class="card-title">Specifying Environments</h3>
+						<ClickableHeadline level={3} id="specifying-environments" className="card-title"
+							>Specifying Environments</ClickableHeadline
+						>
 						<p class="mb-4">
 							You can specify which environment configuration to use with the <code>--env</code> flag:
 						</p>
@@ -172,7 +205,8 @@ kuba test --config ./config/kuba.yaml --env production</code
 						<pre><code
 								class="language-bash"
 								data-toolbar-order="copy-to-clipboard"
-								data-prismjs-copy="📋">kuba run --env production -- docker run myapp</code
+								data-prismjs-copy="📋"
+								>docker run --env-file &lt;( kuba run --env production --contain -- env | cut -f1 -d= ) myapp</code
 							></pre>
 					</div>
 				</div>
@@ -208,7 +242,9 @@ kuba test --config ./config/kuba.yaml --env production</code
 				<div class="space-y-6">
 					<div class="card bg-base-200">
 						<div class="card-body">
-							<h3 class="card-title">Development Workflow</h3>
+							<ClickableHeadline level={3} id="development-workflow" className="card-title"
+								>Development Workflow</ClickableHeadline
+							>
 							<p class="mb-4">
 								Use Kuba during development to avoid managing local <code>.env</code> files:
 							</p>
@@ -230,7 +266,9 @@ kuba run --env development -- npm run migrate</code
 
 					<div class="card bg-base-200">
 						<div class="card-body">
-							<h3 class="card-title">CI/CD Integration</h3>
+							<ClickableHeadline level={3} id="ci-cd-integration" className="card-title"
+								>CI/CD Integration</ClickableHeadline
+							>
 							<p class="mb-4">Integrate Kuba into your CI/CD pipelines:</p>
 							<pre><code
 									class="language-bash"
@@ -249,7 +287,9 @@ kuba run --env production -- docker push myapp</code
 
 					<div class="card bg-base-200">
 						<div class="card-body">
-							<h3 class="card-title">Docker Integration</h3>
+							<ClickableHeadline level={3} id="docker-integration" className="card-title"
+								>Docker Integration</ClickableHeadline
+							>
 							<p class="mb-4">Use Kuba with Docker containers:</p>
 							<pre><code
 									class="language-bash"
@@ -259,7 +299,10 @@ kuba run --env production -- docker push myapp</code
 kuba run -- docker run -e DATABASE_URL -e API_KEY myapp
 
 # Build container with secrets available during build
-kuba run -- docker build --build-arg DATABASE_URL --build-arg API_KEY .</code
+kuba run -- docker build --build-arg DATABASE_URL --build-arg API_KEY .
+
+# Use --contain to avoid inheriting host environment
+docker run --env-file &lt;( kuba run --contain -- env | cut -f1 -d= ) myapp</code
 								></pre>
 						</div>
 					</div>
@@ -274,10 +317,14 @@ kuba run -- docker build --build-arg DATABASE_URL --build-arg API_KEY .</code
 				<div class="space-y-6">
 					<div class="card bg-base-200">
 						<div class="card-body">
-							<h3 class="card-title">Common Issues</h3>
+							<ClickableHeadline level={3} id="common-issues" className="card-title"
+								>Common Issues</ClickableHeadline
+							>
 							<div class="space-y-4">
 								<div>
-									<h4 class="font-bold">Authentication Errors</h4>
+									<ClickableHeadline level={4} id="authentication-errors" className="font-bold"
+										>Authentication Errors</ClickableHeadline
+									>
 									<p class="text-sm">
 										Ensure your cloud provider credentials are properly configured. Check the <a
 											href="/providers"
@@ -286,14 +333,18 @@ kuba run -- docker build --build-arg DATABASE_URL --build-arg API_KEY .</code
 									</p>
 								</div>
 								<div>
-									<h4 class="font-bold">Configuration Errors</h4>
+									<ClickableHeadline level={4} id="configuration-errors" className="font-bold"
+										>Configuration Errors</ClickableHeadline
+									>
 									<p class="text-sm">
 										Validate your <code>kuba.yaml</code> file. Use <code>kuba init</code> to generate
 										a valid template.
 									</p>
 								</div>
 								<div>
-									<h4 class="font-bold">Permission Errors</h4>
+									<ClickableHeadline level={4} id="permission-errors" className="font-bold"
+										>Permission Errors</ClickableHeadline
+									>
 									<p class="text-sm">
 										Ensure your credentials have the necessary permissions to access the secrets
 										specified in your configuration.
@@ -305,7 +356,9 @@ kuba run -- docker build --build-arg DATABASE_URL --build-arg API_KEY .</code
 
 					<div class="card bg-base-200">
 						<div class="card-body">
-							<h3 class="card-title">Debug Mode</h3>
+							<ClickableHeadline level={3} id="debug-mode" className="card-title"
+								>Debug Mode</ClickableHeadline
+							>
 							<p class="mb-4">
 								Enable debug mode to see detailed information about what Kuba is doing:
 							</p>
@@ -327,7 +380,9 @@ kuba run -- docker build --build-arg DATABASE_URL --build-arg API_KEY .</code
 				<div class="grid md:grid-cols-2 gap-6">
 					<div class="card bg-base-200">
 						<div class="card-body">
-							<h3 class="card-title">Security</h3>
+							<ClickableHeadline level={3} id="security" className="card-title"
+								>Security</ClickableHeadline
+							>
 							<ul class="list-disc list-inside space-y-2">
 								<li>Never commit secrets to version control</li>
 								<li>Use environment-specific configurations</li>
@@ -339,7 +394,9 @@ kuba run -- docker build --build-arg DATABASE_URL --build-arg API_KEY .</code
 
 					<div class="card bg-base-200">
 						<div class="card-body">
-							<h3 class="card-title">Configuration</h3>
+							<ClickableHeadline level={3} id="configuration" className="card-title"
+								>Configuration</ClickableHeadline
+							>
 							<ul class="list-disc list-inside space-y-2">
 								<li>Use descriptive environment variable names</li>
 								<li>Group related secrets with secret paths</li>
@@ -351,7 +408,9 @@ kuba run -- docker build --build-arg DATABASE_URL --build-arg API_KEY .</code
 
 					<div class="card bg-base-200">
 						<div class="card-body">
-							<h3 class="card-title">Deployment</h3>
+							<ClickableHeadline level={3} id="deployment" className="card-title"
+								>Deployment</ClickableHeadline
+							>
 							<ul class="list-disc list-inside space-y-2">
 								<li>Test configurations in staging first</li>
 								<li>Use CI/CD for consistent deployments</li>
@@ -363,7 +422,9 @@ kuba run -- docker build --build-arg DATABASE_URL --build-arg API_KEY .</code
 
 					<div class="card bg-base-200">
 						<div class="card-body">
-							<h3 class="card-title">Development</h3>
+							<ClickableHeadline level={3} id="development" className="card-title"
+								>Development</ClickableHeadline
+							>
 							<ul class="list-disc list-inside space-y-2">
 								<li>Use local development environments</li>
 								<li>Share configuration templates, not secrets</li>

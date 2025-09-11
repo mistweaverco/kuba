@@ -188,6 +188,7 @@ kuba --help
 **Run Command Flags:**
 - `--env, -e`: Specify environment (default: "default")
 - `--config, -c`: Path to configuration file
+- `--contain`: Only use environment variables from kuba.yaml, do not merge with OS environment
 
 **Test Command Flags:**
 - `--env, -e`: Specify environment (default: "default")
@@ -198,6 +199,18 @@ some secrets from GCP to your node application.
 
 ```sh
 kuba run -- node dist/server.js
+```
+
+### Using the --contain flag
+
+The `--contain` flag prevents the merging of the current OS environment with the environment variables from `kuba.yaml`. This is useful when you want to ensure only the secrets defined in your configuration are available to the command.
+
+```sh
+# Only use environment variables from kuba.yaml
+kuba run --contain -- node dist/server.js
+
+# Useful for Docker containers to avoid inheriting host environment
+docker run --env-file <( kuba run --contain -- env | cut -f1 -d= ) your-container
 ```
 
 and your `kuba.yaml` would look something like this:
