@@ -92,7 +92,7 @@
 kuba run --contain -- node dist/server.js
 
 # Useful for Docker containers to avoid inheriting host environment
-docker run --env-file &lt;( kuba run --contain -- env | cut -f1 -d= ) myapp</code
+docker run --env-file &lt;(kuba run --contain -- env) myapp</code
 							></pre>
 					</div>
 				</div>
@@ -127,7 +127,7 @@ docker run --env-file &lt;( kuba run --contain -- env | cut -f1 -d= ) myapp</cod
 									class="language-bash"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
-									>docker run --env-file &lt;( kuba run --contain -- env | cut -f1 -d= ) myapp</code
+									>docker run --env-file &lt;(kuba run --contain -- env) myapp</code
 								></pre>
 						</div>
 					</div>
@@ -206,7 +206,7 @@ kuba test --config ./config/kuba.yaml --env production</code
 								class="language-bash"
 								data-toolbar-order="copy-to-clipboard"
 								data-prismjs-copy="📋"
-								>docker run --env-file &lt;( kuba run --env production --contain -- env | cut -f1 -d= ) myapp</code
+								>docker run --env-file &lt;(kuba run --env production --contain -- env) myapp</code
 							></pre>
 					</div>
 				</div>
@@ -302,7 +302,7 @@ kuba run -- docker run -e DATABASE_URL -e API_KEY myapp
 kuba run -- docker build --build-arg DATABASE_URL --build-arg API_KEY .
 
 # Use --contain to avoid inheriting host environment
-docker run --env-file &lt;( kuba run --contain -- env | cut -f1 -d= ) myapp</code
+docker run --env-file &lt;(kuba run --contain -- env) myapp</code
 								></pre>
 						</div>
 					</div>
