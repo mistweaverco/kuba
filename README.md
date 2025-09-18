@@ -224,7 +224,7 @@ default:
   project: 1337
 
   # Mapping of cloud projects to environment variables and secret keys.
-  mappings:
+  env:
     - environment-variable: "GCP_PROJECT_ID"
       secret-key: "gcp_project_secret"
     - environment-variable: "AWS_PROJECT_ID"
@@ -253,7 +253,7 @@ development:
   project: 1337
 
   # You can override specific mappings here or add new ones.
-  mappings:
+  env:
     - environment-variable: "DEV_GCP_PROJECT_ID"
       secret-key: "dev_gcp_project_secret"
     - environment-variable: "DEV_AWS_PROJECT_ID"
@@ -267,7 +267,7 @@ staging:
   provider: gcp
   project: 1337
 
-  mappings:
+  env:
     - environment-variable: "STAGING_GCP_PROJECT_ID"
       secret-key: "staging_gcp_project_secret"
     - environment-variable: "STAGING_AWS_PROJECT_ID"
@@ -280,7 +280,7 @@ production:
   provider: gcp
   project: 1337
 
-  mappings:
+  env:
     - environment-variable: "PROD_GCP_PROJECT_ID"
       secret-key: "prod_gcp_project_secret"
     - environment-variable: "PROD_AWS_PROJECT_ID"
@@ -330,7 +330,7 @@ This allows you to:
 default:
   provider: gcp
   project: 1337
-  mappings:
+  env:
     - environment-variable: "DB_PASSWORD"
       secret-key: "db-password"
     - environment-variable: "DB_HOST"
@@ -395,7 +395,7 @@ which is particularly useful for:
 default:
   provider: gcp
   project: 1337
-  mappings:
+  env:
     - environment-variable: "DB"
       secret-path: "database"
     - environment-variable: "API"
@@ -433,7 +433,7 @@ You can also use secret paths with different providers:
 default:
   provider: gcp
   project: 1337
-  mappings:
+  env:
     - environment-variable: "GCP_SECRETS"
       secret-path: "app-config"
       provider: gcp
@@ -504,7 +504,7 @@ Kuba supports GCP Secret Manager for fetching secrets. To use GCP:
    default:
      provider: gcp
      project: 1337
-     mappings:
+     env:
        - environment-variable: "DATABASE_URL"
          secret-key: "database-connection-string"
        - environment-variable: "API_KEY"
@@ -539,7 +539,7 @@ Kuba supports AWS Secrets Manager for fetching secrets. To use AWS:
    ```yaml
    default:
      provider: aws
-     mappings:
+     env:
        - environment-variable: "DATABASE_URL"
          secret-key: "database-connection-string"
        - environment-variable: "API_KEY"
@@ -569,7 +569,7 @@ Kuba supports Azure Key Vault for fetching secrets. To use Azure Key Vault:
    ```yaml
    default:
      provider: azure
-     mappings:
+     env:
        - environment-variable: "DATABASE_URL"
          secret-key: "database-connection-string"
        - environment-variable: "SOME_HARD_CODED_ENV"
@@ -598,7 +598,7 @@ To use OpenBao:
    ```yaml
    default:
      provider: openbao
-     mappings:
+     env:
        - environment-variable: "DATABASE_URL"
          secret-key: "secret/database-url"
        - environment-variable: "API_KEY"
@@ -612,7 +612,7 @@ To use OpenBao:
 ```yaml
 default:
   provider: openbao
-  mappings:
+  env:
     - environment-variable: "DATABASE_URL"
       secret-key: "database-url"
       project: "secret"  # This will look for secret/database-url

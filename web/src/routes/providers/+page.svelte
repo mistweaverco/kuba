@@ -180,10 +180,10 @@
 									>default:
   provider: gcp
   project: your-project-id
-  mappings:
-    - environment-variable: "DATABASE_URL"
+  env:
+    DATABASE_URL:
       secret-key: "database-connection-string"
-    - environment-variable: "API_KEY"
+    API_KEY:
       secret-key: "external-api-key"</code
 								></pre>
 						</div>
@@ -272,10 +272,10 @@ export AWS_REGION="us-east-1"</code
 									data-prismjs-copy="📋"
 									>default:
   provider: aws
-  mappings:
-    - environment-variable: "DATABASE_URL"
+  env:
+    DATABASE_URL:
       secret-key: "database-connection-string"
-    - environment-variable: "API_KEY"
+    API_KEY:
       secret-key: "external-api-key"</code
 								></pre>
 						</div>
@@ -339,10 +339,10 @@ export AZURE_CLIENT_SECRET="your-client-secret"</code
 									data-prismjs-copy="📋"
 									>default:
   provider: azure
-  mappings:
-    - environment-variable: "DATABASE_URL"
+  env:
+    DATABASE_URL:
       secret-key: "database-connection-string"
-    - environment-variable: "API_KEY"
+    API_KEY:
       secret-key: "external-api-key"</code
 								></pre>
 						</div>
@@ -396,10 +396,10 @@ export OPENBAO_NAMESPACE="your-namespace"     # Optional: Namespace (if using en
 									data-prismjs-copy="📋"
 									>default:
   provider: openbao
-  mappings:
-    - environment-variable: "DATABASE_URL"
+  env:
+    DATABASE_URL:
       secret-key: "secret/database-url"
-    - environment-variable: "API_KEY"
+    API_KEY:
       secret-key: "secret/api-key"</code
 								></pre>
 							<p class="mt-4 text-sm">
@@ -425,18 +425,18 @@ export OPENBAO_NAMESPACE="your-namespace"     # Optional: Namespace (if using en
 								>default:
   provider: gcp
   project: 1337
-  mappings:
-    - environment-variable: "GCP_SECRETS"
+  env:
+    GCP_SECRETS:
       secret-path: "app-config"
       provider: gcp
-    - environment-variable: "AWS_SECRETS"
+    AWS_SECRETS:
       secret-path: "app-config"
       provider: aws
-    - environment-variable: "AZURE_SECRETS"
+    AZURE_SECRETS:
       secret-path: "app-config"
       provider: azure
       project: "my-azure-project"
-    - environment-variable: "OPENBAO_SECRETS"
+    OPENBAO_SECRETS:
       secret-path: "app-config"
       provider: openbao</code
 							></pre>

@@ -85,14 +85,14 @@
 									>production:
   provider: gcp
   project: 1337
-  mappings:
-    - environment-variable: "DATABASE_URL"
+  env:
+    DATABASE_URL:
       secret-key: "prod-database-url"
-    - environment-variable: "JWT_SECRET"
+    JWT_SECRET:
       secret-key: "jwt-secret"
-    - environment-variable: "STRIPE_SECRET_KEY"
+    STRIPE_SECRET_KEY:
       secret-key: "stripe-secret-key"
-    - environment-variable: "REDIS_URL"
+    REDIS_URL:
       value: "redis://$&lbrace;REDIS_HOST:-localhost&rbrace;:6379"</code
 								></pre>
 
@@ -148,14 +148,14 @@ app.listen(3000, () => &lbrace;
 									data-prismjs-copy="📋"
 									>development:
   provider: aws
-  mappings:
-    - environment-variable: "FLASK_ENV"
+  env:
+    FLASK_ENV:
       value: "development"
-    - environment-variable: "DATABASE_URL"
+    DATABASE_URL:
       secret-key: "dev-database-url"
-    - environment-variable: "SECRET_KEY"
+    SECRET_KEY:
       secret-key: "flask-secret-key"
-    - environment-variable: "DEBUG"
+    DEBUG:
       value: "true"</code
 								></pre>
 
@@ -227,18 +227,18 @@ kuba run --env development -- npm run seed</code
 									>production:
   provider: gcp
   project: 1337
-  mappings:
-    - environment-variable: "DATABASE_URL"
+  env:
+    DATABASE_URL:
       secret-key: "prod-postgres-url"
-    - environment-variable: "DB_PASSWORD"
+    DB_PASSWORD:
       secret-key: "prod-db-password"
 
 development:
   provider: aws
-  mappings:
-    - environment-variable: "DATABASE_URL"
+  env:
+    DATABASE_URL:
       secret-key: "dev-postgres-url"
-    - environment-variable: "DB_PASSWORD"
+    DB_PASSWORD:
       secret-key: "dev-db-password"</code
 								></pre>
 						</div>
@@ -268,14 +268,14 @@ development:
 									data-prismjs-copy="📋"
 									>staging:
   provider: azure
-  mappings:
-    - environment-variable: "STRIPE_API_KEY"
+  env:
+    STRIPE_API_KEY:
       secret-key: "stripe-staging-key"
-    - environment-variable: "SENDGRID_API_KEY"
+    SENDGRID_API_KEY:
       secret-key: "sendgrid-staging-key"
-    - environment-variable: "TWILIO_ACCOUNT_SID"
+    TWILIO_ACCOUNT_SID:
       secret-key: "twilio-account-sid"
-    - environment-variable: "TWILIO_AUTH_TOKEN"
+    TWILIO_AUTH_TOKEN:
       secret-key: "twilio-auth-token"</code
 								></pre>
 
@@ -586,25 +586,25 @@ kuba run --env development -- npm run start:services</code
 									>development:
   provider: gcp
   project: 1337
-  mappings:
-    - environment-variable: "DATABASE_URL"
+  env:
+    DATABASE_URL:
       secret-key: "dev-database-url"
-    - environment-variable: "API_KEY"
+    API_KEY:
       secret-key: "dev-api-key"
-    - environment-variable: "DEBUG"
+    DEBUG:
       value: "true"
-    - environment-variable: "LOG_LEVEL"
+    LOG_LEVEL:
       value: "debug"
 
 testing:
   provider: gcp
   project: 1337
-  mappings:
-    - environment-variable: "DATABASE_URL"
+  env:
+    DATABASE_URL:
       secret-key: "test-database-url"
-    - environment-variable: "API_KEY"
+    API_KEY:
       secret-key: "test-api-key"
-    - environment-variable: "NODE_ENV"
+    NODE_ENV:
       value: "test"</code
 								></pre>
 						</div>
@@ -624,21 +624,21 @@ testing:
 default:
   provider: gcp
   project: 1337
-  mappings:
-    - environment-variable: "DATABASE_URL"
+  env:
+    DATABASE_URL:
       secret-key: "database-url"
-    - environment-variable: "API_KEY"
+    API_KEY:
       secret-key: "api-key"
-    - environment-variable: "REDIS_URL"
+    REDIS_URL:
       value: "redis://$&lbrace;REDIS_HOST:-localhost&rbrace;:6379"
 
 development:
   provider: gcp
   project: 1337
-  mappings:
-    - environment-variable: "DATABASE_URL"
+  env:
+    DATABASE_URL:
       secret-key: "dev-database-url"
-    - environment-variable: "DEBUG"
+    DEBUG:
       value: "true"</code
 								></pre>
 
@@ -676,28 +676,28 @@ development:
 									>production:
   provider: gcp
   project: 1337
-  mappings:
+  env:
     # Individual secrets
-    - environment-variable: "APP_ENV"
+    APP_ENV:
       value: "production"
 
     # Database secrets (bulk load)
-    - environment-variable: "DB"
+    DB:
       secret-path: "database"
 
     # API keys (bulk load)
-    - environment-variable: "API"
+    API:
       secret-path: "external-apis"
 
     # Service secrets (bulk load)
-    - environment-variable: "SERVICE"
+    SERVICE:
       secret-path: "microservices"
 
     # Interpolated connection strings
-    - environment-variable: "DATABASE_URL"
+    DATABASE_URL:
       value: "postgresql://$&lbrace;DB_USERNAME&rbrace;:$&lbrace;DB_PASSWORD&rbrace;@$&lbrace;DB_HOST&rbrace;:$&lbrace;DB_PORT&rbrace;/$&lbrace;DB_NAME&rbrace;"
 
-    - environment-variable: "REDIS_URL"
+    REDIS_URL:
       value: "redis://$&lbrace;REDIS_HOST:-localhost&rbrace;:$&lbrace;REDIS_PORT:-6379&rbrace;/0"</code
 								></pre>
 
@@ -722,31 +722,31 @@ development:
 									>production:
   provider: gcp
   project: 1337
-  mappings:
+  env:
     # GCP secrets
-    - environment-variable: "GCP_PROJECT_ID"
+    GCP_PROJECT_ID:
       secret-key: "project-id"
 
     # AWS secrets
-    - environment-variable: "AWS_ACCESS_KEY"
+    AWS_ACCESS_KEY:
       secret-key: "aws-access-key"
       provider: aws
 
     # Azure secrets
-    - environment-variable: "AZURE_TENANT_ID"
+    AZURE_TENANT_ID:
       secret-key: "tenant-id"
       provider: azure
       project: "my-azure-project"
 
     # OpenBao secrets
-    - environment-variable: "INTERNAL_API_KEY"
+    INTERNAL_API_KEY:
       secret-key: "internal-api-key"
       provider: openbao
 
     # Hard-coded values
-    - environment-variable: "APP_ENV"
+    APP_ENV:
       value: "production"
-    - environment-variable: "DEBUG"
+    DEBUG:
       value: "false"</code
 								></pre>
 						</div>

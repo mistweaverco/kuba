@@ -14,10 +14,10 @@ func TestLoadKubaConfig(t *testing.T) {
 default:
   provider: gcp
   project: "test-project"
-  mappings:
-    - environment-variable: "TEST_VAR"
+  env:
+    TEST_VAR:
       secret-key: "test_secret"
-    - environment-variable: "ANOTHER_VAR"
+    ANOTHER_VAR:
       secret-key: "another_secret"
       provider: aws
       project: "aws-project"
@@ -25,8 +25,8 @@ default:
 development:
   provider: gcp
   project: "dev-project"
-  mappings:
-    - environment-variable: "DEV_VAR"
+  env:
+    DEV_VAR:
       secret-key: "dev_secret"
 `
 
@@ -61,26 +61,21 @@ development:
 		t.Errorf("Expected project 'test-project', got '%s'", defaultEnv.Project)
 	}
 
-	if len(defaultEnv.Mappings) != 2 {
-		t.Errorf("Expected 2 mappings, got %d", len(defaultEnv.Mappings))
+	if len(defaultEnv.Env) != 2 {
+		t.Errorf("Expected 2 env items, got %d", len(defaultEnv.Env))
 	}
 
-	// Verify first mapping
-	if defaultEnv.Mappings[0].EnvironmentVariable != "TEST_VAR" {
-		t.Errorf("Expected environment variable 'TEST_VAR', got '%s'", defaultEnv.Mappings[0].EnvironmentVariable)
+	// Verify env map entries
+	if defaultEnv.Env["TEST_VAR"].SecretKey != "test_secret" {
+		t.Errorf("Expected secret key 'test_secret', got '%s'", defaultEnv.Env["TEST_VAR"].SecretKey)
 	}
 
-	if defaultEnv.Mappings[0].SecretKey != "test_secret" {
-		t.Errorf("Expected secret key 'test_secret', got '%s'", defaultEnv.Mappings[0].SecretKey)
+	if defaultEnv.Env["ANOTHER_VAR"].Provider != "aws" {
+		t.Errorf("Expected provider 'aws', got '%s'", defaultEnv.Env["ANOTHER_VAR"].Provider)
 	}
 
-	// Verify second mapping with override
-	if defaultEnv.Mappings[1].Provider != "aws" {
-		t.Errorf("Expected provider 'aws', got '%s'", defaultEnv.Mappings[1].Provider)
-	}
-
-	if defaultEnv.Mappings[1].Project != "aws-project" {
-		t.Errorf("Expected project 'aws-project', got '%s'", defaultEnv.Mappings[1].Project)
+	if defaultEnv.Env["ANOTHER_VAR"].Project != "aws-project" {
+		t.Errorf("Expected project 'aws-project', got '%s'", defaultEnv.Env["ANOTHER_VAR"].Project)
 	}
 
 	// Verify development environment
@@ -104,11 +99,8 @@ func TestGetEnvironmentDefault(t *testing.T) {
 			"default": {
 				Provider: "gcp",
 				Project:  "test-project",
-				Mappings: []Mapping{
-					{
-						EnvironmentVariable: "TEST_VAR",
-						SecretKey:           "test_secret",
-					},
+				Env: map[string]EnvItem{
+					"TEST_VAR": {SecretKey: "test_secret"},
 				},
 			},
 		},
@@ -138,11 +130,8 @@ func TestValidateConfig(t *testing.T) {
 					"default": {
 						Provider: "gcp",
 						Project:  "test-project",
-						Mappings: []Mapping{
-							{
-								EnvironmentVariable: "TEST_VAR",
-								SecretKey:           "test_secret",
-							},
+						Env: map[string]EnvItem{
+							"TEST_VAR": {SecretKey: "test_secret"},
 						},
 					},
 				},
@@ -156,11 +145,8 @@ func TestValidateConfig(t *testing.T) {
 					"default": {
 						Provider: "gcp",
 						Project:  "test-project",
-						Mappings: []Mapping{
-							{
-								EnvironmentVariable: "TEST_VAR",
-								Value:               "test_value",
-							},
+						Env: map[string]EnvItem{
+							"TEST_VAR": {Value: "test_value"},
 						},
 					},
 				},
@@ -168,21 +154,15 @@ func TestValidateConfig(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "valid config with mixed mappings",
+			name: "valid config with mixed env items",
 			config: &KubaConfig{
 				Environments: map[string]Environment{
 					"default": {
 						Provider: "gcp",
 						Project:  "test-project",
-						Mappings: []Mapping{
-							{
-								EnvironmentVariable: "SECRET_VAR",
-								SecretKey:           "test_secret",
-							},
-							{
-								EnvironmentVariable: "VALUE_VAR",
-								Value:               "test_value",
-							},
+						Env: map[string]EnvItem{
+							"SECRET_VAR": {SecretKey: "test_secret"},
+							"VALUE_VAR":  {Value: "test_value"},
 						},
 					},
 				},
@@ -195,11 +175,8 @@ func TestValidateConfig(t *testing.T) {
 				Environments: map[string]Environment{
 					"default": {
 						Project: "test-project",
-						Mappings: []Mapping{
-							{
-								EnvironmentVariable: "TEST_VAR",
-								SecretKey:           "test_secret",
-							},
+						Env: map[string]EnvItem{
+							"TEST_VAR": {SecretKey: "test_secret"},
 						},
 					},
 				},
@@ -213,16 +190,29 @@ func TestValidateConfig(t *testing.T) {
 					"default": {
 						Provider: "invalid",
 						Project:  "test-project",
-						Mappings: []Mapping{
-							{
-								EnvironmentVariable: "TEST_VAR",
-								SecretKey:           "test_secret",
-							},
+						Env: map[string]EnvItem{
+							"TEST_VAR": {SecretKey: "test_secret"},
 						},
 					},
 				},
 			},
 			wantErr: true,
+		},
+		{
+			name: "valid local provider without project (value required)",
+			config: &KubaConfig{
+				Environments: map[string]Environment{
+					"default": {
+						Provider: "local",
+						Project:  "",
+						Env: map[string]EnvItem{
+							"FOO": {Value: "bar"},
+							"BAR": {Value: "baz"},
+						},
+					},
+				},
+			},
+			wantErr: false,
 		},
 		{
 			name: "missing both secret-key and value",
@@ -231,10 +221,8 @@ func TestValidateConfig(t *testing.T) {
 					"default": {
 						Provider: "gcp",
 						Project:  "test-project",
-						Mappings: []Mapping{
-							{
-								EnvironmentVariable: "TEST_VAR",
-							},
+						Env: map[string]EnvItem{
+							"TEST_VAR": {},
 						},
 					},
 				},
@@ -248,12 +236,8 @@ func TestValidateConfig(t *testing.T) {
 					"default": {
 						Provider: "gcp",
 						Project:  "test-project",
-						Mappings: []Mapping{
-							{
-								EnvironmentVariable: "TEST_VAR",
-								SecretKey:           "test_secret",
-								Value:               "test_value",
-							},
+						Env: map[string]EnvItem{
+							"TEST_VAR": {SecretKey: "test_secret", Value: "test_value"},
 						},
 					},
 				},
@@ -267,11 +251,8 @@ func TestValidateConfig(t *testing.T) {
 					"default": {
 						Provider: "aws",
 						Project:  "", // Empty project for AWS should be valid
-						Mappings: []Mapping{
-							{
-								EnvironmentVariable: "AWS_SECRET",
-								SecretKey:           "aws-secret-key",
-							},
+						Env: map[string]EnvItem{
+							"AWS_SECRET": {SecretKey: "aws-secret-key"},
 						},
 					},
 				},
@@ -285,11 +266,38 @@ func TestValidateConfig(t *testing.T) {
 					"default": {
 						Provider: "gcp",
 						Project:  "", // Empty project for GCP should be invalid
-						Mappings: []Mapping{
-							{
-								EnvironmentVariable: "GCP_SECRET",
-								SecretKey:           "gcp-secret-key",
-							},
+						Env: map[string]EnvItem{
+							"GCP_SECRET": {SecretKey: "gcp-secret-key"},
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "local provider rejects secret-key",
+			config: &KubaConfig{
+				Environments: map[string]Environment{
+					"default": {
+						Provider: "local",
+						Project:  "",
+						Env: map[string]EnvItem{
+							"FOO": {SecretKey: "some-secret"},
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "local provider rejects secret-path",
+			config: &KubaConfig{
+				Environments: map[string]Environment{
+					"default": {
+						Provider: "local",
+						Project:  "",
+						Env: map[string]EnvItem{
+							"BAR": {SecretPath: "path/to/secrets"},
 						},
 					},
 				},
@@ -320,15 +328,9 @@ func TestInterpolation(t *testing.T) {
 				"default": {
 					Provider: "gcp",
 					Project:  "test-project",
-					Mappings: []Mapping{
-						{
-							EnvironmentVariable: "DB_PASSWORD",
-							Value:               "secret123",
-						},
-						{
-							EnvironmentVariable: "DB_CONNECTION_STRING",
-							Value:               "postgresql://user:${DB_PASSWORD}@host:5432/db",
-						},
+					Env: map[string]EnvItem{
+						"DB_PASSWORD":          {Value: "secret123"},
+						"DB_CONNECTION_STRING": {Value: "postgresql://user:${DB_PASSWORD}@host:5432/db"},
 					},
 				},
 			},
@@ -339,7 +341,7 @@ func TestInterpolation(t *testing.T) {
 
 		// Check that interpolation worked
 		env := config.Environments["default"]
-		require.Equal(t, "postgresql://user:secret123@host:5432/db", env.Mappings[1].Value)
+		require.Equal(t, "postgresql://user:secret123@host:5432/db", env.Env["DB_CONNECTION_STRING"].Value)
 	})
 
 	t.Run("environment variable interpolation", func(t *testing.T) {
@@ -352,11 +354,8 @@ func TestInterpolation(t *testing.T) {
 				"default": {
 					Provider: "gcp",
 					Project:  "test-project",
-					Mappings: []Mapping{
-						{
-							EnvironmentVariable: "DB_CONNECTION_STRING",
-							Value:               "postgresql://user:pass@${DB_HOST}:5432/mydb",
-						},
+					Env: map[string]EnvItem{
+						"DB_CONNECTION_STRING": {Value: "postgresql://user:pass@${DB_HOST}:5432/mydb"},
 					},
 				},
 			},
@@ -367,7 +366,7 @@ func TestInterpolation(t *testing.T) {
 
 		// Check that interpolation worked
 		env := config.Environments["default"]
-		require.Equal(t, "postgresql://user:pass@mydbhost:5432/mydb", env.Mappings[0].Value)
+		require.Equal(t, "postgresql://user:pass@mydbhost:5432/mydb", env.Env["DB_CONNECTION_STRING"].Value)
 	})
 
 	t.Run("mixed interpolation", func(t *testing.T) {
@@ -380,19 +379,10 @@ func TestInterpolation(t *testing.T) {
 				"default": {
 					Provider: "gcp",
 					Project:  "test-project",
-					Mappings: []Mapping{
-						{
-							EnvironmentVariable: "DB_PASSWORD",
-							Value:               "secret123",
-						},
-						{
-							EnvironmentVariable: "DB_HOST",
-							Value:               "mydbhost",
-						},
-						{
-							EnvironmentVariable: "DB_CONNECTION_STRING",
-							Value:               "postgresql://user:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/mydb",
-						},
+					Env: map[string]EnvItem{
+						"DB_PASSWORD":          {Value: "secret123"},
+						"DB_HOST":              {Value: "mydbhost"},
+						"DB_CONNECTION_STRING": {Value: "postgresql://user:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/mydb"},
 					},
 				},
 			},
@@ -403,7 +393,7 @@ func TestInterpolation(t *testing.T) {
 
 		// Check that interpolation worked
 		env := config.Environments["default"]
-		require.Equal(t, "postgresql://user:secret123@mydbhost:5432/mydb", env.Mappings[2].Value)
+		require.Equal(t, "postgresql://user:secret123@mydbhost:5432/mydb", env.Env["DB_CONNECTION_STRING"].Value)
 	})
 
 	t.Run("no interpolation needed", func(t *testing.T) {
@@ -412,11 +402,8 @@ func TestInterpolation(t *testing.T) {
 				"default": {
 					Provider: "gcp",
 					Project:  "test-project",
-					Mappings: []Mapping{
-						{
-							EnvironmentVariable: "SIMPLE_VALUE",
-							Value:               "no interpolation here",
-						},
+					Env: map[string]EnvItem{
+						"SIMPLE_VALUE": {Value: "no interpolation here"},
 					},
 				},
 			},
@@ -427,7 +414,7 @@ func TestInterpolation(t *testing.T) {
 
 		// Check that value remains unchanged
 		env := config.Environments["default"]
-		require.Equal(t, "no interpolation here", env.Mappings[0].Value)
+		require.Equal(t, "no interpolation here", env.Env["SIMPLE_VALUE"].Value)
 	})
 
 	t.Run("unresolved variable remains unchanged", func(t *testing.T) {
@@ -436,11 +423,8 @@ func TestInterpolation(t *testing.T) {
 				"default": {
 					Provider: "gcp",
 					Project:  "test-project",
-					Mappings: []Mapping{
-						{
-							EnvironmentVariable: "UNRESOLVED",
-							Value:               "value with ${UNKNOWN_VAR}",
-						},
+					Env: map[string]EnvItem{
+						"UNRESOLVED": {Value: "value with ${UNKNOWN_VAR}"},
 					},
 				},
 			},
@@ -451,7 +435,7 @@ func TestInterpolation(t *testing.T) {
 
 		// Check that unresolved variable remains unchanged
 		env := config.Environments["default"]
-		require.Equal(t, "value with ${UNKNOWN_VAR}", env.Mappings[0].Value)
+		require.Equal(t, "value with ${UNKNOWN_VAR}", env.Env["UNRESOLVED"].Value)
 	})
 
 	t.Run("numeric values are converted to string", func(t *testing.T) {
@@ -460,15 +444,9 @@ func TestInterpolation(t *testing.T) {
 				"default": {
 					Provider: "gcp",
 					Project:  "test-project",
-					Mappings: []Mapping{
-						{
-							EnvironmentVariable: "PORT",
-							Value:               8080,
-						},
-						{
-							EnvironmentVariable: "URL",
-							Value:               "http://localhost:${PORT}",
-						},
+					Env: map[string]EnvItem{
+						"PORT": {Value: 8080},
+						"URL":  {Value: "http://localhost:${PORT}"},
 					},
 				},
 			},
@@ -479,8 +457,8 @@ func TestInterpolation(t *testing.T) {
 
 		// Check that numeric value was converted and interpolation worked
 		env := config.Environments["default"]
-		require.Equal(t, "8080", env.Mappings[0].Value)
-		require.Equal(t, "http://localhost:8080", env.Mappings[1].Value)
+		require.Equal(t, "8080", env.Env["PORT"].Value)
+		require.Equal(t, "http://localhost:8080", env.Env["URL"].Value)
 	})
 
 	t.Run("shell-style default value syntax", func(t *testing.T) {
@@ -490,15 +468,9 @@ func TestInterpolation(t *testing.T) {
 				"default": {
 					Provider: "gcp",
 					Project:  "test-project",
-					Mappings: []Mapping{
-						{
-							EnvironmentVariable: "APP_ENV",
-							Value:               "${NODE_ENV:-development}",
-						},
-						{
-							EnvironmentVariable: "REDIS_URL",
-							Value:               "redis://${REDIS_HOST:-localhost}:${REDIS_PORT:-6379}/0",
-						},
+					Env: map[string]EnvItem{
+						"APP_ENV":   {Value: "${NODE_ENV:-development}"},
+						"REDIS_URL": {Value: "redis://${REDIS_HOST:-localhost}:${REDIS_PORT:-6379}/0"},
 					},
 				},
 			},
@@ -509,8 +481,8 @@ func TestInterpolation(t *testing.T) {
 
 		// Check that default values were used
 		env := config.Environments["default"]
-		require.Equal(t, "development", env.Mappings[0].Value)
-		require.Equal(t, "redis://localhost:6379/0", env.Mappings[1].Value)
+		require.Equal(t, "development", env.Env["APP_ENV"].Value)
+		require.Equal(t, "redis://localhost:6379/0", env.Env["REDIS_URL"].Value)
 	})
 
 	t.Run("shell-style default value with existing env var", func(t *testing.T) {
@@ -523,11 +495,8 @@ func TestInterpolation(t *testing.T) {
 				"default": {
 					Provider: "gcp",
 					Project:  "test-project",
-					Mappings: []Mapping{
-						{
-							EnvironmentVariable: "APP_ENV",
-							Value:               "${NODE_ENV:-development}",
-						},
+					Env: map[string]EnvItem{
+						"APP_ENV": {Value: "${NODE_ENV:-development}"},
 					},
 				},
 			},
@@ -538,7 +507,7 @@ func TestInterpolation(t *testing.T) {
 
 		// Check that environment variable value was used instead of default
 		env := config.Environments["default"]
-		require.Equal(t, "production", env.Mappings[0].Value)
+		require.Equal(t, "production", env.Env["APP_ENV"].Value)
 	})
 
 	t.Run("mixed default value syntax", func(t *testing.T) {
@@ -551,15 +520,9 @@ func TestInterpolation(t *testing.T) {
 				"default": {
 					Provider: "gcp",
 					Project:  "test-project",
-					Mappings: []Mapping{
-						{
-							EnvironmentVariable: "DB_PASSWORD",
-							Value:               "secret123",
-						},
-						{
-							EnvironmentVariable: "DB_CONNECTION_STRING",
-							Value:               "postgresql://user:${DB_PASSWORD}@${DB_HOST:-localhost}:${DB_PORT:-5432}/mydb",
-						},
+					Env: map[string]EnvItem{
+						"DB_PASSWORD":          {Value: "secret123"},
+						"DB_CONNECTION_STRING": {Value: "postgresql://user:${DB_PASSWORD}@${DB_HOST:-localhost}:${DB_PORT:-5432}/mydb"},
 					},
 				},
 			},
@@ -570,7 +533,7 @@ func TestInterpolation(t *testing.T) {
 
 		// Check that interpolation worked with mixed syntax
 		env := config.Environments["default"]
-		require.Equal(t, "postgresql://user:secret123@mydbhost:5432/mydb", env.Mappings[1].Value)
+		require.Equal(t, "postgresql://user:secret123@mydbhost:5432/mydb", env.Env["DB_CONNECTION_STRING"].Value)
 	})
 }
 
@@ -588,10 +551,10 @@ func TestLoadKubaConfigWithInterpolation(t *testing.T) {
 		configContent := `default:
   provider: gcp
   project: test-project
-  mappings:
-    - environment-variable: "DB_PASSWORD"
+  env:
+    DB_PASSWORD:
       value: "secret123"
-    - environment-variable: "DB_CONNECTION_STRING"
+    DB_CONNECTION_STRING:
       value: "postgresql://user:${DB_PASSWORD}@${DB_HOST}:5432/mydb"
 `
 
@@ -604,6 +567,6 @@ func TestLoadKubaConfigWithInterpolation(t *testing.T) {
 
 		// Check that interpolation worked
 		env := config.Environments["default"]
-		require.Equal(t, "postgresql://user:secret123@mydbhost:5432/mydb", env.Mappings[1].Value)
+		require.Equal(t, "postgresql://user:secret123@mydbhost:5432/mydb", env.Env["DB_CONNECTION_STRING"].Value)
 	})
 }
