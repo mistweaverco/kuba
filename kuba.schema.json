@@ -42,7 +42,10 @@
               },
               "allOf": [
                 {
-                  "if": { "properties": { "provider": { "const": "local" } } },
+                  "if": {
+                    "properties": { "provider": { "const": "local" } },
+                    "required": ["provider"]
+                  },
                   "then": {
                     "required": ["value"],
                     "not": {
@@ -83,6 +86,33 @@
           },
           "then": {
             "required": ["project"]
+          }
+        },
+        {
+          "if": { "properties": { "provider": { "const": "local" } } },
+          "then": {
+            "properties": {
+              "env": {
+                "patternProperties": {
+                  "^[A-Z0-9_]+$": {
+                    "allOf": [
+                      {
+                        "if": { "not": { "required": ["provider"] } },
+                        "then": {
+                          "required": ["value"],
+                          "not": {
+                            "anyOf": [
+                              { "required": ["secret-key"] },
+                              { "required": ["secret-path"] }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
           }
         }
       ],
