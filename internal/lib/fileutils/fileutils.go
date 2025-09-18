@@ -105,7 +105,7 @@ default:
   project: 1337
 
   # Mapping of cloud projects to environment variables and secret keys.
-  mappings:
+  env:
     GCP_PROJECT_ID:
       secret-key: "gcp_project_secret"
     AWS_PROJECT_ID:
