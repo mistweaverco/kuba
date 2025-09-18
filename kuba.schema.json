@@ -11,19 +11,17 @@
         "provider": {
           "description": "The default cloud provider for this environment.",
           "type": "string",
-          "enum": [
-            "gcp",
-            "azure",
-            "aws",
-            "openbao",
-            "local"
-          ]
+          "enum": ["gcp", "azure", "aws", "openbao", "local"]
         },
         "project": {
           "description": "The default cloud project for this environment. This can be a string or an integer.",
-          "type": [
-            "string",
-            "integer"
+          "type": ["string", "integer"]
+        },
+        "inherits": {
+          "description": "One or more environment names to inherit variables from (in order).",
+          "oneOf": [
+            { "type": "string" },
+            { "type": "array", "items": { "type": "string" } }
           ]
         },
         "env": {
@@ -35,21 +33,31 @@
               "properties": {
                 "secret-key": { "type": "string" },
                 "secret-path": { "type": "string" },
-                "value": { "type": ["string","integer"] },
-                "provider": { "type": "string", "enum": ["gcp","azure","aws","openbao","local"] },
-                "project": { "type": ["string","integer"] }
+                "value": { "type": ["string", "integer"] },
+                "provider": {
+                  "type": "string",
+                  "enum": ["gcp", "azure", "aws", "openbao", "local"]
+                },
+                "project": { "type": ["string", "integer"] }
               },
-              "oneOf": [
-                { "required": [ "secret-key" ] },
-                { "required": [ "secret-path" ] },
-                { "required": [ "value" ] }
-              ],
               "allOf": [
                 {
                   "if": { "properties": { "provider": { "const": "local" } } },
                   "then": {
-                    "required": [ "value" ],
-                    "not": { "anyOf": [ { "required": ["secret-key"] }, { "required": ["secret-path"] } ] }
+                    "required": ["value"],
+                    "not": {
+                      "anyOf": [
+                        { "required": ["secret-key"] },
+                        { "required": ["secret-path"] }
+                      ]
+                    }
+                  },
+                  "else": {
+                    "oneOf": [
+                      { "required": ["secret-key"] },
+                      { "required": ["secret-path"] },
+                      { "required": ["value"] }
+                    ]
                   }
                 }
               ],
@@ -61,10 +69,7 @@
       },
       "allOf": [
         {
-          "required": [
-            "provider",
-            "env"
-          ]
+          "required": ["provider"]
         },
         {
           "if": {
@@ -77,9 +82,7 @@
             }
           },
           "then": {
-            "required": [
-              "project"
-            ]
+            "required": ["project"]
           }
         }
       ],

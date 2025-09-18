@@ -2,10 +2,10 @@ package config
 
 import (
 	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v3"
 )
 
 func TestLoadKubaConfig(t *testing.T) {
@@ -544,10 +544,6 @@ func TestLoadKubaConfigWithInterpolation(t *testing.T) {
 		os.Setenv("DB_HOST", "mydbhost")
 		defer os.Unsetenv("DB_HOST")
 
-		// Create a temporary config file
-		tempDir := t.TempDir()
-		configPath := filepath.Join(tempDir, "kuba.yaml")
-
 		configContent := `default:
   provider: gcp
   project: test-project
@@ -557,16 +553,216 @@ func TestLoadKubaConfigWithInterpolation(t *testing.T) {
     DB_CONNECTION_STRING:
       value: "postgresql://user:${DB_PASSWORD}@${DB_HOST}:5432/mydb"
 `
-
-		err := os.WriteFile(configPath, []byte(configContent), 0644)
+		var config KubaConfig
+		err := yaml.Unmarshal([]byte(configContent), &config)
 		require.NoError(t, err)
-
-		// Load the config
-		config, err := LoadKubaConfig(configPath)
+		err = resolveInheritance(&config)
+		require.NoError(t, err)
+		err = processValueInterpolations(&config)
+		require.NoError(t, err)
+		err = validateConfig(&config)
 		require.NoError(t, err)
 
 		// Check that interpolation worked
 		env := config.Environments["default"]
 		require.Equal(t, "postgresql://user:secret123@mydbhost:5432/mydb", env.Env["DB_CONNECTION_STRING"].Value)
+	})
+}
+
+func TestSecretFieldsInterpolation(t *testing.T) {
+	t.Run("interpolate secret-path and secret-key from values", func(t *testing.T) {
+		cfg := &KubaConfig{
+			Environments: map[string]Environment{
+				"default": {
+					Provider: "gcp",
+					Project:  "test-project",
+					Env: map[string]EnvItem{
+						"GCP_PROJECT": {Value: "my-proj"},
+						"NAME":        {Value: "db-password"},
+						"KEYNAME":     {Value: "api-key"},
+						"DB_PASSWORD": {SecretPath: "projects/${GCP_PROJECT}/secrets/${NAME}"},
+						"API_KEY":     {SecretKey: "${KEYNAME}"},
+					},
+				},
+			},
+		}
+
+		err := resolveInheritance(cfg)
+		require.NoError(t, err)
+		err = processValueInterpolations(cfg)
+		require.NoError(t, err)
+		err = validateConfig(cfg)
+		require.NoError(t, err)
+
+		env := cfg.Environments["default"]
+		require.Equal(t, "projects/my-proj/secrets/db-password", env.Env["DB_PASSWORD"].SecretPath)
+		require.Equal(t, "api-key", env.Env["API_KEY"].SecretKey)
+	})
+
+	t.Run("interpolate with defaults and OS env", func(t *testing.T) {
+		// Set one OS env var to verify precedence
+		os.Setenv("ORG", "acme")
+		defer os.Unsetenv("ORG")
+
+		cfg := &KubaConfig{
+			Environments: map[string]Environment{
+				"default": {
+					Provider: "gcp",
+					Project:  "test-project",
+					Env: map[string]EnvItem{
+						"SERVICE":     {Value: "billing"},
+						"SECRET_PATH": {SecretPath: "orgs/${ORG}/svcs/${SERVICE}/secrets/${MISSING:-fallback}"},
+						"SECRET_KEY":  {SecretKey: "${KEY_MISSING:-default-key}"},
+					},
+				},
+			},
+		}
+
+		err := resolveInheritance(cfg)
+		require.NoError(t, err)
+		err = processValueInterpolations(cfg)
+		require.NoError(t, err)
+		err = validateConfig(cfg)
+		require.NoError(t, err)
+
+		env := cfg.Environments["default"]
+		require.Equal(t, "orgs/acme/svcs/billing/secrets/fallback", env.Env["SECRET_PATH"].SecretPath)
+		require.Equal(t, "default-key", env.Env["SECRET_KEY"].SecretKey)
+	})
+}
+
+func TestInheritanceLoading(t *testing.T) {
+	t.Run("inherits as string", func(t *testing.T) {
+		content := `base:
+  provider: gcp
+  project: p
+  env:
+    A:
+      value: "1"
+
+child:
+  provider: gcp
+  project: p
+  inherits: base
+  env:
+    B:
+      value: "2"
+`
+		var cfg KubaConfig
+		err := yaml.Unmarshal([]byte(content), &cfg)
+		require.NoError(t, err)
+		err = resolveInheritance(&cfg)
+		require.NoError(t, err)
+		err = processValueInterpolations(&cfg)
+		require.NoError(t, err)
+		err = validateConfig(&cfg)
+		require.NoError(t, err)
+
+		env := cfg.Environments["child"]
+		require.Len(t, env.Env, 2)
+		require.Equal(t, "1", env.Env["A"].Value)
+		require.Equal(t, "2", env.Env["B"].Value)
+	})
+
+	t.Run("inherits as single-item array", func(t *testing.T) {
+		content := `base:
+  provider: gcp
+  project: p
+  env:
+    A:
+      value: "1"
+
+child:
+  provider: gcp
+  project: p
+  inherits: ["base"]
+  env:
+    B:
+      value: "2"
+`
+		var cfg KubaConfig
+		err := yaml.Unmarshal([]byte(content), &cfg)
+		require.NoError(t, err)
+		err = resolveInheritance(&cfg)
+		require.NoError(t, err)
+		err = processValueInterpolations(&cfg)
+		require.NoError(t, err)
+		err = validateConfig(&cfg)
+		require.NoError(t, err)
+
+		env := cfg.Environments["child"]
+		require.Len(t, env.Env, 2)
+		require.Equal(t, "1", env.Env["A"].Value)
+		require.Equal(t, "2", env.Env["B"].Value)
+	})
+
+	t.Run("inherits as two-item array with order and override", func(t *testing.T) {
+		content := `base1:
+  provider: gcp
+  project: p
+  env:
+    A:
+      value: "1"
+    COMMON:
+      value: "X"
+
+base2:
+  provider: gcp
+  project: p
+  env:
+    B:
+      value: "2"
+    COMMON:
+      value: "Y"
+
+child:
+  provider: gcp
+  project: p
+  inherits: ["base1", "base2"]
+  env:
+    C:
+      value: "3"
+    COMMON:
+      value: "Z"
+`
+		var cfg KubaConfig
+		err := yaml.Unmarshal([]byte(content), &cfg)
+		require.NoError(t, err)
+		err = resolveInheritance(&cfg)
+		require.NoError(t, err)
+		err = processValueInterpolations(&cfg)
+		require.NoError(t, err)
+		err = validateConfig(&cfg)
+		require.NoError(t, err)
+
+		env := cfg.Environments["child"]
+		// Should contain A from base1, B from base2, C from child, and COMMON overridden by child
+		require.Equal(t, "1", env.Env["A"].Value)
+		require.Equal(t, "2", env.Env["B"].Value)
+		require.Equal(t, "3", env.Env["C"].Value)
+		require.Equal(t, "Z", env.Env["COMMON"].Value)
+	})
+
+	t.Run("inherits references unknown environment", func(t *testing.T) {
+		content := `base:
+  provider: gcp
+  project: p
+  env:
+    A:
+      value: "1"
+
+child:
+  provider: gcp
+  project: p
+  inherits: missing
+  env:
+    B:
+      value: "2"
+`
+		var cfg KubaConfig
+		err := yaml.Unmarshal([]byte(content), &cfg)
+		require.NoError(t, err)
+		err = resolveInheritance(&cfg)
+		require.Error(t, err)
 	})
 }
