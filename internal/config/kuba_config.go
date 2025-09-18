@@ -18,19 +18,53 @@ type KubaConfig struct {
 
 // Environment represents a single environment configuration
 type Environment struct {
-	Provider string    `yaml:"provider"`
-	Project  string    `yaml:"project"`
-	Mappings []Mapping `yaml:"mappings"`
+	Provider string             `yaml:"provider"`
+	Project  string             `yaml:"project"`
+	Env      map[string]EnvItem `yaml:"env"`
 }
 
-// Mapping represents a mapping between environment variable and secret key or value
-type Mapping struct {
-	EnvironmentVariable string      `yaml:"environment-variable"`
+// EnvItem represents an environment variable configuration in the new simplified format
+// It can be either a string (just the env var name) or a full mapping object
+type EnvItem struct {
+	// For string format: just the environment variable name
+	EnvironmentVariable string      `yaml:"environment-variable,omitempty"`
 	SecretKey           string      `yaml:"secret-key,omitempty"`
 	SecretPath          string      `yaml:"secret-path,omitempty"`
 	Value               interface{} `yaml:"value,omitempty"`
 	Provider            string      `yaml:"provider,omitempty"`
 	Project             string      `yaml:"project,omitempty"`
+}
+
+// UnmarshalYAML implements custom YAML unmarshaling for EnvItem
+// This allows it to handle both string format (just env var name) and object format
+func (e *EnvItem) UnmarshalYAML(value *yaml.Node) error {
+	// For map syntax, the env var name is the map key; object holds fields only
+	var temp struct {
+		SecretKey  string      `yaml:"secret-key,omitempty"`
+		SecretPath string      `yaml:"secret-path,omitempty"`
+		Value      interface{} `yaml:"value,omitempty"`
+		Provider   string      `yaml:"provider,omitempty"`
+		Project    string      `yaml:"project,omitempty"`
+	}
+	if err := value.Decode(&temp); err != nil {
+		return err
+	}
+	e.SecretKey = temp.SecretKey
+	e.SecretPath = temp.SecretPath
+	e.Value = temp.Value
+	e.Provider = temp.Provider
+	e.Project = temp.Project
+	return nil
+}
+
+// GetEnvItems returns all env items for an environment
+func (e *Environment) GetEnvItems() []EnvItem {
+	items := make([]EnvItem, 0, len(e.Env))
+	for name, item := range e.Env {
+		item.EnvironmentVariable = name
+		items = append(items, item)
+	}
+	return items
 }
 
 // interpolateEnvVars replaces ${VAR_NAME} patterns with actual environment variable values
@@ -82,7 +116,7 @@ func interpolateEnvVars(value string, resolvedVars map[string]string) string {
 	})
 }
 
-// processValueInterpolations processes all value fields in mappings to resolve environment variable interpolations
+// processValueInterpolations processes all value fields in env items to resolve environment variable interpolations
 func processValueInterpolations(config *KubaConfig) error {
 	// Process environments in order to handle dependencies correctly
 	// We'll process each environment multiple times until no more interpolations are possible
@@ -92,16 +126,17 @@ func processValueInterpolations(config *KubaConfig) error {
 		// Track resolved variables for this environment
 		resolvedVars := make(map[string]string)
 
-		// Process mappings multiple times to handle dependencies
-		maxIterations := len(env.Mappings) * 2 // Allow for some dependency depth
+		// Process env items multiple times to handle dependencies
+		maxIterations := len(env.Env) * 2 // Allow for some dependency depth
 		for iteration := 0; iteration < maxIterations; iteration++ {
 			changed := false
 
-			for i, mapping := range env.Mappings {
-				if mapping.Value != nil {
+			// Process env items
+			for name, envItem := range env.Env {
+				if envItem.Value != nil {
 					// Convert value to string for processing
 					var strValue string
-					switch v := mapping.Value.(type) {
+					switch v := envItem.Value.(type) {
 					case string:
 						strValue = v
 					case int, int32, int64:
@@ -119,20 +154,24 @@ func processValueInterpolations(config *KubaConfig) error {
 
 						// If the value changed, update it
 						if interpolatedValue != strValue {
-							// Update the mapping value
-							env.Mappings[i].Value = interpolatedValue
+							// Update the env item value
+							tmp := env.Env[name]
+							tmp.Value = interpolatedValue
+							env.Env[name] = tmp
 							// Update our resolved vars map
-							resolvedVars[mapping.EnvironmentVariable] = interpolatedValue
+							resolvedVars[name] = interpolatedValue
 							changed = true
 						}
 					} else {
 						// No interpolation needed, but convert numeric values to strings for consistency
-						if mapping.Value != strValue {
-							env.Mappings[i].Value = strValue
+						if envItem.Value != strValue {
+							tmp := env.Env[name]
+							tmp.Value = strValue
+							env.Env[name] = tmp
 							changed = true
 						}
 						// Store the value in resolved vars
-						resolvedVars[mapping.EnvironmentVariable] = strValue
+						resolvedVars[name] = strValue
 					}
 				}
 			}
@@ -223,7 +262,7 @@ func (c *KubaConfig) GetEnvironment(envName string) (*Environment, error) {
 		return nil, fmt.Errorf("environment '%s' not found in configuration", envName)
 	}
 
-	logger.Debug("Environment configuration retrieved", "environment", envName, "provider", env.Provider, "project", env.Project, "mappings_count", len(env.Mappings))
+	logger.Debug("Environment configuration retrieved", "environment", envName, "provider", env.Provider, "project", env.Project, "env_count", len(env.Env))
 	return &env, nil
 }
 
@@ -247,44 +286,61 @@ func validateConfig(config *KubaConfig) error {
 			return fmt.Errorf("environment '%s': provider is required", envName)
 		}
 
-		// Project is required for all providers except AWS, Azure, and OpenBao
-		if env.Project == "" && env.Provider != "aws" && env.Provider != "azure" && env.Provider != "openbao" {
+		// Project is required for all providers except AWS, Azure, OpenBao, and local
+		if env.Project == "" && env.Provider != "aws" && env.Provider != "azure" && env.Provider != "openbao" && env.Provider != "local" {
 			return fmt.Errorf("environment '%s': project is required for provider '%s'", envName, env.Provider)
 		}
 
-		if len(env.Mappings) == 0 {
-			return fmt.Errorf("environment '%s': at least one mapping is required", envName)
+		// At least one env item must be provided
+		if len(env.Env) == 0 {
+			return fmt.Errorf("environment '%s': at least one env item is required", envName)
 		}
 
-		for i, mapping := range env.Mappings {
-			if mapping.EnvironmentVariable == "" {
-				return fmt.Errorf("environment '%s': mapping %d: environment-variable is required", envName, i+1)
-			}
+		// Validate env items
+		idx := 0
+		for _, envItem := range env.Env {
+			idx++
+			// name is the environment variable
 
-			// Either secret-key, secret-path, or value must be provided, but not multiple
+			// Either secret-key, secret-path, or value must be provided (no bare items)
+			// Special case: for local provider (env-level or item-level), only value is allowed
 			secretFields := 0
-			if mapping.SecretKey != "" {
+			if envItem.SecretKey != "" {
 				secretFields++
 			}
-			if mapping.SecretPath != "" {
+			if envItem.SecretPath != "" {
 				secretFields++
 			}
-			if mapping.Value != nil {
+			if envItem.Value != nil {
 				secretFields++
 			}
 
 			if secretFields == 0 {
-				return fmt.Errorf("environment '%s': mapping %d: either secret-key, secret-path, or value is required", envName, i+1)
+				return fmt.Errorf("environment '%s': env item %d: either secret-key, secret-path, or value is required", envName, idx)
 			}
 
 			if secretFields > 1 {
-				return fmt.Errorf("environment '%s': mapping %d: cannot specify multiple of secret-key, secret-path, or value", envName, i+1)
+				return fmt.Errorf("environment '%s': env item %d: cannot specify multiple of secret-key, secret-path, or value", envName, idx)
 			}
 
-			// Validate provider if specified and secret fields are used
-			if mapping.Provider != "" && (mapping.SecretKey != "" || mapping.SecretPath != "") {
-				if !isValidProvider(mapping.Provider) {
-					return fmt.Errorf("environment '%s': mapping %d: invalid provider '%s'", envName, i+1, mapping.Provider)
+			// Determine effective provider for this item
+			effectiveProvider := env.Provider
+			if envItem.Provider != "" {
+				effectiveProvider = envItem.Provider
+			}
+
+			// Validate provider value if set on item
+			if envItem.Provider != "" && !isValidProvider(envItem.Provider) {
+				return fmt.Errorf("environment '%s': env item %d: invalid provider '%s'", envName, idx, envItem.Provider)
+			}
+
+			// Local provider rules: only value is allowed
+			if effectiveProvider == "local" {
+				if envItem.Value == nil {
+					return fmt.Errorf("environment '%s': env item %d: provider 'local' requires 'value'", envName, idx)
+				}
+				if envItem.SecretKey != "" || envItem.SecretPath != "" {
+					return fmt.Errorf("environment '%s': env item %d: provider 'local' does not support 'secret-key' or 'secret-path'", envName, idx)
 				}
 			}
 		}
@@ -300,7 +356,7 @@ func validateConfig(config *KubaConfig) error {
 
 // isValidProvider checks if the provider is supported
 func isValidProvider(provider string) bool {
-	validProviders := []string{"gcp", "aws", "azure", "openbao"}
+	validProviders := []string{"gcp", "aws", "azure", "openbao", "local"}
 	for _, p := range validProviders {
 		if p == provider {
 			return true

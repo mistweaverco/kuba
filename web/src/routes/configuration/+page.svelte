@@ -85,7 +85,7 @@
 						<h3 class="card-title">Basic Structure</h3>
 						<p class="mb-4">
 							The <code>kuba.yaml</code> file is organized into environment sections, each with its own
-							provider and mappings:
+							provider and env:
 						</p>
 						<pre><code
 								class="language-yaml"
@@ -96,24 +96,24 @@
 default:
   provider: gcp
   project: 1337
-  mappings:
-    - environment-variable: "DATABASE_URL"
+  env:
+    DATABASE_URL:
       secret-key: "database-connection-string"
-    - environment-variable: "API_KEY"
+    API_KEY:
       secret-key: "external-api-key"
 
 development:
   provider: gcp
   project: 1337
-  mappings:
-    - environment-variable: "DEV_DATABASE_URL"
+  env:
+    DEV_DATABASE_URL:
       secret-key: "dev-database-connection-string"
 
 production:
   provider: gcp
   project: 1337
-  mappings:
-    - environment-variable: "PROD_DATABASE_URL"
+  env:
+    PROD_DATABASE_URL:
       secret-key: "prod-database-connection-string"</code
 							></pre>
 					</div>
@@ -175,10 +175,10 @@ production:
 									class="language-yaml"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
-									>mappings:
-  - environment-variable: "DATABASE_URL"
+									>env:
+  DATABASE_URL:
     secret-key: "database-connection-string"
-  - environment-variable: "API_KEY"
+  API_KEY:
     secret-key: "external-api-key"</code
 								></pre>
 						</div>
@@ -192,10 +192,10 @@ production:
 									class="language-yaml"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
-									>mappings:
-  - environment-variable: "DB"
+									>env:
+  DB:
     secret-path: "database"
-  - environment-variable: "API"
+  API:
     secret-path: "external-apis"</code
 								></pre>
 							<p class="mt-4 text-sm">
@@ -213,10 +213,10 @@ production:
 									class="language-yaml"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
-									>mappings:
-  - environment-variable: "APP_ENV"
+									>env:
+  APP_ENV:
     value: "production"
-  - environment-variable: "DEBUG"
+  DEBUG:
     value: "false"</code
 								></pre>
 						</div>
@@ -243,12 +243,12 @@ production:
 								class="language-yaml"
 								data-toolbar-order="copy-to-clipboard"
 								data-prismjs-copy="📋"
-								>mappings:
-  - environment-variable: "DB_PASSWORD"
+								>env:
+  DB_PASSWORD:
     secret-key: "db-password"
-  - environment-variable: "DB_HOST"
+  DB_HOST:
     value: "mydbhost"
-  - environment-variable: "DB_CONNECTION_STRING"
+  DB_CONNECTION_STRING:
     value: "postgresql://user:$&lbrace;DB_PASSWORD&rbrace;@$&lbrace;DB_HOST&rbrace;:5432/mydb"</code
 							></pre>
 					</div>
@@ -263,7 +263,7 @@ production:
 									class="language-yaml"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
-									>- environment-variable: "API_URL"
+									>API_URL:
   value: "https://api.$&lbrace;DOMAIN&rbrace;/v1"</code
 								></pre>
 						</div>
@@ -277,7 +277,7 @@ production:
 									class="language-yaml"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
-									>- environment-variable: "REDIS_URL"
+									>REDIS_URL:
   value: "redis://$&lbrace;REDIS_HOST:-localhost&rbrace;:$&lbrace;REDIS_PORT:-6379&rbrace;/0"</code
 								></pre>
 						</div>
@@ -325,13 +325,13 @@ production:
 								>default:
   provider: gcp
   project: 1337
-  mappings:
-    - environment-variable: "GCP_PROJECT_ID"
+  env:
+    GCP_PROJECT_ID:
       secret-key: "gcp_project_secret"
-    - environment-variable: "AWS_PROJECT_ID"
+    AWS_PROJECT_ID:
       secret-key: "aws_project_secret"
       provider: aws
-    - environment-variable: "AZURE_PROJECT_ID"
+    AZURE_PROJECT_ID:
       secret-key: "azure_project_secret"
       provider: azure
       project: "my-azure-project"</code
@@ -358,60 +358,60 @@ production:
 default:
   provider: gcp
   project: 1337
-  mappings:
+  env:
     # Individual secrets
-    - environment-variable: "DATABASE_URL"
+    DATABASE_URL:
       secret-key: "database-connection-string"
-    - environment-variable: "STRIPE_API_KEY"
+    STRIPE_API_KEY:
       secret-key: "stripe-api-key"
 
     # Secret paths for bulk loading
-    - environment-variable: "DB"
+    DB:
       secret-path: "database"
-    - environment-variable: "API"
+    API:
       secret-path: "external-apis"
 
     # Hard-coded values
-    - environment-variable: "APP_ENV"
+    APP_ENV:
       value: "development"
-    - environment-variable: "DEBUG"
+    DEBUG:
       value: "true"
 
     # Interpolated values
-    - environment-variable: "REDIS_URL"
+    REDIS_URL:
       value: "redis://$&lbrace;REDIS_HOST:-localhost$&rbrace;:$&lbrace;REDIS_PORT:-6379&rbrace;/0"
-    - environment-variable: "LOG_LEVEL"
+    LOG_LEVEL:
       value: "$&lbrace;LOG_LEVEL:-info&rbrace;"
 
 development:
   provider: gcp
   project: 1337
-  mappings:
-    - environment-variable: "DEV_DATABASE_URL"
+  env:
+    DEV_DATABASE_URL:
       secret-key: "dev-database-connection-string"
-    - environment-variable: "DEV_STRIPE_API_KEY"
+    DEV_STRIPE_API_KEY:
       secret-key: "dev-stripe-api-key"
 
 staging:
   provider: gcp
   project: 1337
-  mappings:
-    - environment-variable: "STAGING_DATABASE_URL"
+  env:
+    STAGING_DATABASE_URL:
       secret-key: "staging-database-connection-string"
-    - environment-variable: "STAGING_STRIPE_API_KEY"
+    STAGING_STRIPE_API_KEY:
       secret-key: "staging-stripe-api-key"
 
 production:
   provider: gcp
   project: 1337
-  mappings:
-    - environment-variable: "PROD_DATABASE_URL"
+  env:
+    PROD_DATABASE_URL:
       secret-key: "prod-database-connection-string"
-    - environment-variable: "PROD_STRIPE_API_KEY"
+    PROD_STRIPE_API_KEY:
       secret-key: "prod-stripe-api-key"
-    - environment-variable: "APP_ENV"
+    APP_ENV:
       value: "production"
-    - environment-variable: "DEBUG"
+    DEBUG:
       value: "false"</code
 							></pre>
 					</div>

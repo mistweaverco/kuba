@@ -80,7 +80,7 @@ func runCommand(args []string) error {
 	if err != nil {
 		return fmt.Errorf("failed to get environment '%s': %w", environment, err)
 	}
-	logger.Debug("Environment configuration retrieved", "environment", environment, "provider", env.Provider, "mappings_count", len(env.Mappings))
+	logger.Debug("Environment configuration retrieved", "environment", environment, "provider", env.Provider, "env_count", len(env.Env))
 
 	// Create secrets manager factory
 	logger.Debug("Creating secrets manager factory")

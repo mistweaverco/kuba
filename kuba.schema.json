@@ -15,7 +15,8 @@
             "gcp",
             "azure",
             "aws",
-            "openbao"
+            "openbao",
+            "local"
           ]
         },
         "project": {
@@ -25,78 +26,44 @@
             "integer"
           ]
         },
-        "mappings": {
-          "description": "A list of environment variable to secret key or value mappings.",
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "environment-variable": {
-                "description": "The name of the environment variable.",
-                "type": "string"
+        "env": {
+          "description": "Mapping of environment variable name to configuration object.",
+          "type": "object",
+          "patternProperties": {
+            "^[A-Z0-9_]+$": {
+              "type": "object",
+              "properties": {
+                "secret-key": { "type": "string" },
+                "secret-path": { "type": "string" },
+                "value": { "type": ["string","integer"] },
+                "provider": { "type": "string", "enum": ["gcp","azure","aws","openbao","local"] },
+                "project": { "type": ["string","integer"] }
               },
-              "secret-key": {
-                "description": "The name of the secret key. Required if no value is provided.",
-                "type": "string"
-              },
-              "secret-path": {
-                "description": "The path prefix to lookup all secrets starting with this string. Required if no secret-key or value is provided.",
-                "type": "string"
-              },
-              "value": {
-                "description": "The literal value for the environment variable. Required if no secret-key is provided. Supports environment variable interpolation using ${VAR_NAME} syntax, which can reference previously defined environment variables from the same configuration or system environment variables.",
-                "type": [
-                  "string",
-                  "integer"
-                ]
-              },
-              "provider": {
-                "description": "Optional override for the cloud provider.",
-                "type": "string",
-                "enum": [
-                  "gcp",
-                  "azure",
-                  "aws",
-                  "openbao"
-                ]
-              },
-              "project": {
-                "description": "Optional override for the cloud project.",
-                "type": [
-                  "string",
-                  "integer"
-                ]
-              }
-            },
-            "required": [
-              "environment-variable"
-            ],
-            "oneOf": [
-              {
-                "required": [
-                  "secret-key"
-                ]
-              },
-              {
-                "required": [
-                  "secret-path"
-                ]
-              },
-              {
-                "required": [
-                  "value"
-                ]
-              }
-            ],
-            "additionalProperties": false
-          }
+              "oneOf": [
+                { "required": [ "secret-key" ] },
+                { "required": [ "secret-path" ] },
+                { "required": [ "value" ] }
+              ],
+              "allOf": [
+                {
+                  "if": { "properties": { "provider": { "const": "local" } } },
+                  "then": {
+                    "required": [ "value" ],
+                    "not": { "anyOf": [ { "required": ["secret-key"] }, { "required": ["secret-path"] } ] }
+                  }
+                }
+              ],
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
         }
       },
       "allOf": [
         {
           "required": [
             "provider",
-            "mappings"
+            "env"
           ]
         },
         {
@@ -104,7 +71,7 @@
             "properties": {
               "provider": {
                 "not": {
-                  "enum": ["aws", "azure", "openbao"]
+                  "enum": ["aws", "azure", "openbao", "local"]
                 }
               }
             }
