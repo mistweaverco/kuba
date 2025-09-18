@@ -106,14 +106,14 @@ default:
 
   # Mapping of cloud projects to environment variables and secret keys.
   mappings:
-    - environment-variable: "GCP_PROJECT_ID"
+    GCP_PROJECT_ID:
       secret-key: "gcp_project_secret"
-    - environment-variable: "AWS_PROJECT_ID"
+    AWS_PROJECT_ID:
       secret-key: "aws_project_secret"
       provider: aws
-    - environment-variable: "SOME_HARD_CODED_ENV"
+    SOME_HARD_CODED_ENV:
       value: "hard-coded-value"
-    - environment-variable: "AZURE_PROJECT_ID"
+    AZURE_PROJECT_ID:
       secret-key: "azure_project_secret"
       provider: azure
       project: "my-azure-project-default"

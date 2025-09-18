@@ -225,24 +225,24 @@ default:
 
   # Mapping of cloud projects to environment variables and secret keys.
   env:
-    - environment-variable: "GCP_PROJECT_ID"
+    GCP_PROJECT_ID:
       secret-key: "gcp_project_secret"
-    - environment-variable: "AWS_PROJECT_ID"
+    AWS_PROJECT_ID:
       secret-key: "aws_project_secret"
       provider: aws
-    - environment-variable: "AZURE_PROJECT_ID"
+    AZURE_PROJECT_ID:
       secret-key: "azure_project_secret"
       provider: azure
       project: "my-azure-project-default"
-    - environment-variable: "OPENBAO_SECRET"
+    OPENBAO_SECRET:
       secret-key: "secret/openbao-secret"
       provider: openbao
-    - environment-variable: "DATABASE_CONFIG"
+    DATABASE_CONFIG:
       secret-path: "database"
-    - environment-variable: "API_KEYS"
+    API_KEYS:
       secret-path: "external-apis"
       provider: aws
-    - environment-variable: "SOME_HARD_CODED_ENV"
+    SOME_HARD_CODED_ENV:
       value: "hard-coded-value"
 
 ---
@@ -254,9 +254,9 @@ development:
 
   # You can override specific mappings here or add new ones.
   env:
-    - environment-variable: "DEV_GCP_PROJECT_ID"
+    DEV_GCP_PROJECT_ID:
       secret-key: "dev_gcp_project_secret"
-    - environment-variable: "DEV_AWS_PROJECT_ID"
+    DEV_AWS_PROJECT_ID:
       secret-key: "dev_aws_project_secret"
       provider: aws
 
@@ -268,9 +268,9 @@ staging:
   project: 1337
 
   env:
-    - environment-variable: "STAGING_GCP_PROJECT_ID"
+    STAGING_GCP_PROJECT_ID:
       secret-key: "staging_gcp_project_secret"
-    - environment-variable: "STAGING_AWS_PROJECT_ID"
+    STAGING_AWS_PROJECT_ID:
       secret-key: "staging_aws_project_secret"
       provider: aws
 ---
@@ -281,9 +281,9 @@ production:
   project: 1337
 
   env:
-    - environment-variable: "PROD_GCP_PROJECT_ID"
+    PROD_GCP_PROJECT_ID:
       secret-key: "prod_gcp_project_secret"
-    - environment-variable: "PROD_AWS_PROJECT_ID"
+    PROD_AWS_PROJECT_ID:
       secret-key: "prod_aws_project_secret"
       provider: aws
 ```
@@ -331,17 +331,17 @@ default:
   provider: gcp
   project: 1337
   env:
-    - environment-variable: "DB_PASSWORD"
+    DB_PASSWORD:
       secret-key: "db-password"
-    - environment-variable: "DB_HOST"
+    DB_HOST:
       value: "mydbhost"
-    - environment-variable: "DB_CONNECTION_STRING"
+    DB_CONNECTION_STRING:
       value: "postgresql://user:${DB_PASSWORD}@${DB_HOST}:5432/mydb"
-    - environment-variable: "API_URL"
+    API_URL:
       value: "https://api.${DOMAIN}/v1"
-    - environment-variable: "APP_ENV"
+    APP_ENV:
       value: "${NODE_ENV:-development}"
-    - environment-variable: "REDIS_URL"
+    REDIS_URL:
       value: "redis://${REDIS_HOST:-localhost}:${REDIS_PORT:-6379}/0"
 ```
 
@@ -396,13 +396,13 @@ default:
   provider: gcp
   project: 1337
   env:
-    - environment-variable: "DB"
+    DB:
       secret-path: "database"
-    - environment-variable: "API"
+    API:
       secret-path: "external-apis"
-    - environment-variable: "SERVICE"
+    SERVICE:
       secret-path: "microservices"
-    - environment-variable: "HARD_CODED"
+    HARD_CODED:
       value: "static-value"
 ```
 
@@ -434,13 +434,13 @@ default:
   provider: gcp
   project: 1337
   env:
-    - environment-variable: "GCP_SECRETS"
+    GCP_SECRETS:
       secret-path: "app-config"
       provider: gcp
-    - environment-variable: "AWS_SECRETS"
+    AWS_SECRETS:
       secret-path: "app-config"
       provider: aws
-    - environment-variable: "AZURE_SECRETS"
+    AZURE_SECRETS:
       secret-path: "app-config"
       provider: azure
       project: "my-azure-project"
@@ -505,11 +505,11 @@ Kuba supports GCP Secret Manager for fetching secrets. To use GCP:
      provider: gcp
      project: 1337
      env:
-       - environment-variable: "DATABASE_URL"
+       DATABASE_URL:
          secret-key: "database-connection-string"
-       - environment-variable: "API_KEY"
+       API_KEY:
          secret-key: "external-api-key"
-       - environment-variable: "SOME_HARD_CODED_ENV"
+       SOME_HARD_CODED_ENV:
          value: "hard-coded-value"
    ```
 
@@ -540,11 +540,11 @@ Kuba supports AWS Secrets Manager for fetching secrets. To use AWS:
    default:
      provider: aws
      env:
-       - environment-variable: "DATABASE_URL"
+       DATABASE_URL:
          secret-key: "database-connection-string"
-       - environment-variable: "API_KEY"
+       API_KEY:
          secret-key: "external-api-key"
-       - environment-variable: "SOME_HARD_CODED_ENV"
+       SOME_HARD_CODED_ENV:
          value: "hard-coded-value"
    ```
 
@@ -570,9 +570,9 @@ Kuba supports Azure Key Vault for fetching secrets. To use Azure Key Vault:
    default:
      provider: azure
      env:
-       - environment-variable: "DATABASE_URL"
+       DATABASE_URL:
          secret-key: "database-connection-string"
-       - environment-variable: "SOME_HARD_CODED_ENV"
+       SOME_HARD_CODED_ENV:
          value: "hard-coded-value"
    ```
 
@@ -599,11 +599,11 @@ To use OpenBao:
    default:
      provider: openbao
      env:
-       - environment-variable: "DATABASE_URL"
+       DATABASE_URL:
          secret-key: "secret/database-url"
-       - environment-variable: "API_KEY"
+       API_KEY:
          secret-key: "secret/api-key"
-       - environment-variable: "SOME_HARD_CODED_ENV"
+       SOME_HARD_CODED_ENV:
          value: "hard-coded-value"
    ```
 
@@ -613,7 +613,7 @@ To use OpenBao:
 default:
   provider: openbao
   env:
-    - environment-variable: "DATABASE_URL"
+    DATABASE_URL:
       secret-key: "database-url"
       project: "secret"  # This will look for secret/database-url
 ```
