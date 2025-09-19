@@ -117,15 +117,36 @@ func interpolateEnvVars(value string, resolvedVars map[string]string) string {
 	// Regex to match ${VAR_NAME} and ${VAR_NAME:-default} patterns
 	re := regexp.MustCompile(`\$\{([^}]+)\}`)
 
-	return re.ReplaceAllStringFunc(value, func(match string) string {
-		// Extract the variable name and optional default from ${VAR_NAME} or ${VAR_NAME:-default}
-		content := match[2 : len(match)-1]
+	// Keep interpolating until no more changes are made to handle nested variables
+	prevValue := ""
+	for prevValue != value {
+		prevValue = value
+		value = re.ReplaceAllStringFunc(value, func(match string) string {
+			// Extract the variable name and optional default from ${VAR_NAME} or ${VAR_NAME:-default}
+			content := match[2 : len(match)-1]
 
-		// Check if there's a default value specified
-		if strings.Contains(content, ":-") {
-			parts := strings.SplitN(content, ":-", 2)
-			varName := parts[0]
-			defaultValue := parts[1]
+			// Check if there's a default value specified
+			if strings.Contains(content, ":-") {
+				parts := strings.SplitN(content, ":-", 2)
+				varName := parts[0]
+				defaultValue := parts[1]
+
+				// First check if we have this variable from previously resolved mappings
+				if resolvedValue, exists := resolvedVars[varName]; exists {
+					return resolvedValue
+				}
+
+				// Then check if it's an environment variable
+				if envValue := os.Getenv(varName); envValue != "" {
+					return envValue
+				}
+
+				// If not found, return the default value
+				return defaultValue
+			}
+
+			// No default value specified, use original logic
+			varName := content
 
 			// First check if we have this variable from previously resolved mappings
 			if resolvedValue, exists := resolvedVars[varName]; exists {
@@ -137,26 +158,12 @@ func interpolateEnvVars(value string, resolvedVars map[string]string) string {
 				return envValue
 			}
 
-			// If not found, return the default value
-			return defaultValue
-		}
+			// If not found, return the original pattern (could be useful for debugging)
+			return match
+		})
+	}
 
-		// No default value specified, use original logic
-		varName := content
-
-		// First check if we have this variable from previously resolved mappings
-		if resolvedValue, exists := resolvedVars[varName]; exists {
-			return resolvedValue
-		}
-
-		// Then check if it's an environment variable
-		if envValue := os.Getenv(varName); envValue != "" {
-			return envValue
-		}
-
-		// If not found, return the original pattern (could be useful for debugging)
-		return match
-	})
+	return value
 }
 
 // processValueInterpolations processes all value fields in env items to resolve environment variable interpolations
