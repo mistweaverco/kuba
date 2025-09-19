@@ -766,3 +766,284 @@ child:
 		require.Error(t, err)
 	})
 }
+
+func TestMultipleVariableInterpolation(t *testing.T) {
+	t.Run("multiple variables in single string", func(t *testing.T) {
+		config := &KubaConfig{
+			Environments: map[string]Environment{
+				"default": {
+					Provider: "gcp",
+					Project:  "test-project",
+					Env: map[string]EnvItem{
+						"VAR1":     {Value: "value1"},
+						"VAR2":     {Value: "value2"},
+						"VAR3":     {Value: "value3"},
+						"COMBINED": {Value: "prefix-${VAR1}-middle-${VAR2}-suffix-${VAR3}"},
+					},
+				},
+			},
+		}
+
+		err := processValueInterpolations(config)
+		require.NoError(t, err)
+
+		// Check that all variables were interpolated correctly
+		env := config.Environments["default"]
+		require.Equal(t, "prefix-value1-middle-value2-suffix-value3", env.Env["COMBINED"].Value)
+	})
+
+	t.Run("complex nested interpolation", func(t *testing.T) {
+		config := &KubaConfig{
+			Environments: map[string]Environment{
+				"default": {
+					Provider: "gcp",
+					Project:  "test-project",
+					Env: map[string]EnvItem{
+						"HOST":     {Value: "api.example.com"},
+						"PORT":     {Value: "443"},
+						"PROTOCOL": {Value: "https"},
+						"PATH":     {Value: "/v1/endpoint"},
+						"URL":      {Value: "${PROTOCOL}://${HOST}:${PORT}${PATH}"},
+					},
+				},
+			},
+		}
+
+		err := processValueInterpolations(config)
+		require.NoError(t, err)
+
+		// Check that complex interpolation worked
+		env := config.Environments["default"]
+		require.Equal(t, "https://api.example.com:443/v1/endpoint", env.Env["URL"].Value)
+	})
+
+	t.Run("multiple variables with defaults", func(t *testing.T) {
+		config := &KubaConfig{
+			Environments: map[string]Environment{
+				"default": {
+					Provider: "gcp",
+					Project:  "test-project",
+					Env: map[string]EnvItem{
+						"EXISTING_VAR": {Value: "existing"},
+						"COMPLEX":      {Value: "result: ${EXISTING_VAR}, missing1: ${MISSING1:-default1}, missing2: ${MISSING2:-default2}"},
+					},
+				},
+			},
+		}
+
+		err := processValueInterpolations(config)
+		require.NoError(t, err)
+
+		// Check that mixed interpolation with defaults worked
+		env := config.Environments["default"]
+		require.Equal(t, "result: existing, missing1: default1, missing2: default2", env.Env["COMPLEX"].Value)
+	})
+
+	t.Run("variables referencing other variables", func(t *testing.T) {
+		config := &KubaConfig{
+			Environments: map[string]Environment{
+				"default": {
+					Provider: "gcp",
+					Project:  "test-project",
+					Env: map[string]EnvItem{
+						"BASE_URL": {Value: "https://api.example.com"},
+						"VERSION":  {Value: "v1"},
+						"ENDPOINT": {Value: "users"},
+						"FULL_URL": {Value: "${BASE_URL}/${VERSION}/${ENDPOINT}"},
+					},
+				},
+			},
+		}
+
+		err := processValueInterpolations(config)
+		require.NoError(t, err)
+
+		// Check that chained interpolation worked
+		env := config.Environments["default"]
+		require.Equal(t, "https://api.example.com/v1/users", env.Env["FULL_URL"].Value)
+	})
+
+	t.Run("multiple iterations needed", func(t *testing.T) {
+		config := &KubaConfig{
+			Environments: map[string]Environment{
+				"default": {
+					Provider: "gcp",
+					Project:  "test-project",
+					Env: map[string]EnvItem{
+						"VAR1": {Value: "first"},
+						"VAR2": {Value: "${VAR1}-second"},
+						"VAR3": {Value: "${VAR2}-third"},
+						"VAR4": {Value: "${VAR3}-fourth"},
+					},
+				},
+			},
+		}
+
+		err := processValueInterpolations(config)
+		require.NoError(t, err)
+
+		// Check that chained interpolation worked across multiple iterations
+		env := config.Environments["default"]
+		require.Equal(t, "first", env.Env["VAR1"].Value)
+		require.Equal(t, "first-second", env.Env["VAR2"].Value)
+		require.Equal(t, "first-second-third", env.Env["VAR3"].Value)
+		require.Equal(t, "first-second-third-fourth", env.Env["VAR4"].Value)
+	})
+
+	t.Run("mixed with environment variables", func(t *testing.T) {
+		// Set test environment variable
+		os.Setenv("EXTERNAL_VAR", "external_value")
+		defer os.Unsetenv("EXTERNAL_VAR")
+
+		config := &KubaConfig{
+			Environments: map[string]Environment{
+				"default": {
+					Provider: "gcp",
+					Project:  "test-project",
+					Env: map[string]EnvItem{
+						"INTERNAL_VAR": {Value: "internal"},
+						"MIXED":        {Value: "config: ${INTERNAL_VAR}, env: ${EXTERNAL_VAR}"},
+					},
+				},
+			},
+		}
+
+		err := processValueInterpolations(config)
+		require.NoError(t, err)
+
+		// Check that mixed interpolation worked
+		env := config.Environments["default"]
+		require.Equal(t, "config: internal, env: external_value", env.Env["MIXED"].Value)
+	})
+
+	t.Run("deeply nested variable references", func(t *testing.T) {
+		config := &KubaConfig{
+			Environments: map[string]Environment{
+				"default": {
+					Provider: "gcp",
+					Project:  "test-project",
+					Env: map[string]EnvItem{
+						"LEVEL1": {Value: "base"},
+						"LEVEL2": {Value: "${LEVEL1}-extended"},
+						"LEVEL3": {Value: "${LEVEL2}-more"},
+						"LEVEL4": {Value: "${LEVEL3}-final"},
+						"RESULT": {Value: "Final result: ${LEVEL4}"},
+					},
+				},
+			},
+		}
+
+		err := processValueInterpolations(config)
+		require.NoError(t, err)
+
+		// Check that deeply nested interpolation worked
+		env := config.Environments["default"]
+		require.Equal(t, "base", env.Env["LEVEL1"].Value)
+		require.Equal(t, "base-extended", env.Env["LEVEL2"].Value)
+		require.Equal(t, "base-extended-more", env.Env["LEVEL3"].Value)
+		require.Equal(t, "base-extended-more-final", env.Env["LEVEL4"].Value)
+		require.Equal(t, "Final result: base-extended-more-final", env.Env["RESULT"].Value)
+	})
+
+	t.Run("variables with special characters in names", func(t *testing.T) {
+		config := &KubaConfig{
+			Environments: map[string]Environment{
+				"default": {
+					Provider: "gcp",
+					Project:  "test-project",
+					Env: map[string]EnvItem{
+						"VAR_WITH_UNDERSCORES": {Value: "underscore_value"},
+						"VAR-WITH-DASHES":      {Value: "dash_value"},
+						"VAR.WITH.DOTS":        {Value: "dot_value"},
+						"COMBINED":             {Value: "${VAR_WITH_UNDERSCORES}-${VAR-WITH-DASHES}-${VAR.WITH.DOTS}"},
+					},
+				},
+			},
+		}
+
+		err := processValueInterpolations(config)
+		require.NoError(t, err)
+
+		// Check that variables with special characters work
+		env := config.Environments["default"]
+		require.Equal(t, "underscore_value-dash_value-dot_value", env.Env["COMBINED"].Value)
+	})
+
+	t.Run("empty and whitespace values", func(t *testing.T) {
+		config := &KubaConfig{
+			Environments: map[string]Environment{
+				"default": {
+					Provider: "gcp",
+					Project:  "test-project",
+					Env: map[string]EnvItem{
+						"EMPTY_VAR": {Value: ""},
+						"SPACE_VAR": {Value: " "},
+						"RESULT":    {Value: "empty:'${EMPTY_VAR}' space:'${SPACE_VAR}'"},
+					},
+				},
+			},
+		}
+
+		err := processValueInterpolations(config)
+		require.NoError(t, err)
+
+		// Check that empty and whitespace values are handled correctly
+		env := config.Environments["default"]
+		require.Equal(t, "empty:'' space:' '", env.Env["RESULT"].Value)
+	})
+
+	t.Run("circular reference detection", func(t *testing.T) {
+		config := &KubaConfig{
+			Environments: map[string]Environment{
+				"default": {
+					Provider: "gcp",
+					Project:  "test-project",
+					Env: map[string]EnvItem{
+						"VAR1": {Value: "${VAR2}"},
+						"VAR2": {Value: "${VAR1}"},
+					},
+				},
+			},
+		}
+
+		err := processValueInterpolations(config)
+		require.NoError(t, err)
+
+		// Check that circular references are handled gracefully (should remain unchanged)
+		env := config.Environments["default"]
+		require.Equal(t, "${VAR2}", env.Env["VAR1"].Value)
+		require.Equal(t, "${VAR1}", env.Env["VAR2"].Value)
+	})
+
+	t.Run("multiple environments with same variable names", func(t *testing.T) {
+		config := &KubaConfig{
+			Environments: map[string]Environment{
+				"env1": {
+					Provider: "gcp",
+					Project:  "project1",
+					Env: map[string]EnvItem{
+						"SHARED_VAR": {Value: "env1_value"},
+						"RESULT1":    {Value: "env1: ${SHARED_VAR}"},
+					},
+				},
+				"env2": {
+					Provider: "gcp",
+					Project:  "project2",
+					Env: map[string]EnvItem{
+						"SHARED_VAR": {Value: "env2_value"},
+						"RESULT2":    {Value: "env2: ${SHARED_VAR}"},
+					},
+				},
+			},
+		}
+
+		err := processValueInterpolations(config)
+		require.NoError(t, err)
+
+		// Check that each environment resolves its own variables independently
+		env1 := config.Environments["env1"]
+		env2 := config.Environments["env2"]
+		require.Equal(t, "env1: env1_value", env1.Env["RESULT1"].Value)
+		require.Equal(t, "env2: env2_value", env2.Env["RESULT2"].Value)
+	})
+}
