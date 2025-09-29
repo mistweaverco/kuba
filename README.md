@@ -6,6 +6,7 @@
 
 [![Made with love](assets/badge-made-with-love.svg)](https://github.com/mistweaverco/kuba/graphs/contributors)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/mistweaverco/kuba?style=for-the-badge)](https://github.com/mistweaverco/kuba/releases/latest)
+[![Development status)](assets/badge-development-status.svg)](https://github.com/orgs/mistweaverco/projects/5/views/1?filterQuery=repo%3Amistweaverco%2Fkuba)
 [![License](https://img.shields.io/github/license/mistweaverco/kuba?style=for-the-badge)](./LICENSE)
 [![GitHub issues](https://img.shields.io/github/issues/mistweaverco/kuba?style=for-the-badge)](https://github.com/mistweaverco/kuba/issues)
 [![Discord](assets/badge-discord.svg)](https://mistweaverco.com/discord)
