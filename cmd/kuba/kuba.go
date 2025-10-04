@@ -42,6 +42,7 @@ func Execute() {
 func init() {
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(initCmd)
+	rootCmd.AddCommand(updateCmd)
 	// runCmd is added in run.go init() function
 	rootCmd.PersistentFlags().BoolVar(&cfg.Flags.Version, "version", false, "Kuba version")
 	rootCmd.PersistentFlags().BoolVarP(&cfg.Flags.Debug, "debug", "d", false, "Enable debug mode for verbose logging")
