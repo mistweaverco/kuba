@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -190,6 +191,115 @@ func (c *Cache) List() ([]CacheEntry, error) {
 	}
 
 	return entries, nil
+}
+
+// ClearFiltered clears cache entries based on filters
+func (c *Cache) ClearFiltered(path, kubaEnv, env string, expiredOnly bool) (int, error) {
+	logger := log.NewLogger()
+
+	// Build WHERE clause based on filters
+	var conditions []string
+	var args []interface{}
+	argIndex := 1
+
+	if path != "" {
+		conditions = append(conditions, fmt.Sprintf("path = $%d", argIndex))
+		args = append(args, path)
+		argIndex++
+	}
+
+	if kubaEnv != "" {
+		conditions = append(conditions, fmt.Sprintf("kuba_env = $%d", argIndex))
+		args = append(args, kubaEnv)
+		argIndex++
+	}
+
+	if env != "" {
+		conditions = append(conditions, fmt.Sprintf("env = $%d", argIndex))
+		args = append(args, env)
+		argIndex++
+	}
+
+	if expiredOnly {
+		conditions = append(conditions, fmt.Sprintf("expires_at < $%d", argIndex))
+		args = append(args, time.Now())
+		argIndex++
+	}
+
+	// Build query
+	whereClause := ""
+	if len(conditions) > 0 {
+		whereClause = "WHERE " + strings.Join(conditions, " AND ")
+	}
+
+	query := fmt.Sprintf("DELETE FROM secrets %s", whereClause)
+
+	result, err := c.db.Exec(query, args...)
+	if err != nil {
+		return 0, fmt.Errorf("failed to clear cache entries: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return 0, fmt.Errorf("failed to get rows affected: %w", err)
+	}
+
+	logger.Debug("Cleared cache entries", "count", rowsAffected, "path", path, "kuba_env", kubaEnv, "env", env, "expired_only", expiredOnly)
+	return int(rowsAffected), nil
+}
+
+// UpdateExpiry updates the expiry time for cache entries based on filters
+func (c *Cache) UpdateExpiry(path, kubaEnv, env string, newTTL time.Duration) (int, error) {
+	logger := log.NewLogger()
+
+	// Build WHERE clause based on filters
+	var conditions []string
+	var args []interface{}
+	argIndex := 1
+
+	if path != "" {
+		conditions = append(conditions, fmt.Sprintf("path = $%d", argIndex))
+		args = append(args, path)
+		argIndex++
+	}
+
+	if kubaEnv != "" {
+		conditions = append(conditions, fmt.Sprintf("kuba_env = $%d", argIndex))
+		args = append(args, kubaEnv)
+		argIndex++
+	}
+
+	if env != "" {
+		conditions = append(conditions, fmt.Sprintf("env = $%d", argIndex))
+		args = append(args, env)
+		argIndex++
+	}
+
+	// Build query - set new expiry time to now + TTL
+	newExpiryTime := time.Now().Add(newTTL)
+	conditions = append(conditions, fmt.Sprintf("expires_at = $%d", argIndex))
+	args = append(args, newExpiryTime)
+	argIndex++
+
+	whereClause := ""
+	if len(conditions) > 1 { // More than just the expiry condition
+		whereClause = "WHERE " + strings.Join(conditions[:len(conditions)-1], " AND ")
+	}
+
+	query := fmt.Sprintf("UPDATE secrets SET expires_at = $%d %s", argIndex, whereClause)
+
+	result, err := c.db.Exec(query, args...)
+	if err != nil {
+		return 0, fmt.Errorf("failed to update cache expiry: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return 0, fmt.Errorf("failed to get rows affected: %w", err)
+	}
+
+	logger.Debug("Updated cache expiry", "count", rowsAffected, "path", path, "kuba_env", kubaEnv, "env", env, "new_ttl", newTTL, "new_expiry", newExpiryTime)
+	return int(rowsAffected), nil
 }
 
 // getCacheDir returns the cache directory path
