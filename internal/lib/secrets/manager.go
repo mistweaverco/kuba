@@ -268,5 +268,14 @@ func (f *SecretManagerFactory) GetSecretsForEnvironment(ctx context.Context, env
 		}
 	}
 
+	// Perform interpolation on all values now that we have all secrets and values
+	// This allows values to reference other environment variables that were just resolved
+	for key, value := range allSecrets {
+		if strings.Contains(value, "${") {
+			interpolatedValue := config.InterpolateEnvVars(value, allSecrets)
+			allSecrets[key] = interpolatedValue
+		}
+	}
+
 	return allSecrets, nil
 }
