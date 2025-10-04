@@ -110,10 +110,10 @@ func (e *Environment) GetEnvItems() []EnvItem {
 	return items
 }
 
-// interpolateEnvVars replaces ${VAR_NAME} patterns with actual environment variable values
+// InterpolateEnvVars replaces ${VAR_NAME} patterns with actual environment variable values
 // It also supports previously resolved variables from the same configuration
 // Supports both ${VAR_NAME} and ${VAR_NAME:-default} syntax
-func interpolateEnvVars(value string, resolvedVars map[string]string) string {
+func InterpolateEnvVars(value string, resolvedVars map[string]string) string {
 	// Regex to match ${VAR_NAME} and ${VAR_NAME:-default} patterns
 	re := regexp.MustCompile(`\$\{([^}]+)\}`)
 
@@ -166,6 +166,51 @@ func interpolateEnvVars(value string, resolvedVars map[string]string) string {
 	return value
 }
 
+// interpolateConfigVars replaces ${VAR_NAME} patterns with resolved variables from configuration only
+// This version does not check system environment variables, only the resolvedVars map
+func interpolateConfigVars(value string, resolvedVars map[string]string) string {
+	// Regex to match ${VAR_NAME} and ${VAR_NAME:-default} patterns
+	re := regexp.MustCompile(`\$\{([^}]+)\}`)
+
+	// Keep interpolating until no more changes are made to handle nested variables
+	prevValue := ""
+	for prevValue != value {
+		prevValue = value
+		value = re.ReplaceAllStringFunc(value, func(match string) string {
+			// Extract the variable name and optional default from ${VAR_NAME} or ${VAR_NAME:-default}
+			content := match[2 : len(match)-1]
+
+			// Check if there's a default value specified
+			if strings.Contains(content, ":-") {
+				parts := strings.SplitN(content, ":-", 2)
+				varName := parts[0]
+				defaultValue := parts[1]
+
+				// Check if we have this variable from previously resolved mappings
+				if resolvedValue, exists := resolvedVars[varName]; exists {
+					return resolvedValue
+				}
+
+				// If not found, return the default value
+				return defaultValue
+			}
+
+			// No default value specified, use original logic
+			varName := content
+
+			// Check if we have this variable from previously resolved mappings
+			if resolvedValue, exists := resolvedVars[varName]; exists {
+				return resolvedValue
+			}
+
+			// If not found, return the original pattern (could be useful for debugging)
+			return match
+		})
+	}
+
+	return value
+}
+
 // processValueInterpolations processes all value fields in env items to resolve environment variable interpolations
 func processValueInterpolations(config *KubaConfig) error {
 	// Process environments in order to handle dependencies correctly
@@ -200,7 +245,7 @@ func processValueInterpolations(config *KubaConfig) error {
 					// Check if this value contains interpolation patterns
 					if strings.Contains(strValue, "${") {
 						// Interpolate the value
-						interpolatedValue := interpolateEnvVars(strValue, resolvedVars)
+						interpolatedValue := InterpolateEnvVars(strValue, resolvedVars)
 
 						// If the value changed, update it
 						if interpolatedValue != strValue {
@@ -248,7 +293,7 @@ func processValueInterpolations(config *KubaConfig) error {
 
 		// Interpolate environment-level project field
 		if env.Project != "" && strings.Contains(env.Project, "${") {
-			interpolated := interpolateEnvVars(env.Project, resolvedVars)
+			interpolated := InterpolateEnvVars(env.Project, resolvedVars)
 			if interpolated != env.Project {
 				env.Project = interpolated
 			}
@@ -258,15 +303,15 @@ func processValueInterpolations(config *KubaConfig) error {
 		for name, envItem := range env.Env {
 			// secret-key
 			if envItem.SecretKey != "" && strings.Contains(envItem.SecretKey, "${") {
-				envItem.SecretKey = interpolateEnvVars(envItem.SecretKey, resolvedVars)
+				envItem.SecretKey = InterpolateEnvVars(envItem.SecretKey, resolvedVars)
 			}
 			// secret-path
 			if envItem.SecretPath != "" && strings.Contains(envItem.SecretPath, "${") {
-				envItem.SecretPath = interpolateEnvVars(envItem.SecretPath, resolvedVars)
+				envItem.SecretPath = InterpolateEnvVars(envItem.SecretPath, resolvedVars)
 			}
 			// project (item-level)
 			if envItem.Project != "" && strings.Contains(envItem.Project, "${") {
-				envItem.Project = interpolateEnvVars(envItem.Project, resolvedVars)
+				envItem.Project = InterpolateEnvVars(envItem.Project, resolvedVars)
 			}
 			env.Env[name] = envItem
 		}
