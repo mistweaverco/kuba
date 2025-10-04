@@ -2,6 +2,7 @@ package kuba
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -12,6 +13,7 @@ import (
 
 var (
 	cachePath    string
+	cacheName    string
 	cacheEnv     string
 	cacheVerbose bool
 )
@@ -50,11 +52,15 @@ var cacheClearCmd = &cobra.Command{
 	Short: "Clear cached secrets",
 	Long: `Clear cached secrets.
 
-By default, clears all cached secrets. Use --path to clear secrets for a specific
-kuba.yaml file, or --env to clear secrets for a specific environment.`,
+By default, clears secrets from ./kuba.yaml in the current directory. Use filters to clear specific entries:
+- --path: Clear secrets for a specific kuba.yaml file (defaults to ./kuba.yaml)
+- --env: Clear secrets for a specific kuba environment
+- --name: Clear secrets for a specific environment name
+- --all: Clear all cached secrets from all paths
+- --expired: Clear only expired secrets`,
 	Args: cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return runCacheClear()
+		return runCacheClear(cmd)
 	},
 }
 
@@ -65,6 +71,25 @@ var cacheStatsCmd = &cobra.Command{
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runCacheStats()
+	},
+}
+
+var cacheExpireCmd = &cobra.Command{
+	Use:   "expire",
+	Short: "Set expiry time for cached secrets",
+	Long: `Set expiry time for cached secrets.
+
+This command allows you to update the expiry time for existing cache entries.
+You can filter by path, env, or name, and set a new expiry time using
+human-readable format (e.g., "2w", "1d", "72h", "1y").
+
+Examples:
+  kuba cache expire --path kuba.yaml --ttl 2w
+  kuba cache expire --name production --ttl 1d
+  kuba cache expire --env staging --ttl 72h`,
+	Args: cobra.NoArgs,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return runCacheExpire(cmd)
 	},
 }
 
@@ -91,15 +116,21 @@ func init() {
 	cacheCmd.AddCommand(cacheListCmd)
 	cacheCmd.AddCommand(cacheClearCmd)
 	cacheCmd.AddCommand(cacheStatsCmd)
+	cacheCmd.AddCommand(cacheExpireCmd)
 
 	// Global flags for cache commands
 	cacheCmd.PersistentFlags().StringVarP(&cachePath, "path", "p", "", "Path to kuba.yaml file")
-	cacheCmd.PersistentFlags().StringVarP(&cacheEnv, "env", "e", "", "Environment name")
+	cacheCmd.PersistentFlags().StringVarP(&cacheEnv, "env", "e", "", "Kuba environment name")
+	cacheCmd.PersistentFlags().StringVarP(&cacheName, "name", "n", "", "Environment name")
 	cacheCmd.PersistentFlags().BoolVarP(&cacheVerbose, "verbose", "v", false, "Verbose output")
 
 	// Cache clear flags
 	cacheClearCmd.Flags().Bool("all", false, "Clear all cached secrets")
 	cacheClearCmd.Flags().Bool("expired", false, "Clear only expired secrets")
+
+	// Cache expire flags
+	cacheExpireCmd.Flags().String("ttl", "", "Set new expiry time (e.g., 2w, 1d, 72h, 1y)")
+	cacheExpireCmd.MarkFlagRequired("ttl")
 
 	// Cache config flags (moved to config command)
 	configCacheCmd.Flags().Bool("enable", false, "Enable caching")
@@ -200,52 +231,64 @@ func runCacheList() error {
 	return nil
 }
 
-func runCacheClear() error {
-	// Load global config
-	globalConfig, err := config.LoadGlobalConfig()
+func runCacheClear(cmd *cobra.Command) error {
+	// Get flags
+	all, _ := cmd.Flags().GetBool("all")
+	expired, _ := cmd.Flags().GetBool("expired")
+
+	// Initialize cache
+	cacheInstance, err := cache.NewCache()
 	if err != nil {
-		return fmt.Errorf("failed to load global config: %w", err)
+		return fmt.Errorf("failed to initialize cache: %w", err)
 	}
+	defer cacheInstance.Close()
 
-	// Convert to cache types
-	cacheGlobalConfig := &cache.GlobalConfig{
-		Cache: cache.CacheConfig{
-			Enabled: globalConfig.Cache.Enabled,
-			TTL:     globalConfig.Cache.TTL,
-		},
-	}
-
-	// Initialize cache manager
-	manager, err := cache.NewManager(cacheGlobalConfig)
-	if err != nil {
-		return fmt.Errorf("failed to initialize cache manager: %w", err)
-	}
-	defer manager.Close()
-
-	if !manager.IsEnabled() {
-		fmt.Println("Caching is disabled.")
-		return nil
+	// Set default path if not provided
+	pathToUse := cachePath
+	if pathToUse == "" {
+		// Get current working directory
+		cwd, err := os.Getwd()
+		if err != nil {
+			return fmt.Errorf("failed to get current working directory: %w", err)
+		}
+		pathToUse = filepath.Join(cwd, "kuba.yaml")
 	}
 
 	// Determine what to clear
-	if cachePath != "" && cacheEnv != "" {
-		// Clear specific environment
-		if err := manager.ClearByEnvironment(cachePath, cacheEnv); err != nil {
-			return fmt.Errorf("failed to clear cache for environment: %w", err)
-		}
-		fmt.Printf("Cleared cache for environment '%s' in %s\n", cacheEnv, cachePath)
-	} else if cachePath != "" {
-		// Clear specific path
-		if err := manager.ClearByPath(cachePath); err != nil {
-			return fmt.Errorf("failed to clear cache for path: %w", err)
-		}
-		fmt.Printf("Cleared cache for %s\n", cachePath)
-	} else {
+	var count int
+	if all {
 		// Clear all
-		if err := manager.Clear(); err != nil {
+		if err := cacheInstance.Clear(); err != nil {
 			return fmt.Errorf("failed to clear cache: %w", err)
 		}
 		fmt.Println("Cleared all cached secrets.")
+	} else {
+		// Clear filtered entries
+		count, err = cacheInstance.ClearFiltered(pathToUse, cacheEnv, cacheName, expired)
+		if err != nil {
+			return fmt.Errorf("failed to clear cache entries: %w", err)
+		}
+
+		// Show results
+		fmt.Printf("Cleared %d cache entries\n", count)
+
+		// Show filters used
+		filters := []string{}
+		if pathToUse != "" {
+			filters = append(filters, fmt.Sprintf("path=%s", pathToUse))
+		}
+		if cacheEnv != "" {
+			filters = append(filters, fmt.Sprintf("env=%s", cacheEnv))
+		}
+		if cacheName != "" {
+			filters = append(filters, fmt.Sprintf("name=%s", cacheName))
+		}
+		if expired {
+			filters = append(filters, "expired=true")
+		}
+		if len(filters) > 0 {
+			fmt.Printf("Filters applied: %s\n", strings.Join(filters, ", "))
+		}
 	}
 
 	return nil
@@ -358,6 +401,56 @@ func runCacheConfigWithCmd(cmd *cobra.Command) error {
 	fmt.Println("Cache configuration updated successfully.")
 	fmt.Printf("Enabled: %v\n", globalConfig.Cache.Enabled)
 	fmt.Printf("TTL: %s\n", globalConfig.Cache.TTL)
+
+	return nil
+}
+
+func runCacheExpire(cmd *cobra.Command) error {
+	// Get TTL from flag
+	ttlStr, _ := cmd.Flags().GetString("ttl")
+	if ttlStr == "" {
+		return fmt.Errorf("--ttl is required")
+	}
+
+	// Parse TTL
+	duration, _, err := cache.ParseDuration(ttlStr)
+	if err != nil {
+		return fmt.Errorf("invalid TTL format: %w", err)
+	}
+
+	// Initialize cache
+	cacheInstance, err := cache.NewCache()
+	if err != nil {
+		return fmt.Errorf("failed to initialize cache: %w", err)
+	}
+	defer cacheInstance.Close()
+
+	// Update expiry for filtered entries
+	count, err := cacheInstance.UpdateExpiry(cachePath, cacheEnv, cacheName, duration)
+	if err != nil {
+		return fmt.Errorf("failed to update cache expiry: %w", err)
+	}
+
+	// Show results
+	fmt.Printf("Updated expiry for %d cache entries\n", count)
+	fmt.Printf("New TTL: %s\n", duration)
+
+	// Show filters used
+	filters := []string{}
+	if cachePath != "" {
+		filters = append(filters, fmt.Sprintf("path=%s", cachePath))
+	}
+	if cacheEnv != "" {
+		filters = append(filters, fmt.Sprintf("env=%s", cacheEnv))
+	}
+	if cacheName != "" {
+		filters = append(filters, fmt.Sprintf("name=%s", cacheName))
+	}
+	if len(filters) > 0 {
+		fmt.Printf("Filters applied: %s\n", strings.Join(filters, ", "))
+	} else {
+		fmt.Println("Applied to all cache entries")
+	}
 
 	return nil
 }
