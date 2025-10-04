@@ -24,6 +24,14 @@
             { "type": "array", "items": { "type": "string" } }
           ]
         },
+        "cache": {
+          "description": "Cache configuration for this environment. Can be a boolean, number (seconds), or duration string (e.g., '1d', '2w', '72h', '2y').",
+          "oneOf": [
+            { "type": "boolean" },
+            { "type": "number" },
+            { "type": "string", "pattern": "^(\\d+(?:\\.\\d+)?[smhdwy]|\\d+)$" }
+          ]
+        },
         "env": {
           "description": "Mapping of environment variable name to configuration object.",
           "type": "object",

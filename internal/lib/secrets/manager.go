@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/mistweaverco/kuba/internal/config"
+	"github.com/mistweaverco/kuba/internal/lib/cache"
 	"github.com/mistweaverco/kuba/internal/lib/log"
 )
 
@@ -73,7 +75,128 @@ func (f *SecretManagerFactory) CreateSecretManager(ctx context.Context, provider
 
 // GetSecretsForEnvironment retrieves all secrets and values for a given environment configuration
 func (f *SecretManagerFactory) GetSecretsForEnvironment(ctx context.Context, env *config.Environment) (map[string]string, error) {
+	return f.GetSecretsForEnvironmentWithCache(ctx, env, "", "")
+}
+
+// GetSecretsForEnvironmentWithCache retrieves all secrets and values for a given environment configuration with caching
+func (f *SecretManagerFactory) GetSecretsForEnvironmentWithCache(ctx context.Context, env *config.Environment, configPath, envName string) (map[string]string, error) {
 	logger := log.NewLogger()
+
+	// Initialize cache manager if config path is provided
+	var cacheManager *cache.Manager
+	var cacheEnabled bool
+	var cacheTTL time.Duration
+
+	if configPath != "" {
+		// Load global config
+		globalConfig, err := config.LoadGlobalConfig()
+		if err != nil {
+			logger.Debug("Failed to load global config, using defaults", "error", err)
+			globalConfig = config.DefaultGlobalConfig()
+		}
+
+		// Check if caching should be enabled (global or environment level)
+		shouldEnableCache := globalConfig.Cache.Enabled
+		if env.Cache != nil {
+			shouldEnableCache = env.Cache.Enabled
+		}
+
+		// Only create cache manager if caching is enabled
+		if shouldEnableCache {
+			// Convert to cache types
+			cacheGlobalConfig := &cache.GlobalConfig{
+				Cache: cache.CacheConfig{
+					Enabled: globalConfig.Cache.Enabled,
+					TTL:     globalConfig.Cache.TTL,
+				},
+			}
+
+			cacheManager, err = cache.NewManager(cacheGlobalConfig)
+			if err != nil {
+				logger.Debug("Failed to initialize cache manager", "error", err)
+			} else {
+				// Convert env cache config
+				var envCache *cache.CacheConfig
+				if env.Cache != nil {
+					envCache = &cache.CacheConfig{
+						Enabled: env.Cache.Enabled,
+						TTL:     env.Cache.TTL,
+					}
+				}
+
+				cacheEnabled, cacheTTL = cacheManager.GetCacheConfig(envCache)
+				logger.Debug("Cache configuration", "enabled", cacheEnabled, "ttl", cacheTTL)
+			}
+		} else {
+			logger.Debug("Caching disabled", "global_enabled", globalConfig.Cache.Enabled, "env_cache", env.Cache != nil)
+		}
+	}
+
+	// Try to retrieve all secrets from cache first
+	if cacheManager != nil && cacheEnabled && configPath != "" && envName != "" {
+		logger.Debug("Attempting to retrieve secrets from cache", "config_path", configPath, "env_name", envName)
+
+		// Get all env items to know what to look for
+		envItems := env.GetEnvItems()
+		cachedSecrets := make(map[string]string)
+		allCached := true
+
+		for _, envItem := range envItems {
+			// Skip value-based mappings as they don't need caching
+			if envItem.Value != nil {
+				continue
+			}
+
+			// Try to get from cache
+			if value, found, err := cacheManager.Get(configPath, envName, envItem.EnvironmentVariable); err != nil {
+				logger.Debug("Failed to get secret from cache", "env_var", envItem.EnvironmentVariable, "error", err)
+				allCached = false
+				break
+			} else if found {
+				cachedSecrets[envItem.EnvironmentVariable] = value
+				logger.Debug("Retrieved secret from cache", "env_var", envItem.EnvironmentVariable)
+			} else {
+				logger.Debug("Secret not found in cache", "env_var", envItem.EnvironmentVariable)
+				allCached = false
+				break
+			}
+		}
+
+		// If all secrets were found in cache, combine with static values
+		if allCached && len(cachedSecrets) > 0 {
+			logger.Debug("All secrets retrieved from cache", "count", len(cachedSecrets))
+
+			// Combine cached secrets with static values
+			allSecrets := make(map[string]string)
+
+			// Add cached secrets
+			for envVar, value := range cachedSecrets {
+				allSecrets[envVar] = value
+			}
+
+			// Add static values
+			for _, envItem := range envItems {
+				if envItem.Value != nil {
+					allSecrets[envItem.EnvironmentVariable] = fmt.Sprintf("%v", envItem.Value)
+				}
+			}
+
+			// Interpolate all values
+			for key, value := range allSecrets {
+				if strings.Contains(value, "${") {
+					interpolatedValue := config.InterpolateEnvVars(value, allSecrets)
+					allSecrets[key] = interpolatedValue
+				}
+			}
+
+			// Clean up cache manager
+			cacheManager.Close()
+
+			return allSecrets, nil
+		}
+
+		logger.Debug("Not all secrets found in cache, fetching from providers", "cached_count", len(cachedSecrets))
+	}
 
 	// Group mappings by provider and project for secret-based mappings
 	providerGroups := make(map[string]map[string][]string)
@@ -275,6 +398,30 @@ func (f *SecretManagerFactory) GetSecretsForEnvironment(ctx context.Context, env
 			interpolatedValue := config.InterpolateEnvVars(value, allSecrets)
 			allSecrets[key] = interpolatedValue
 		}
+	}
+
+	// Cache the results if caching is enabled (only cache secrets, not static values)
+	if cacheManager != nil && cacheEnabled && configPath != "" && envName != "" {
+		cachedCount := 0
+		for _, envItem := range envItems {
+			// Only cache secrets (not static values)
+			if envItem.Value == nil && (envItem.SecretKey != "" || envItem.SecretPath != "") {
+				envVar := envItem.EnvironmentVariable
+				if value, exists := allSecrets[envVar]; exists {
+					if err := cacheManager.Set(configPath, envName, envVar, value, cacheTTL); err != nil {
+						logger.Debug("Failed to cache secret", "env_var", envVar, "error", err)
+					} else {
+						cachedCount++
+					}
+				}
+			}
+		}
+		logger.Debug("Cached secrets", "count", cachedCount, "ttl", cacheTTL)
+	}
+
+	// Clean up cache manager
+	if cacheManager != nil {
+		cacheManager.Close()
 	}
 
 	return allSecrets, nil

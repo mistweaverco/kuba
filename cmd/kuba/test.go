@@ -76,7 +76,7 @@ func runTest() error {
 	ctx := context.Background()
 
 	logger.Debug("Fetching secrets and values for environment")
-	values, err := factory.GetSecretsForEnvironment(ctx, env)
+	values, err := factory.GetSecretsForEnvironmentWithCache(ctx, env, cfgPath, testEnvironment)
 	if err != nil {
 		return fmt.Errorf("failed to retrieve values: %w", err)
 	}

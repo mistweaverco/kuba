@@ -47,6 +47,8 @@ jobs:
             linux-bun-${{ hashFiles('**/bun.lock') }}
       - name: Add kuba.schema.json to website
         run: cp kuba.schema.json web/static/kuba.schema.json
+      - name: Add kuba-global.schema.json to website
+        run: cp kuba-global.schema.json web/static/kuba-global.schema.json
       - name: Install dependencies
         run: cd web && bun install --frozen-lockfile
       - name: Create Website

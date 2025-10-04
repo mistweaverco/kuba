@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/mistweaverco/kuba/internal/lib/cache"
 	"github.com/mistweaverco/kuba/internal/lib/log"
 	"gopkg.in/yaml.v3"
 )
@@ -22,6 +23,7 @@ type Environment struct {
 	Project  string             `yaml:"project"`
 	Env      map[string]EnvItem `yaml:"env"`
 	Inherits []string           `yaml:"inherits,omitempty"`
+	Cache    *cache.CacheConfig `yaml:"cache,omitempty"`
 }
 
 // UnmarshalYAML implements custom YAML unmarshaling for Environment to support
@@ -32,6 +34,7 @@ func (e *Environment) UnmarshalYAML(value *yaml.Node) error {
 		Project  string             `yaml:"project"`
 		Env      map[string]EnvItem `yaml:"env"`
 		Inherits interface{}        `yaml:"inherits,omitempty"`
+		Cache    interface{}        `yaml:"cache,omitempty"`
 	}
 	var tmp rawEnv
 	if err := value.Decode(&tmp); err != nil {
@@ -63,6 +66,20 @@ func (e *Environment) UnmarshalYAML(value *yaml.Node) error {
 	default:
 		return fmt.Errorf("invalid type for inherits: %T", v)
 	}
+
+	// Parse cache configuration
+	e.Cache = nil
+	if tmp.Cache != nil {
+		cacheConfig := &cache.CacheConfig{}
+		duration, enabled, err := cache.ParseDuration(tmp.Cache)
+		if err != nil {
+			return fmt.Errorf("failed to parse cache configuration: %w", err)
+		}
+		cacheConfig.Enabled = enabled
+		cacheConfig.TTL = duration
+		e.Cache = cacheConfig
+	}
+
 	return nil
 }
 
