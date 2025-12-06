@@ -128,21 +128,21 @@ iwr https://kuba.mwco.app/install.ps1 -useb | iex
 ## Usage
 
 ```sh
-kuba run -- <your-command>
+kuba run -- <your-application>
 ```
 
 This will fetch all secrets defined in
 `kuba.yaml` and pass them as
-environment variables to any arbitrary command.
+environment variables to any arbitrary application.
 
 ### Debug Mode
 
 For troubleshooting configuration issues and seeing detailed execution steps, you can enable debug mode:
 
 ```sh
-kuba --debug run -- <your-command>
+kuba --debug run -- <your-application>
 # or use the short form
-kuba -d run -- <your-command>
+kuba -d run -- <your-application>
 ```
 
 Debug mode provides verbose logging that shows:
@@ -151,7 +151,7 @@ Debug mode provides verbose logging that shows:
 - Secret provider initialization
 - Secret retrieval attempts and results
 - Environment variable mapping
-- Command execution details
+- Application execution details
 
 This is particularly useful for:
 - Diagnosing cloud provider authentication issues
@@ -164,12 +164,24 @@ This is particularly useful for:
 
 Kuba provides several commands to help you manage your configuration:
 
+- `completion`: Generates shell completion scripts for Kuba
+- `config`: Manages global Kuba configuration options such as:
+  - `cache`: Enable or disable local caching of secrets
+- `convert`: Converts existing **dotenv** (`.env*`) files to `kuba.yaml` format
+- `help`: Displays help information for Kuba and its commands
+- `init`: Initializes a new `kuba.yaml` configuration file in the current directory
+- `run`: Runs an application with environment variables fetched from secrets
+- `show`: Displays the effective environment variables for a given configuration
+- `test`: Tests the configuration and secret retrieval without running an application
+- `update`: Updates Kuba to the latest version
+- `version`: Displays the current version of Kuba
+
 ```sh
 # Initialize a new configuration file
 kuba init
 
 # Run a command with secrets
-kuba run -- <command>
+kuba run -- <application> [args...]
 
 # Test secret retrieval without running a command
 kuba test --env <environment>
@@ -204,7 +216,11 @@ kuba run -- node dist/server.js
 
 ### Using the --contain flag
 
-The `--contain` flag prevents the merging of the current OS environment with the environment variables from `kuba.yaml`. This is useful when you want to ensure only the secrets defined in your configuration are available to the command.
+The `--contain` flag prevents the merging of the current OS environment with
+the environment variables from `kuba.yaml`.
+
+This is useful when you want to ensure only the secrets defined in
+your configuration are available to the application.
 
 ```sh
 # Only use environment variables from kuba.yaml
@@ -304,7 +320,11 @@ and maps them to environment variables. The example includes:
 
 Each top-level section corresponds to a different environment,
 such as `default`, `development`, `staging`, and `production`.
-They're completely arbitrary and can be named as you wish.
+
+They're completely arbitrary.
+
+The exception is `default`,
+which is the default to use, when no other `--env` is specified
 
 Each section specifies the cloud provider, the project ID,
 and a list of mappings between environment variables and secret keys.
@@ -464,7 +484,7 @@ kuba run --env development -- node dist/server.js
 ### Testing configuration and access
 
 Use the `test` subcommand to verify that Kuba can load your configuration and
-retrieve all mapped values for an environment without executing any program:
+retrieve all mapped values for an environment without executing any application:
 
 ```sh
 # Use default environment
@@ -479,6 +499,53 @@ kuba test --config ./config/kuba.yaml --env production
 
 This is useful for validating credentials, permissions, and
 configuration mappings during setup or CI.
+
+### Update kuba to the latest version
+
+To update kuba to the latest version, run:
+
+```sh
+kuba update
+```
+
+This fetches the latest release and replaces your
+existing kuba binary.
+
+It also backups your current binary in case you need to revert.
+
+### Converting dotenv (`.env*`) files
+
+To convert existing dotenv files to `kuba.yaml` format,
+
+```sh
+# Convert .env to kuba.yaml for the default environment
+kuba convert --infile .env
+
+# Convert .env.staging to my-kuba.yaml for the staging environment
+kuba convert --infile .env.staging --outfile my-kuba.yaml --env staging
+```
+
+### Show effective environment variables
+
+You can use the `show` subcommand to display the
+effective environment variables for a given configuration:
+
+```sh
+# Show environment variables for the default environment
+kuba show
+
+# Show environment variables for the production environment
+kuba show --env production
+
+# Point to a specific configuration file and environment
+kuba show --config ./config/kuba.yaml --env staging
+
+# Redact sensitive values
+kuba show --sensitive
+
+# Filter by one or more prefixes (case-insensitive)
+kuba show "db*" "api*"
+```
 
 ## Cloud Provider Setup
 
