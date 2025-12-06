@@ -56,20 +56,57 @@
 
 				<div class="card bg-base-200 mb-6">
 					<div class="card-body">
-						<ClickableHeadline level={3} id="running-commands-with-kuba" className="card-title"
-							>Running Commands with Kuba</ClickableHeadline
+						<ClickableHeadline level={3} id="running-applications-with-kuba" className="card-title"
+							>Running Applications with Kuba</ClickableHeadline
 						>
 						<p class="mb-4">The basic syntax for using Kuba is:</p>
 						<pre><code
 								class="language-bash"
 								data-toolbar-order="copy-to-clipboard"
-								data-prismjs-copy="📋">kuba run -- &lt;your-command&gt;</code
+								data-prismjs-copy="📋">kuba run -- &lt;your-application&gt;</code
+							></pre>
+						<p class="mt-4">
+							This will fetch all secrets defined in your <code>kuba.yaml</code> file and pass them as
+							environment variables to your application. By default, these secrets are merged with your
+							current OS environment.
+						</p>
+					</div>
+				</div>
+
+				<div class="card bg-base-200 mb-6">
+					<div class="card-body">
+						<ClickableHeadline level={3} id="running-commands-with-kuba" className="card-title"
+							>Running Commands with Kuba</ClickableHeadline
+						>
+						<p class="mb-4">The basic syntax for running a one-of command with Kuba is:</p>
+						<pre><code
+								class="language-bash"
+								data-toolbar-order="copy-to-clipboard"
+								data-prismjs-copy="📋">kuba run --command "echo \$SOME_SECRET"</code
 							></pre>
 						<p class="mt-4">
 							This will fetch all secrets defined in your <code>kuba.yaml</code> file and pass them as
 							environment variables to your command. By default, these secrets are merged with your current
 							OS environment.
 						</p>
+						<div class="alert alert-warning mt-6">
+							<i class="fa-solid fa-triangle-exclamation mr-2"></i>
+							<span>
+								<strong>Important:</strong>
+								Escaping <code>$</code> characters is only necessary when using the
+								<code>--command</code> flag. When passing an application and its arguments directly,
+								Kuba will handle them correctly.
+							</span>
+						</div>
+						<div class="alert alert-info mt-6">
+							<i class="fa-solid fa-info-circle mr-2"></i>
+							<span>
+								<strong>Important:</strong>
+								The <code>--command</code> flag tries to spawn a shell to run the command, so it may
+								behave differently on different platforms. It tries to use the default shell on your
+								system by checking the <code>$SHELL</code> environment variable on Unix-like systems
+							</span>
+						</div>
 					</div>
 				</div>
 
@@ -212,19 +249,7 @@ kuba test --config ./config/kuba.yaml --env production</code
 				</div>
 
 				<div class="alert alert-info">
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						fill="none"
-						viewBox="0 0 24 24"
-						class="stroke-current shrink-0 w-6 h-6"
-					>
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-						></path>
-					</svg>
+					<i class="fa-solid fa-info-circle mr-2"></i>
 					<span>
 						If no environment is specified, Kuba will use the <code>default</code> environment from your
 						configuration.
@@ -304,6 +329,76 @@ kuba run -- docker build --build-arg DATABASE_URL --build-arg API_KEY .
 # Use --contain to avoid inheriting host environment
 docker run --env-file=&lt;(kuba run --contain -- env) myapp</code
 								></pre>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section>
+				<ClickableHeadline level={2} id="show" className="text-3xl font-bold mb-6"
+					>Show</ClickableHeadline
+				>
+
+				<div class="space-y-6">
+					<div class="card bg-base-200">
+						<div class="card-body">
+							<h3 class="card-title">Show values</h3>
+							<p class="mb-4">
+								Use the <code>show</code> subcommand to display the resolved environment variables based
+								on your configuration without running a program:
+							</p>
+							<pre><code
+									class="language-bash"
+									data-toolbar-order="copy-to-clipboard"
+									data-prismjs-copy="📋">kuba show</code
+								></pre>
+							<p class="mt-4">
+								This will print all environment variables as defined in your <code>kuba.yaml</code> file.
+							</p>
+							<p class="mb-4">
+								You can also specify an environment to show its specific variables. Or just show a
+								specific variable by name, or a group of variables using a wildcard.
+							</p>
+							<pre><code
+									class="language-bash"
+									data-toolbar-order="copy-to-clipboard"
+									data-prismjs-copy="📋">kuba show --env prod "DATABASE_URL" "LOG_*"</code
+								></pre>
+							<p class="mt-4">
+								If you want to hide sensitive values when displaying, use the <code>--sensitve</code
+								> flag.
+							</p>
+							<pre><code
+									class="language-bash"
+									data-toolbar-order="copy-to-clipboard"
+									data-prismjs-copy="📋">kuba show --sensitive --env prod "LOG_*"</code
+								></pre>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section>
+				<ClickableHeadline level={2} id="update" className="text-3xl font-bold mb-6"
+					>Update</ClickableHeadline
+				>
+
+				<div class="space-y-6">
+					<div class="card bg-base-200">
+						<div class="card-body">
+							<h3 class="card-title">Automatically update kuba binary</h3>
+							<p class="mb-4">
+								Kuba can update itself to the latest version using the following command:
+							</p>
+							<pre><code
+									class="language-bash"
+									data-toolbar-order="copy-to-clipboard"
+									data-prismjs-copy="📋">kuba update</code
+								></pre>
+							<p class="mt-4">
+								This command checks for the latest version of Kuba and replaces the current binary
+								with the updated one. It also creates a backup of the existing binary.
+							</p>
 						</div>
 					</div>
 				</div>

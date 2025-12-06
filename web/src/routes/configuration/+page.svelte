@@ -71,6 +71,26 @@
 						</p>
 					</div>
 				</div>
+
+				<div class="divider">OR</div>
+
+				<div class="card bg-base-200 mb-6">
+					<div class="card-body">
+						<h3 class="card-title">Import from dotenv (<code>.env*</code>)</h3>
+						<p class="mb-4">
+							You can also create a configuration file by importing existing environment variables
+							from a <code>.env</code> file using the following command:
+						</p>
+						<pre><code
+								class="language-bash"
+								data-toolbar-order="copy-to-clipboard"
+								data-prismjs-copy="📋">kuba convert --from dotenv --infile .env</code
+							></pre>
+						<p class="mt-4">
+							See <code>kuba convert --help</code> for more options on importing from different formats.
+						</p>
+					</div>
+				</div>
 			</section>
 
 			<section>
@@ -134,8 +154,8 @@ production:
 						<div class="card-body">
 							<h3 class="card-title">Provider Configuration</h3>
 							<p>
-								The <code>provider</code> field specifies which cloud provider to use (gcp, aws, azure,
-								openbao).
+								The <code>provider</code> field specifies which
+								<a class="link" href="/providers">provider</a> to use (gcp, aws, azure, openbao, local).
 							</p>
 						</div>
 					</div>
@@ -152,9 +172,9 @@ production:
 
 					<div class="card bg-base-200">
 						<div class="card-body">
-							<h3 class="card-title">Mappings</h3>
+							<h3 class="card-title">Env</h3>
 							<p>
-								The <code>mappings</code> array defines how secrets are mapped to environment variables.
+								The <code>env</code> array defines how secrets are mapped to environment variables.
 							</p>
 						</div>
 					</div>
@@ -162,8 +182,8 @@ production:
 			</section>
 
 			<section>
-				<ClickableHeadline level={2} id="mapping-types" className="text-3xl font-bold mb-6"
-					>Mapping Types</ClickableHeadline
+				<ClickableHeadline level={2} id="env-types" className="text-3xl font-bold mb-6"
+					>Env Types</ClickableHeadline
 				>
 
 				<div class="space-y-6">
@@ -285,19 +305,7 @@ production:
 				</div>
 
 				<div class="alert alert-info mt-6">
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						fill="none"
-						viewBox="0 0 24 24"
-						class="stroke-current shrink-0 w-6 h-6"
-					>
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-						></path>
-					</svg>
+					<i class="fa-solid fa-info-circle mr-2"></i>
 					<span>
 						<strong>Important:</strong> Interpolation is processed in order, so you can reference variables
 						defined earlier in the same configuration.
@@ -414,6 +422,41 @@ production:
     DEBUG:
       value: "false"</code
 							></pre>
+					</div>
+				</div>
+			</section>
+
+			<div class="text-center mb-12">
+				<ClickableHeadline level={1} id="kuba-global-config" className="text-4xl font-bold mb-4"
+					>Configure Kuba itself</ClickableHeadline
+				>
+				<p class="text-xl text-base-content/70">Learn how to configure Kuba itself (globally).</p>
+			</div>
+			<section>
+				<ClickableHeadline
+					level={2}
+					id="kuba-global-config-cache"
+					className="text-3xl font-bold mb-6">Cache</ClickableHeadline
+				>
+
+				<div class="card bg-base-200">
+					<div class="card-body">
+						<p class="mb-4">
+							Caching is off by default. To enable caching, run the following command:
+						</p>
+						<pre><code
+								class="language-bash"
+								data-toolbar-order="copy-to-clipboard"
+								data-prismjs-copy="📋"
+								>kuba config cache --enable --ttl 14d
+</code></pre>
+						<p class="mb-4">
+							This will enable caching of secrets locally, with a time-to-live (TTL) of 14 days. You
+							can adjust the TTL as needed.
+						</p>
+						<p class="mb-4">
+							Check <code>kuba cache --help</code> for more options related to managing the cache.
+						</p>
 					</div>
 				</div>
 			</section>

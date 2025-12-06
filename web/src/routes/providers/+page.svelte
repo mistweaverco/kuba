@@ -31,7 +31,7 @@
 
 <HeadComponent
 	data={{
-		title: 'Cloud Providers Setup - Kuba',
+		title: 'Providers Setup - Kuba',
 		description:
 			'Set up authentication and permissions for GCP, AWS, Azure, and OpenBao to use with Kuba.'
 	}}
@@ -40,12 +40,11 @@
 <div class="container mx-auto px-4 py-8">
 	<div class="max-w-4xl mx-auto">
 		<div class="text-center mb-12">
-			<ClickableHeadline level={1} id="cloud-providers-setup" className="text-4xl font-bold mb-4"
-				>Cloud Providers Setup</ClickableHeadline
+			<ClickableHeadline level={1} id="providers-setup" className="text-4xl font-bold mb-4"
+				>Providers Setup</ClickableHeadline
 			>
 			<p class="text-xl text-base-content/70">
-				Configure authentication and permissions for your cloud providers to start using Kuba
-				securely.
+				Configure authentication and permissions for your providers to start using Kuba securely.
 			</p>
 		</div>
 
@@ -55,7 +54,7 @@
 					>Supported Providers</ClickableHeadline
 				>
 
-				<div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+				<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
 					<div class="card bg-base-200 text-center">
 						<div class="card-body">
 							<div class="text-4xl mb-2">☁️</div>
@@ -89,12 +88,20 @@
 							<p class="text-sm">Self-hosted secrets with tokens and namespaces</p>
 						</div>
 					</div>
+
+					<div class="card bg-base-200 text-center">
+						<div class="card-body">
+							<div class="text-4xl mb-2">🛠️</div>
+							<h3 class="card-title justify-center">Local</h3>
+							<p class="text-sm">Use for hard-coded non-sensitive values during development</p>
+						</div>
+					</div>
 				</div>
 			</section>
 
 			<section>
 				<ClickableHeadline level={2} id="google-cloud-platform" className="text-3xl font-bold mb-6"
-					>Google Cloud Platform (GCP)</ClickableHeadline
+					>Google Cloud Platform (gcp)</ClickableHeadline
 				>
 
 				<div class="space-y-6">
@@ -193,7 +200,7 @@
 
 			<section>
 				<ClickableHeadline level={2} id="aws-secrets-manager" className="text-3xl font-bold mb-6"
-					>AWS Secrets Manager</ClickableHeadline
+					>AWS Secrets Manager (aws)</ClickableHeadline
 				>
 
 				<div class="space-y-6">
@@ -285,7 +292,7 @@ export AWS_REGION="us-east-1"</code
 
 			<section>
 				<ClickableHeadline level={2} id="azure-key-vault" className="text-3xl font-bold mb-6"
-					>Azure Key Vault</ClickableHeadline
+					>Azure Key Vault (azure)</ClickableHeadline
 				>
 
 				<div class="space-y-6">
@@ -352,7 +359,7 @@ export AZURE_CLIENT_SECRET="your-client-secret"</code
 
 			<section>
 				<ClickableHeadline level={2} id="openbao" className="text-3xl font-bold mb-6"
-					>OpenBao</ClickableHeadline
+					>OpenBao (openbao)</ClickableHeadline
 				>
 
 				<div class="space-y-6">
@@ -406,6 +413,39 @@ export OPENBAO_NAMESPACE="your-namespace"     # Optional: Namespace (if using en
 								<strong>Note:</strong> OpenBao secrets are stored as key-value pairs. If a secret contains
 								multiple keys, Kuba will return the first string value it finds.
 							</p>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section>
+				<ClickableHeadline level={2} id="local" className="text-3xl font-bold mb-6"
+					>Local (local)</ClickableHeadline
+				>
+
+				<div class="space-y-6">
+					<div class="alert alert-error text-xl">
+						<i class="fa-solid fa-triangle-exclamation"></i>
+						<span>
+							Make sure to use the <code>local</code> provider only for non-sensitive values.
+						</span>
+					</div>
+
+					<div class="card bg-base-200">
+						<div class="card-body">
+							<h3 class="card-title">2. Configuration Example</h3>
+							<pre><code
+									class="language-yaml"
+									data-toolbar-order="copy-to-clipboard"
+									data-prismjs-copy="📋"
+									>default:
+  provider: local
+  env:
+    LOG_ENV:
+      value: "local"
+    LOG_LEVEL:
+      value: "debug"</code
+								></pre>
 						</div>
 					</div>
 				</div>
