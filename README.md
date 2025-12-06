@@ -105,11 +105,11 @@ that you might already be using.
 
 Kuba is a single binary, so you can install it easily.
 
-### Manual Installation
+### Manual installation
 
 Download the latest release from [GitHub Releases](https://github.com/mistweaverco/kuba/releases/latest).
 
-### Automatic Linux and macOS Installation
+### Automatic Linux and macOS installation
 
 You can install it using `curl`:
 
@@ -117,7 +117,7 @@ You can install it using `curl`:
 curl -sSL https://kuba.mwco.app/install.sh | sh
 ```
 
-### Automatic Windows Installation
+### Automatic Windows installation
 
 Run the following command in PowerShell:
 
@@ -135,7 +135,49 @@ This will fetch all secrets defined in
 `kuba.yaml` and pass them as
 environment variables to any arbitrary application.
 
-### Debug Mode
+A basic example:
+
+```sh
+kuba run -- npm run dev
+```
+
+### Running commands directly
+
+If you want to run a *command* with arguments,
+use the `--command` flag:
+
+```sh
+kuba run --command "<your-command> [args...]"
+```
+
+When using the `--command` flag,
+make sure to wrap the entire command in quotes.
+
+If you don't escape `$` characters,
+your shell might try to interpolate them before Kuba runs.
+
+> [!IMPORTANT]
+> Escaping `$` characters is only necessary
+> when using the `--command` flag.
+>
+> When passing an application and its arguments directly,
+> Kuba will handle them correctly.
+
+A basic example with the `--command` flag:
+
+```sh
+kuba run --command "echo \$DATABASE_URL"
+```
+
+> [!NOTE]
+> The `--command` flag tries to spawn a shell to run the command,
+> so it may behave differently on different platforms.
+>
+> It tries to use the default shell on your system by
+> checking the `$SHELL` environment variable on Unix-like systems
+
+
+### Debug mode
 
 For troubleshooting configuration issues and seeing detailed execution steps, you can enable debug mode:
 
@@ -160,7 +202,7 @@ This is particularly useful for:
 - Verifying environment variable interpolation
 - Debugging provider-specific errors
 
-### Available Commands and Flags
+### Available commands and flags
 
 Kuba provides several commands to help you manage your configuration:
 
@@ -214,7 +256,7 @@ some secrets from GCP to your node application.
 kuba run -- node dist/server.js
 ```
 
-### Using the --contain flag
+### Using the `--contain` flag
 
 The `--contain` flag prevents the merging of the current OS environment with
 the environment variables from `kuba.yaml`.
@@ -316,7 +358,7 @@ and maps them to environment variables. The example includes:
 - **Cross-provider mappings** where different secrets come
   from different cloud providers
 
-### Confguration File Structure
+### Confguration file structure
 
 Each top-level section corresponds to a different environment,
 such as `default`, `development`, `staging`, and `production`.
@@ -334,7 +376,7 @@ allowing you to fetch secrets from different cloud providers
 or projects as needed. Kuba currently supports GCP Secret Manager,
 AWS Secrets Manager, Azure Key Vault, and OpenBao.
 
-### Environment Variable Interpolation
+### Environment variable interpolation
 
 Kuba supports environment variable interpolation
 in the `value` field using `${VAR_NAME}` syntax.
@@ -395,7 +437,7 @@ This means:
 - Names that don't start with a letter or underscore get a leading underscore
 - This ensures compatibility across different operating systems and shells
 
-### Secret Path Mapping
+### Secret path mapping
 
 In addition to individual secret keys, Kuba supports **secret path mapping** using the `secret-path` field.
 This feature allows you to fetch all secrets that start with a given path prefix,
@@ -549,7 +591,15 @@ kuba show "db*" "api*"
 
 ## Cloud Provider Setup
 
-### Google Cloud Platform (GCP)
+The following providers are supported:
+
+- GCP Secret Manager (`gcp`)
+- AWS Secrets Manager (`aws`)
+- Azure Key Vault (`azure`)
+- OpenBao (`openbao`)
+- Local (`local`, use for hard-coded values only)
+
+### Google Cloud Platform (gcp)
 
 Kuba supports GCP Secret Manager for fetching secrets. To use GCP:
 
@@ -581,7 +631,7 @@ Kuba supports GCP Secret Manager for fetching secrets. To use GCP:
          value: "hard-coded-value"
    ```
 
-### AWS Secrets Manager
+### AWS Secrets Manager (aws)
 
 Kuba supports AWS Secrets Manager for fetching secrets. To use AWS:
 
@@ -616,7 +666,7 @@ Kuba supports AWS Secrets Manager for fetching secrets. To use AWS:
          value: "hard-coded-value"
    ```
 
-### Azure Key Vault
+### Azure Key Vault (azure)
 
 Kuba supports Azure Key Vault for fetching secrets. To use Azure Key Vault:
 
@@ -644,7 +694,7 @@ Kuba supports Azure Key Vault for fetching secrets. To use Azure Key Vault:
          value: "hard-coded-value"
    ```
 
-### OpenBao
+### OpenBao (openbao)
 
 Kuba supports OpenBao for fetching secrets.
 OpenBao is a fork of HashiCorp Vault that provides secure secret storage and access.
