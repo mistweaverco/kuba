@@ -259,10 +259,10 @@ func TestOpenBaoAuthorization(ctx context.Context, projectID string) (*Authoriza
 // TestLocalAuthorization tests local provider (always succeeds, no auth needed)
 func TestLocalAuthorization(ctx context.Context, projectID string) (*AuthorizationTestResult, error) {
 	result := &AuthorizationTestResult{
-		Provider:       "local",
-		ProjectID:      projectID,
-		Authenticated:  true,
-		HasPermissions: true,
+		Provider:        "local",
+		ProjectID:       projectID,
+		Authenticated:   true,
+		HasPermissions:  true,
 		CredentialsInfo: "Local provider uses environment variables - no authentication required.",
 	}
 	return result, nil
