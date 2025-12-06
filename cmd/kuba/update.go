@@ -20,7 +20,7 @@ var updateCmd = &cobra.Command{
 	Use:   "update",
 	Short: "Update kuba to the latest version",
 	Long: `Check if a newer version of kuba is available and update to it if found.
-	
+
 This command will:
 1. Check the current version against the latest GitHub release
 2. If a newer version is available, download it
@@ -328,4 +328,8 @@ func runUpdate() error {
 	fmt.Printf("Backup saved as: %s\n", backupPath)
 
 	return nil
+}
+
+func init() {
+	rootCmd.AddCommand(updateCmd)
 }

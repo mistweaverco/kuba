@@ -15,3 +15,8 @@ var versionCmd = &cobra.Command{
 		fmt.Println(version.VERSION)
 	},
 }
+
+func init() {
+	rootCmd.AddCommand(versionCmd)
+	rootCmd.PersistentFlags().BoolVar(&cfg.Flags.Version, "version", false, "Kuba version")
+}
