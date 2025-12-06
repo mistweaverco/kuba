@@ -16,6 +16,7 @@ var (
 	environment string
 	configFile  string
 	contain     bool
+	commandFlag string
 )
 
 var runCmd = &cobra.Command{
@@ -36,8 +37,19 @@ Example:
   kuba run -- node server.js
   kuba run --env production -- python app.py
   kuba run --config ./config/kuba.yaml -- docker-compose up
-  kuba run --contain -- node server.js`,
-	Args: cobra.MinimumNArgs(1),
+  kuba run --contain -- node server.js
+  kuba run --command 'echo "$SOME_SECRET"'`,
+	Args: func(cmd *cobra.Command, args []string) error {
+		// If --command is provided, args are optional
+		if cmd.Flags().Changed("command") {
+			return nil
+		}
+		// Otherwise, require at least one argument
+		if len(args) < 1 {
+			return fmt.Errorf("requires at least 1 arg(s), only received %d", len(args))
+		}
+		return nil
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runCommand(args)
 	},
@@ -47,6 +59,7 @@ func init() {
 	runCmd.Flags().StringVarP(&environment, "env", "e", "default", "Environment to use (default: default)")
 	runCmd.Flags().StringVarP(&configFile, "config", "c", "", "Path to kuba.yaml configuration file")
 	runCmd.Flags().BoolVar(&contain, "contain", false, "Only use environment variables from kuba.yaml, do not merge with OS environment")
+	runCmd.Flags().StringVar(&commandFlag, "command", "", "Run an arbitrary command string in a shell with access to injected environment variables")
 	rootCmd.AddCommand(runCmd)
 }
 
@@ -95,13 +108,23 @@ func runCommand(args []string) error {
 	}
 	logger.Debug("Secrets retrieved successfully", "count", len(secrets))
 
-	// Prepare command
-	command := args[0]
-	commandArgs := args[1:]
-	logger.Debug("Preparing command execution", "command", command, "args", commandArgs)
-
-	// Create command
-	cmd := exec.Command(command, commandArgs...)
+	// Prepare command execution
+	var cmd *exec.Cmd
+	if commandFlag != "" {
+		// Execute command string in a shell
+		shell := os.Getenv("SHELL")
+		if shell == "" {
+			shell = "/bin/sh"
+		}
+		logger.Debug("Preparing shell command execution", "shell", shell, "command", commandFlag)
+		cmd = exec.Command(shell, "-c", commandFlag)
+	} else {
+		// Execute command directly (existing behavior)
+		command := args[0]
+		commandArgs := args[1:]
+		logger.Debug("Preparing command execution", "command", command, "args", commandArgs)
+		cmd = exec.Command(command, commandArgs...)
+	}
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
