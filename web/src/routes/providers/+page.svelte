@@ -20,7 +20,6 @@
 					const parent = env.element.parentNode as HTMLElement;
 					parent.requestFullscreen();
 				});
-
 				return button;
 			}
 		);
@@ -58,7 +57,9 @@
 					<div class="card bg-base-200 text-center">
 						<div class="card-body">
 							<div class="text-4xl mb-2">☁️</div>
-							<h3 class="card-title justify-center">Google Cloud Platform</h3>
+							<a class="hover:link" href="#gcp">
+								<h3 class="card-title justify-center">Google Cloud Platform</h3>
+							</a>
 							<p class="text-sm">
 								Secret Manager integration with service accounts and workload identity
 							</p>
@@ -68,7 +69,9 @@
 					<div class="card bg-base-200 text-center">
 						<div class="card-body">
 							<div class="text-4xl mb-2">☁️</div>
-							<h3 class="card-title justify-center">AWS</h3>
+							<a class="hover:link" href="#aws">
+								<h3 class="card-title justify-center">AWS</h3>
+							</a>
 							<p class="text-sm">Secrets Manager with IAM roles and access keys</p>
 						</div>
 					</div>
@@ -76,7 +79,9 @@
 					<div class="card bg-base-200 text-center">
 						<div class="card-body">
 							<div class="text-4xl mb-2">☁️</div>
-							<h3 class="card-title justify-center">Azure</h3>
+							<a class="hover:link" href="#azure">
+								<h3 class="card-title justify-center">Azure</h3>
+							</a>
 							<p class="text-sm">Key Vault with service principals and managed identity</p>
 						</div>
 					</div>
@@ -84,7 +89,9 @@
 					<div class="card bg-base-200 text-center">
 						<div class="card-body">
 							<div class="text-4xl mb-2">☁️</div>
-							<h3 class="card-title justify-center">OpenBao</h3>
+							<a class="hover:link" href="#openbao">
+								<h3 class="card-title justify-center">OpenBao</h3>
+							</a>
 							<p class="text-sm">Self-hosted secrets with tokens and namespaces</p>
 						</div>
 					</div>
@@ -92,7 +99,9 @@
 					<div class="card bg-base-200 text-center">
 						<div class="card-body">
 							<div class="text-4xl mb-2">🛠️</div>
-							<h3 class="card-title justify-center">Local</h3>
+							<a class="hover:link" href="#local">
+								<h3 class="card-title justify-center">Local</h3>
+							</a>
 							<p class="text-sm">Use for hard-coded non-sensitive values during development</p>
 						</div>
 					</div>
@@ -100,27 +109,27 @@
 			</section>
 
 			<section>
-				<ClickableHeadline level={2} id="google-cloud-platform" className="text-3xl font-bold mb-6"
+				<ClickableHeadline level={2} id="gcp" className="text-3xl font-bold mb-6"
 					>Google Cloud Platform (gcp)</ClickableHeadline
 				>
 
 				<div class="space-y-6">
 					<div class="card bg-base-200">
 						<div class="card-body">
-							<h3 class="card-title">1. Enable Secret Manager API</h3>
-							<p class="mb-4">Make sure the Secret Manager API is enabled in your GCP project:</p>
-							<pre><code
-									class="language-bash"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋">gcloud services enable secretmanager.googleapis.com</code
-								></pre>
-						</div>
-					</div>
-
-					<div class="card bg-base-200">
-						<div class="card-body">
-							<h3 class="card-title">2. Authentication Methods</h3>
+							<ClickableHeadline level={3} id="gcp-authentication-methods" className="card-title"
+								>1. Authentication Methods</ClickableHeadline
+							>
 							<div class="space-y-4">
+								<div>
+									<h4 class="font-bold">Application Default Credentials</h4>
+									<p class="mb-2">Use gcloud for local development:</p>
+									<pre><code
+											class="language-bash"
+											data-toolbar-order="copy-to-clipboard"
+											data-prismjs-copy="📋">gcloud auth application-default login</code
+										></pre>
+								</div>
+								<div class="divider">OR</div>
 								<div>
 									<h4 class="font-bold">Service Account Key</h4>
 									<p class="mb-2">
@@ -133,80 +142,82 @@
 											>export GOOGLE_APPLICATION_CREDENTIALS="/path/to/service-account-key.json"</code
 										></pre>
 								</div>
-
-								<div>
-									<h4 class="font-bold">Application Default Credentials</h4>
-									<p class="mb-2">Use gcloud for local development:</p>
-									<pre><code
-											class="language-bash"
-											data-toolbar-order="copy-to-clipboard"
-											data-prismjs-copy="📋">gcloud auth application-default login</code
-										></pre>
-								</div>
-
+								<div class="divider">OR</div>
 								<div>
 									<h4 class="font-bold">Workload Identity</h4>
 									<p class="mb-2">For GKE or other GCP services, use workload identity.</p>
 								</div>
-
-								<div>
-									<h4 class="font-bold">Compute Engine</h4>
-									<p class="mb-2">
+								<div class="alert alert-info">
+									<i class="fa-solid fa-info-circle"></i>
+									<p>
 										If running on Compute Engine, the default service account will be used
 										automatically.
 									</p>
+									<div></div>
 								</div>
 							</div>
 						</div>
-					</div>
 
-					<div class="card bg-base-200">
-						<div class="card-body">
-							<h3 class="card-title">3. IAM Permissions</h3>
-							<p class="mb-4">
-								Ensure your service account has the <code>Secret Manager Secret Accessor</code> role:
-							</p>
-							<pre><code
-									class="language-bash"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋"
-									>gcloud projects add-iam-policy-binding PROJECT_ID \
+						<div class="card bg-base-200">
+							<div class="card-body">
+								<h3 class="card-title">2. Enable Secret Manager API</h3>
+								<p class="mb-4">Make sure the Secret Manager API is enabled in your GCP project:</p>
+								<pre><code
+										class="language-bash"
+										data-toolbar-order="copy-to-clipboard"
+										data-prismjs-copy="📋">gcloud services enable secretmanager.googleapis.com</code
+									></pre>
+							</div>
+						</div>
+
+						<div class="card bg-base-200">
+							<div class="card-body">
+								<h3 class="card-title">3. IAM Permissions</h3>
+								<p class="mb-4">
+									Ensure your service account has the <code>Secret Manager Secret Accessor</code> role:
+								</p>
+								<pre><code
+										class="language-bash"
+										data-toolbar-order="copy-to-clipboard"
+										data-prismjs-copy="📋"
+										>gcloud projects add-iam-policy-binding PROJECT_ID \
     --member="serviceAccount:YOUR_SERVICE_ACCOUNT@PROJECT_ID.iam.gserviceaccount.com" \
     --role="roles/secretmanager.secretAccessor"</code
-								></pre>
+									></pre>
+							</div>
 						</div>
-					</div>
-
-					<div class="card bg-base-200">
-						<div class="card-body">
-							<h3 class="card-title">4. Configuration Example</h3>
-							<pre><code
-									class="language-yaml"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋"
-									>default:
+						<div class="card bg-base-200">
+							<div class="card-body">
+								<h3 class="card-title">4. Configuration Example</h3>
+								<pre><code
+										class="language-yaml"
+										data-toolbar-order="copy-to-clipboard"
+										data-prismjs-copy="📋"
+										>default:
   provider: gcp
-  project: your-project-id
+  project: 1337
   env:
     DATABASE_URL:
       secret-key: "database-connection-string"
     API_KEY:
       secret-key: "external-api-key"</code
-								></pre>
+									></pre>
+							</div>
 						</div>
 					</div>
 				</div>
 			</section>
 
 			<section>
-				<ClickableHeadline level={2} id="aws-secrets-manager" className="text-3xl font-bold mb-6"
+				<ClickableHeadline level={2} id="aws" className="text-3xl font-bold mb-6"
 					>AWS Secrets Manager (aws)</ClickableHeadline
 				>
-
 				<div class="space-y-6">
 					<div class="card bg-base-200">
 						<div class="card-body">
-							<h3 class="card-title">1. Authentication Methods</h3>
+							<ClickableHeadline level={3} id="aws-authentication-methods" className="card-title"
+								>1. Authentication Methods</ClickableHeadline
+							>
 							<div class="space-y-4">
 								<div>
 									<h4 class="font-bold">Environment Variables</h4>
@@ -220,7 +231,7 @@ export AWS_SECRET_ACCESS_KEY="your-secret-key"
 export AWS_REGION="us-east-1"</code
 										></pre>
 								</div>
-
+								<div class="divider">OR</div>
 								<div>
 									<h4 class="font-bold">AWS Profile</h4>
 									<p class="mb-2">Use a specific profile from your AWS credentials file:</p>
@@ -232,12 +243,12 @@ export AWS_REGION="us-east-1"</code
 export AWS_REGION="us-east-1"</code
 										></pre>
 								</div>
-
+								<div class="divider">OR</div>
 								<div>
 									<h4 class="font-bold">IAM Roles</h4>
 									<p class="mb-2">If running on EC2, ECS, or other AWS services, use IAM roles.</p>
 								</div>
-
+								<div class="divider">OR</div>
 								<div>
 									<h4 class="font-bold">AWS CLI</h4>
 									<p class="mb-2">Use <code>aws configure</code> to set up your credentials.</p>
@@ -291,14 +302,16 @@ export AWS_REGION="us-east-1"</code
 			</section>
 
 			<section>
-				<ClickableHeadline level={2} id="azure-key-vault" className="text-3xl font-bold mb-6"
+				<ClickableHeadline level={2} id="azure" className="text-3xl font-bold mb-6"
 					>Azure Key Vault (azure)</ClickableHeadline
 				>
 
 				<div class="space-y-6">
 					<div class="card bg-base-200">
 						<div class="card-body">
-							<h3 class="card-title">1. Authentication Methods</h3>
+							<ClickableHeadline level={3} id="azure-authentication-methods" className="card-title"
+								>1. Authentication Methods</ClickableHeadline
+							>
 							<div class="space-y-4">
 								<div>
 									<h4 class="font-bold">Service Principal</h4>
@@ -313,12 +326,12 @@ export AZURE_CLIENT_ID="your-client-id"
 export AZURE_CLIENT_SECRET="your-client-secret"</code
 										></pre>
 								</div>
-
+								<div class="divider">OR</div>
 								<div>
 									<h4 class="font-bold">Managed Identity</h4>
 									<p class="mb-2">If running on Azure services with managed identity enabled.</p>
 								</div>
-
+								<div class="divider">OR</div>
 								<div>
 									<h4 class="font-bold">Default Azure Credential</h4>
 									<p class="mb-2">Uses Azure CLI, Visual Studio Code, or other Azure tools.</p>
@@ -372,7 +385,11 @@ export AZURE_CLIENT_SECRET="your-client-secret"</code
 
 					<div class="card bg-base-200">
 						<div class="card-body">
-							<h3 class="card-title">2. Authentication</h3>
+							<ClickableHeadline
+								level={3}
+								id="openbao-authentication-methods"
+								className="card-title">2. Authentication Methods</ClickableHeadline
+							>
 							<p class="mb-4">Set up authentication using environment variables:</p>
 							<pre><code
 									class="language-bash"

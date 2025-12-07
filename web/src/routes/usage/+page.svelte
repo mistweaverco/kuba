@@ -365,7 +365,8 @@ docker run --env-file=&lt;(kuba run --contain -- env) myapp</code
 									data-prismjs-copy="📋">kuba show --env prod "DATABASE_URL" "LOG_*"</code
 								></pre>
 							<p class="mt-4">
-								If you want to hide sensitive values when displaying, use the <code>--sensitive</code
+								If you want to hide sensitive values when displaying, use the <code
+									>--sensitive</code
 								> flag.
 							</p>
 							<pre><code
