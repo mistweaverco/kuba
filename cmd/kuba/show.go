@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/mistweaverco/kuba/internal/config"
@@ -16,6 +17,10 @@ var (
 	showEnvironment string
 	showConfigFile  string
 	showSensitive   bool
+)
+
+const (
+	showListEnvironmentsValue = "__LIST_ENVIRONMENTS__"
 )
 
 var showCmd = &cobra.Command{
@@ -38,19 +43,40 @@ Examples:
   kuba show --sensitive        # Show all variables with redacted values`,
 	Args: cobra.ArbitraryArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return runShowCommand(args)
+		envFlag := cmd.Flags().Lookup("env")
+		listEnvironments := envFlag != nil && envFlag.Changed && showEnvironment == showListEnvironmentsValue
+
+		// Allow form: --env <value> (when NoOptDefVal is set) by consuming
+		// the next positional argument as the environment if provided.
+		if listEnvironments && len(args) > 0 && args[0] != "" {
+			showEnvironment = args[0]
+			args = args[1:]
+			listEnvironments = false
+		}
+
+		return runShowCommand(args, listEnvironments)
 	},
 }
 
 func init() {
-	showCmd.Flags().StringVarP(&showEnvironment, "env", "e", "default", "Environment to use (default: default)")
+	showCmd.Flags().StringVarP(&showEnvironment, "env", "e", "default", "Environment to use (default: default). Provide without value to list available environments.")
 	showCmd.Flags().StringVarP(&showConfigFile, "config", "c", "", "Path to kuba.yaml configuration file")
 	showCmd.Flags().BoolVar(&showSensitive, "sensitive", false, "Redact sensitive values")
+	envFlag := showCmd.Flags().Lookup("env")
+	if envFlag != nil {
+		envFlag.NoOptDefVal = showListEnvironmentsValue
+	}
 	rootCmd.AddCommand(showCmd)
 }
 
-func runShowCommand(patterns []string) error {
+func runShowCommand(patterns []string, listEnvironments bool) error {
 	logger := log.NewLogger()
+
+	if listEnvironments && len(patterns) > 0 && patterns[0] != "" {
+		showEnvironment = patterns[0]
+		patterns = patterns[1:]
+		listEnvironments = false
+	}
 
 	// Find configuration file if not specified
 	if showConfigFile == "" {
@@ -72,6 +98,14 @@ func runShowCommand(patterns []string) error {
 		return fmt.Errorf("failed to load configuration: %w", err)
 	}
 	logger.Debug("Configuration loaded successfully")
+
+	if listEnvironments {
+		logger.Debug("Listing available environments from configuration")
+		for _, envName := range getSortedEnvironmentNames(kubaConfig) {
+			fmt.Println(envName)
+		}
+		return nil
+	}
 
 	// Get environment configuration
 	logger.Debug("Getting environment configuration", "environment", showEnvironment)
@@ -149,4 +183,13 @@ func filterSecrets(secrets map[string]string, patterns []string) map[string]stri
 	}
 
 	return filtered
+}
+
+func getSortedEnvironmentNames(cfg *config.KubaConfig) []string {
+	names := make([]string, 0, len(cfg.Environments))
+	for name := range cfg.Environments {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	return names
 }
