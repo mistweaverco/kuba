@@ -2,6 +2,7 @@ package kuba
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"sort"
@@ -17,6 +18,7 @@ var (
 	showEnvironment string
 	showConfigFile  string
 	showSensitive   bool
+	showOutput      string
 )
 
 const (
@@ -62,6 +64,7 @@ func init() {
 	showCmd.Flags().StringVarP(&showEnvironment, "env", "e", "default", "Environment to use (default: default). Provide without value to list available environments.")
 	showCmd.Flags().StringVarP(&showConfigFile, "config", "c", "", "Path to kuba.yaml configuration file")
 	showCmd.Flags().BoolVar(&showSensitive, "sensitive", false, "Redact sensitive values")
+	showCmd.Flags().StringVarP(&showOutput, "output", "o", "dotenv", "Output format: dotenv (default), json, shell")
 	envFlag := showCmd.Flags().Lookup("env")
 	if envFlag != nil {
 		envFlag.NoOptDefVal = showListEnvironmentsValue
@@ -132,13 +135,33 @@ func runShowCommand(patterns []string, listEnvironments bool) error {
 	filteredSecrets := filterSecrets(secrets, patterns)
 	logger.Debug("Filtered secrets", "original_count", len(secrets), "filtered_count", len(filteredSecrets))
 
-	// Display secrets
+	// Prepare secrets for output
+	displaySecrets := make(map[string]string, len(filteredSecrets))
 	for key, value := range filteredSecrets {
 		displayValue := value
 		if showSensitive {
 			displayValue = maskSecret(value)
 		}
-		fmt.Printf("%s=%s\n", key, displayValue)
+		displaySecrets[key] = displayValue
+	}
+
+	switch showOutput {
+	case "dotenv":
+		for _, key := range getSortedKeys(displaySecrets) {
+			fmt.Printf("%s=%s\n", key, displaySecrets[key])
+		}
+	case "shell":
+		for _, key := range getSortedKeys(displaySecrets) {
+			fmt.Printf("export %s=%s\n", key, displaySecrets[key])
+		}
+	case "json":
+		payload, err := json.MarshalIndent(displaySecrets, "", "  ")
+		if err != nil {
+			return fmt.Errorf("failed to format secrets as json: %w", err)
+		}
+		fmt.Println(string(payload))
+	default:
+		return fmt.Errorf("invalid output format '%s': must be one of: dotenv, json, shell", showOutput)
 	}
 
 	return nil
@@ -192,4 +215,13 @@ func getSortedEnvironmentNames(cfg *config.KubaConfig) []string {
 	}
 	sort.Strings(names)
 	return names
+}
+
+func getSortedKeys(values map[string]string) []string {
+	keys := make([]string, 0, len(values))
+	for key := range values {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	return keys
 }
