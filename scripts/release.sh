@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 if [ -z "$VERSION" ]; then echo "Error: VERSION is not set"; exit 1; fi
-if [ -z "$PLATFORM" ]; then echo "Error: PLATFORM is not set"; exit 1; fi
+if [ -z "$TARGET_PLATFORM" ]; then echo "Error: TARGET_PLATFORM is not set"; exit 1; fi
 
 BIN_NAME="kuba"
 RELEASE_ACTION="create"
@@ -50,7 +50,7 @@ check_files_exist() {
 }
 
 set_files_based_on_platform() {
-  case $PLATFORM in
+  case $TARGET_PLATFORM in
     linux)
       FILES=("${LINUX_FILES[@]}")
       ;;
@@ -61,7 +61,7 @@ set_files_based_on_platform() {
       FILES=("${WINDOWS_FILES[@]}")
       ;;
     *)
-      echo "Error: PLATFORM $PLATFORM is not supported"
+      echo "Error: PLATFORM $TARGET_PLATFORM is not supported"
       exit 1
       ;;
   esac
