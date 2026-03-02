@@ -13,16 +13,11 @@ build_linux_arm64() {
   build_wrapper "linux" "arm64"
 }
 
-build_linux_x86() {
-  build_wrapper "linux" "386"
-}
-
 build_linux_x86_64() {
   build_wrapper "linux" "amd64"
 }
 
 build_linux() {
-  build_linux_x86
   build_linux_x86_64
 }
 
@@ -39,16 +34,11 @@ build_macos() {
   build_macos_x86_64
 }
 
-build_windows_x86() {
-  build_wrapper "windows" "386"
-}
-
 build_windows_x86_64() {
   build_wrapper "windows" "amd64"
 }
 
 build_windows() {
-  build_windows_x86
   build_windows_x86_64
 }
 

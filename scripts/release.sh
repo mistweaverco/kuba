@@ -9,7 +9,6 @@ GH_TAG="v$VERSION"
 FILES=()
 
 LINUX_FILES=(
-  "dist/${BIN_NAME}-linux-386"
   "dist/${BIN_NAME}-linux-amd64"
 )
 
@@ -19,7 +18,6 @@ MACOS_FILES=(
 )
 
 WINDOWS_FILES=(
-  "dist/${BIN_NAME}-windows-386.exe"
   "dist/${BIN_NAME}-windows-amd64.exe"
 )
 

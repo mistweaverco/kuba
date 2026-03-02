@@ -146,8 +146,6 @@ func detectPlatform() string {
 	switch arch {
 	case "amd64":
 		arch = "amd64"
-	case "386":
-		arch = "386"
 	case "arm64":
 		arch = "arm64"
 	case "arm":
@@ -167,7 +165,7 @@ func downloadBinary(version, platform string) (string, error) {
 
 	// Construct download URL
 	fileName := fmt.Sprintf("kuba-%s", platform)
-	if platform == "windows-amd64" || platform == "windows-386" {
+	if platform == "windows-amd64" {
 		fileName += ".exe"
 	}
 
@@ -201,7 +199,7 @@ func downloadBinary(version, platform string) (string, error) {
 	}
 
 	// Make the file executable on Unix-like systems
-	if platform != "windows-amd64" && platform != "windows-386" {
+	if platform != "windows-amd64" {
 		if err := os.Chmod(tempFile.Name(), 0755); err != nil {
 			os.Remove(tempFile.Name())
 			return "", fmt.Errorf("failed to make binary executable: %w", err)

@@ -89,7 +89,7 @@ func TestDetectPlatform(t *testing.T) {
 	validOS := []string{"linux", "darwin", "windows"}
 	hasValidOS := false
 	for _, os := range validOS {
-		if platform == os+"-amd64" || platform == os+"-386" || platform == os+"-arm64" || platform == os+"-armv7" {
+		if platform == os+"-amd64" || platform == os+"-arm64" || platform == os+"-armv7" {
 			hasValidOS = true
 			break
 		}

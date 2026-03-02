@@ -68,7 +68,7 @@ function Get-WindowsArchitecture {
     if ([Environment]::Is64BitOperatingSystem) {
         return "amd64"
     } else {
-        return "386"
+        return "NOT_SUPPORTED"
     }
 }
 
@@ -250,6 +250,10 @@ function Main {
 
     # Detect architecture
     $architecture = Get-WindowsArchitecture
+		if ($architecture -eq "NOT_SUPPORTED") {
+				Write-Error "Unsupported architecture detected. Only 64-bit Windows is supported."
+				exit 1
+		}
     Write-Status "Detected architecture: $architecture"
 
     # Get latest version
