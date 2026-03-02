@@ -46,6 +46,7 @@ Azure Key Vault, OpenBao, and Bitwarden Secrets Manager to your application
   - [AWS Secrets Manager](#aws-secrets-manager)
   - [Azure Key Vault](#azure-key-vault)
   - [OpenBao](#openbao)
+  - [Bitwarden Secrets Manager](#bitwarden-secrets-manager-bitwarden)
 
 ---
 
