@@ -18,7 +18,7 @@ jobs:
         run: |
           VERSION=${GITHUB_REF_NAME#v}
           echo "VERSION=$VERSION" >> $GITHUB_ENV
-          echo "PLATFORM=linux" >> $GITHUB_ENV
+          echo "TARGET_PLATFORM=linux" >> $GITHUB_ENV
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -46,7 +46,7 @@ jobs:
         run: |
           VERSION=${GITHUB_REF_NAME#v}
           echo "VERSION=$VERSION" >> $GITHUB_ENV
-          echo "PLATFORM=macos" >> $GITHUB_ENV
+          echo "TARGET_PLATFORM=macos" >> $GITHUB_ENV
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -128,7 +128,7 @@ jobs:
         run: |
           $version = "${env:GITHUB_REF_NAME}".TrimStart('v')
           "VERSION=$version" >> $env:GITHUB_ENV
-          "PLATFORM=windows" >> $env:GITHUB_ENV
+          "TARGET_PLATFORM=windows" >> $env:GITHUB_ENV
       - name: Set up Go
         uses: actions/setup-go@v5
         with:

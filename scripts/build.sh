@@ -42,7 +42,7 @@ build_windows() {
   build_windows_x86_64
 }
 
-case $PLATFORM in
+case $TARGET_PLATFORM in
   "linux")
     build_linux
     ;;
@@ -59,7 +59,7 @@ case $PLATFORM in
     build_windows
     ;;
   *)
-    echo "Error: PLATFORM $PLATFORM is not supported"
+    echo "Error: TARGET_PLATFORM $TARGET_PLATFORM is not supported"
     exit 1
     ;;
 esac
