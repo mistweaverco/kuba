@@ -32,7 +32,7 @@
 	data={{
 		title: 'Providers Setup - Kuba',
 		description:
-			'Set up authentication and permissions for GCP, AWS, Azure, and OpenBao to use with Kuba.'
+			'Set up authentication and permissions for GCP, AWS, Azure, OpenBao, Bitwarden, and local providers to use with Kuba.'
 	}}
 />
 
@@ -98,11 +98,118 @@
 
 					<div class="card bg-base-200 text-center">
 						<div class="card-body">
+							<div class="text-4xl mb-2">🔐</div>
+							<a class="hover:link" href="#bitwarden">
+								<h3 class="card-title justify-center">Bitwarden Secrets Manager</h3>
+							</a>
+							<p class="text-sm">Bitwarden Secrets Manager with cloud or self-hosted instances</p>
+						</div>
+					</div>
+
+					<div class="card bg-base-200 text-center">
+						<div class="card-body">
 							<div class="text-4xl mb-2">🛠️</div>
 							<a class="hover:link" href="#local">
 								<h3 class="card-title justify-center">Local</h3>
 							</a>
 							<p class="text-sm">Use for hard-coded non-sensitive values during development</p>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section>
+				<ClickableHeadline level={2} id="bitwarden" className="text-3xl font-bold mb-6"
+					>Bitwarden Secrets Manager (bitwarden)</ClickableHeadline
+				>
+
+				<div class="space-y-6">
+					<div class="card bg-base-200">
+						<div class="card-body">
+							<ClickableHeadline level={3} id="bitwarden-authentication" className="card-title"
+								>1. Authentication & Organization</ClickableHeadline
+							>
+							<p class="mb-4">
+								Configure a Bitwarden Secrets Manager access token and organization ID:
+							</p>
+							<pre><code
+									class="language-bash"
+									data-toolbar-order="copy-to-clipboard"
+									data-prismjs-copy="📋"
+									>export BITWARDEN_ACCESS_TOKEN="your-access-token"    # or ACCESS_TOKEN
+export BITWARDEN_ORGANIZATION_ID="your-organization-id"</code
+								></pre>
+							<p class="mt-4 text-sm">
+								You can also set the organization ID in your <code>kuba.yaml</code> via the
+								<code>project</code> field when using the <code>bitwarden</code> provider; that value
+								is treated as the Bitwarden organization ID.
+							</p>
+						</div>
+					</div>
+
+					<div class="card bg-base-200">
+						<div class="card-body">
+							<ClickableHeadline level={3} id="bitwarden-self-hosted" className="card-title"
+								>2. Self-hosted Bitwarden (optional)</ClickableHeadline
+							>
+							<p class="mb-4">
+								To use a self-hosted Bitwarden instance, configure the API and identity URLs:
+							</p>
+							<pre><code
+									class="language-bash"
+									data-toolbar-order="copy-to-clipboard"
+									data-prismjs-copy="📋"
+									>export BITWARDEN_API_URL="https://your-bitwarden.example.com/api"
+export BITWARDEN_IDENTITY_URL="https://your-bitwarden.example.com/identity"</code
+								></pre>
+							<p class="mt-4 text-sm">
+								Optional: if you want the Bitwarden SDK to reuse its own state between Kuba runs
+								(for example, to avoid re-initializing some internal session data), you can point it
+								at a state file. The SDK will create and maintain this file itself:
+							</p>
+							<pre><code
+									class="language-bash"
+									data-toolbar-order="copy-to-clipboard"
+									data-prismjs-copy="📋"
+									>export BITWARDEN_STATE_FILE="$HOME/.local/share/kuba/bitwarden_state.json"</code
+								></pre>
+							<p class="mt-2 text-sm">
+								Treat this file as sensitive: keep it outside version control and in a user-scoped
+								data directory (for example, <code>~/.local/share/kuba</code> on Linux/macOS or
+								<code>%LOCALAPPDATA%\kuba</code> on Windows). You still need a valid Bitwarden access
+								token; the state file complements it rather than replacing it.
+							</p>
+						</div>
+					</div>
+
+					<div class="card bg-base-200">
+						<div class="card-body">
+							<h3 class="card-title">3. Configuration Example</h3>
+							<p class="mb-4">
+								In your <code>kuba.yaml</code>, use the <code>bitwarden</code> provider. The
+								<code>secret-key</code> values must be Bitwarden <strong>secret IDs</strong>:
+							</p>
+							<pre><code
+									class="language-yaml"
+									data-toolbar-order="copy-to-clipboard"
+									data-prismjs-copy="📋"
+									>default:
+  provider: bitwarden
+  # Optional: if omitted, BITWARDEN_ORGANIZATION_ID must be set
+  project: "your-bitwarden-organization-id"
+  env:
+    DATABASE_URL:
+      secret-key: "bitwarden-secret-id-for-database-url"
+    API_KEY:
+      secret-key: "bitwarden-secret-id-for-api-key"
+    SOME_HARD_CODED_ENV:
+      value: "hard-coded-value"</code
+								></pre>
+							<p class="mt-4 text-sm">
+								<strong>Note:</strong> Bitwarden support in Kuba currently only supports
+								<code>secret-key</code> mappings (by secret ID). <code>secret-path</code> mappings
+								are not available for the <code>bitwarden</code> provider.
+							</p>
 						</div>
 					</div>
 				</div>
@@ -495,7 +602,11 @@ export OPENBAO_NAMESPACE="your-namespace"     # Optional: Namespace (if using en
       project: "my-azure-project"
     OPENBAO_SECRETS:
       secret-path: "app-config"
-      provider: openbao</code
+      provider: openbao
+    BITWARDEN_DATABASE:
+      # Bitwarden secrets are addressed by secret ID; this maps a single secret ID
+      secret-key: "bitwarden-secret-id-for-database-url"
+      provider: bitwarden</code
 							></pre>
 					</div>
 				</div>

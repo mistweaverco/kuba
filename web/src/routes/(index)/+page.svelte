@@ -7,7 +7,7 @@
 	data={{
 		title: 'Kuba - Securely and easily access your environment variables',
 		description:
-			'Pass env directly from GCP Secret Manager, AWS Secrets Manager, Azure Key Vault and OpenBao to your application.'
+			'Pass env directly from GCP Secret Manager, AWS Secrets Manager, Azure Key Vault, OpenBao, Bitwarden, and more to your application.'
 	}}
 />
 
@@ -24,7 +24,7 @@
 			</p>
 			<p class="py-4">
 				Kuba helps you to get rid of <code>.env</code> files. Pass env directly from GCP Secret Manager,
-				AWS Secrets Manager, Azure Key Vault, and OpenBao to your application.
+				AWS Secrets Manager, Azure Key Vault, OpenBao, Bitwarden Secrets Manager, and more to your application.
 			</p>
 			<div class="flex gap-4 justify-center mt-8">
 				<a href="/installation" class="btn btn-primary">Get Started</a>
@@ -59,7 +59,7 @@
 			<div class="card bg-base-200 shadow-xl">
 				<div class="card-body">
 					<h3 class="card-title">☁️ Multi-Cloud</h3>
-					<p>Support for GCP, AWS, Azure, and OpenBao all in one tool</p>
+					<p>Support for GCP, AWS, Azure, OpenBao, Bitwarden, and local values all in one tool</p>
 				</div>
 			</div>
 			<div class="card bg-base-200 shadow-xl">

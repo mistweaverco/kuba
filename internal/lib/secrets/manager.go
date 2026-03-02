@@ -68,6 +68,10 @@ func (f *SecretManagerFactory) CreateSecretManager(ctx context.Context, provider
 	case "local":
 		// Local provider doesn't require any external configuration
 		return NewLocalManager(ctx)
+	case "bitwarden":
+		// Bitwarden uses its own organization concept; projectID is treated
+		// as the Bitwarden organization ID (or falls back to env vars).
+		return NewBitwardenManager(ctx, projectID)
 	default:
 		return nil, fmt.Errorf("unsupported cloud provider: %s", provider)
 	}
@@ -230,8 +234,8 @@ func (f *SecretManagerFactory) GetSecretsForEnvironmentWithCache(ctx context.Con
 				project = env.Project
 			}
 
-			// For AWS, Azure, OpenBao, and local, we use a default project key since they don't use projects in the same way as GCP
-			if (provider == "aws" || provider == "azure" || provider == "openbao" || provider == "local") && project == "" {
+			// For AWS, Azure, OpenBao, Bitwarden, and local, we use a default project key since they don't use projects in the same way as GCP
+			if (provider == "aws" || provider == "azure" || provider == "openbao" || provider == "bitwarden" || provider == "local") && project == "" {
 				project = "default"
 			}
 
@@ -256,8 +260,8 @@ func (f *SecretManagerFactory) GetSecretsForEnvironmentWithCache(ctx context.Con
 				project = env.Project
 			}
 
-			// For AWS, Azure, OpenBao, and local, we use a default project key since they don't use projects in the same way as GCP
-			if (provider == "aws" || provider == "azure" || provider == "openbao" || provider == "local") && project == "" {
+			// For AWS, Azure, OpenBao, Bitwarden, and local, we use a default project key since they don't use projects in the same way as GCP
+			if (provider == "aws" || provider == "azure" || provider == "openbao" || provider == "bitwarden" || provider == "local") && project == "" {
 				project = "default"
 			}
 
@@ -314,8 +318,8 @@ func (f *SecretManagerFactory) GetSecretsForEnvironmentWithCache(ctx context.Con
 						envItemProject = env.Project
 					}
 
-					// For AWS, Azure, OpenBao, and local, we use a default project key since they don't use projects in the same way as GCP
-					if (envItemProvider == "aws" || envItemProvider == "azure" || envItemProvider == "openbao" || envItemProvider == "local") && envItemProject == "" {
+					// For AWS, Azure, OpenBao, Bitwarden, and local, we use a default project key since they don't use projects in the same way as GCP
+					if (envItemProvider == "aws" || envItemProvider == "azure" || envItemProvider == "openbao" || envItemProvider == "bitwarden" || envItemProvider == "local") && envItemProject == "" {
 						envItemProject = "default"
 					}
 

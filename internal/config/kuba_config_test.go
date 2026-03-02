@@ -260,6 +260,21 @@ func TestValidateConfig(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "valid Bitwarden config without project",
+			config: &KubaConfig{
+				Environments: map[string]Environment{
+					"default": {
+						Provider: "bitwarden",
+						Project:  "", // Empty project for Bitwarden should be valid
+						Env: map[string]EnvItem{
+							"BW_SECRET": {SecretKey: "bitwarden-secret-id"},
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
 			name: "invalid GCP config without project",
 			config: &KubaConfig{
 				Environments: map[string]Environment{

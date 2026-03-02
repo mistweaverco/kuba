@@ -21,7 +21,7 @@ Kuba helps you to get rid of `.env` files.
 
 Pass env directly from GCP Secret Manager,
 AWS Secrets Manager,
-Azure Key Vault, and OpenBao to your application
+Azure Key Vault, OpenBao, and Bitwarden Secrets Manager to your application
 
 <p></p>
 
@@ -621,7 +621,82 @@ The following providers are supported:
 - AWS Secrets Manager (`aws`)
 - Azure Key Vault (`azure`)
 - OpenBao (`openbao`)
+- Bitwarden Secrets Manager (`bitwarden`)
 - Local (`local`, use for hard-coded values only)
+
+### Bitwarden Secrets Manager (bitwarden)
+
+Kuba supports Bitwarden Secrets Manager via the official Bitwarden Go SDK. To use Bitwarden:
+
+1. **Authentication & organization**
+
+   Configure an access token and organization ID:
+
+   ```sh
+   export BITWARDEN_ACCESS_TOKEN="your-access-token" # or ACCESS_TOKEN
+   export BITWARDEN_ORGANIZATION_ID="your-organization-id"
+   ```
+
+   You can also set the organization ID in your `kuba.yaml` via the `project` field when using the
+   `bitwarden` provider; that value is treated as the Bitwarden organization ID.
+
+2. **Self-hosted Bitwarden (optional)**
+
+   To use a self-hosted Bitwarden instance, configure:
+
+   ```sh
+   export BITWARDEN_API_URL="https://your-bitwarden.example.com/api"
+   export BITWARDEN_IDENTITY_URL="https://your-bitwarden.example.com/identity"
+   ```
+
+3. **Persisting Bitwarden state (optional)**
+
+   By default, Kuba authenticates the Bitwarden SDK on each run using your access token only. If you
+   want the SDK to reuse its own state between runs (for example to avoid re-initializing some
+   internal session data), you can point it at a state file:
+
+   ```sh
+   export BITWARDEN_STATE_FILE="$HOME/.local/share/kuba/bitwarden_state.json"
+   ```
+
+   When this variable is set:
+
+   - The Bitwarden SDK will create or update the file itself when Kuba calls `AccessTokenLogin`.
+   - Subsequent Kuba runs will pass the same state file to the SDK so it can reuse whatever it
+     stored there.
+
+   **Recommendations:**
+
+   - Treat the state file as sensitive: keep it outside your repo and out of version control.
+   - Prefer a user-scoped **data** directory such as:
+     - Linux/macOS: `~/.local/share/kuba/bitwarden_state.json`
+     - Windows (PowerShell): `"$Env:LOCALAPPDATA\kuba\bitwarden_state.json"`
+   - You still need a valid Bitwarden access token; the state file complements it rather than
+     replacing it.
+
+4. **Configuration**
+
+   In your `kuba.yaml`, specify the Bitwarden provider. The `secret-key` entries must refer to
+   Bitwarden **secret IDs**:
+
+   ```yaml
+   default:
+     provider: bitwarden
+     # Optional: if omitted, BITWARDEN_ORGANIZATION_ID must be set
+     project: "your-bitwarden-organization-id"
+     env:
+       DATABASE_URL:
+         secret-key: "bitwarden-secret-id-for-database-url"
+       API_KEY:
+         secret-key: "bitwarden-secret-id-for-api-key"
+       SOME_HARD_CODED_ENV:
+         value: "hard-coded-value"
+   ```
+
+   > **Note**
+   >
+   > Bitwarden does not currently support hierarchical secret-path lookups in Kuba; only
+   > `secret-key` mappings (by secret ID) are supported for the `bitwarden` provider.
 
 ### Google Cloud Platform (gcp)
 

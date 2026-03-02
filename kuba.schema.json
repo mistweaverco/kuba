@@ -11,7 +11,7 @@
         "provider": {
           "description": "The default cloud provider for this environment.",
           "type": "string",
-          "enum": ["gcp", "azure", "aws", "openbao", "local"]
+          "enum": ["gcp", "azure", "aws", "openbao", "bitwarden", "local"]
         },
         "project": {
           "description": "The default cloud project for this environment. This can be a string or an integer.",
@@ -44,7 +44,7 @@
                 "value": { "type": ["string", "integer"] },
                 "provider": {
                   "type": "string",
-                  "enum": ["gcp", "azure", "aws", "openbao", "local"]
+                  "enum": ["gcp", "azure", "aws", "openbao", "bitwarden", "local"]
                 },
                 "project": { "type": ["string", "integer"] }
               },
@@ -87,7 +87,7 @@
             "properties": {
               "provider": {
                 "not": {
-                  "enum": ["aws", "azure", "openbao", "local"]
+                  "enum": ["aws", "azure", "openbao", "bitwarden", "local"]
                 }
               }
             }
