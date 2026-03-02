@@ -23,10 +23,12 @@ var (
 var convertCmd = &cobra.Command{
 	Use:   "convert",
 	Short: "Convert configuration from other formats to kuba.yaml",
-	Long: `Convert configuration files from other formats (e.g., dotenv) to kuba.yaml format.
+	Long: `Convert configuration files from other formats (e.g., dotenv, ksvc) to kuba.yaml format.
 
 This command helps migrate existing configurations to kuba.yaml format.
 For dotenv files, it will create environment variable entries using the 'value' field.
+For ksvc files, it will convert container env definitions (including secret refs)
+into kuba.yaml env mappings.
 
 Note: When updating an existing kuba.yaml file, comments within the modified
 environment section will be lost as the section is regenerated. This is a limitation
@@ -40,7 +42,7 @@ comments are important.`,
 }
 
 func init() {
-	convertCmd.Flags().StringVar(&convertFrom, "from", "", "Source format (e.g., 'dotenv')")
+	convertCmd.Flags().StringVar(&convertFrom, "from", "", "Source format (e.g., 'dotenv', 'ksvc')")
 	convertCmd.Flags().StringVarP(&convertEnv, "env", "e", "default", "Environment name to use in kuba.yaml (default: default)")
 	convertCmd.Flags().StringVar(&convertInfile, "infile", "", "Input file path (e.g., .env.example)")
 	convertCmd.Flags().StringVar(&convertOutfile, "outfile", "", "Output kuba.yaml file path (default: kuba.yaml in current directory)")
@@ -54,8 +56,8 @@ func init() {
 func runConvert() error {
 	logger := log.NewLogger()
 
-	if convertFrom != "dotenv" {
-		return fmt.Errorf("unsupported source format: %s (only 'dotenv' is currently supported)", convertFrom)
+	if convertFrom != "dotenv" && convertFrom != "ksvc" {
+		return fmt.Errorf("unsupported source format: %s (supported: 'dotenv', 'ksvc')", convertFrom)
 	}
 
 	// Determine output file path
@@ -64,15 +66,59 @@ func runConvert() error {
 		outPath = "kuba.yaml"
 	}
 
-	logger.Debug("Converting dotenv to kuba.yaml", "infile", convertInfile, "outfile", outPath, "env", convertEnv)
+	logger.Debug("Converting configuration to kuba.yaml", "infile", convertInfile, "outfile", outPath, "env", convertEnv, "from", convertFrom)
 
-	// Read and parse dotenv file
-	logger.Debug("Reading dotenv file", "path", convertInfile)
-	envVars, err := parseDotenvFile(convertInfile)
-	if err != nil {
-		return fmt.Errorf("failed to parse dotenv file: %w", err)
+	// Read and parse input file based on source format
+	var (
+		newEnvItems     map[string]config.EnvItem
+		sourceVarsCount int
+		defaultProvider string
+		defaultProject  string
+	)
+
+	switch convertFrom {
+	case "dotenv":
+		logger.Debug("Reading dotenv file", "path", convertInfile)
+		envVars, err := parseDotenvFile(convertInfile)
+		if err != nil {
+			return fmt.Errorf("failed to parse dotenv file: %w", err)
+		}
+		logger.Debug("Parsed dotenv file", "variables_count", len(envVars))
+
+		newEnvItems = make(map[string]config.EnvItem, len(envVars))
+		for key, value := range envVars {
+			// Skip empty values
+			if strings.TrimSpace(value) == "" {
+				logger.Debug("Skipping empty environment variable", "key", key)
+				continue
+			}
+			newEnvItems[key] = config.EnvItem{
+				Value: value,
+			}
+		}
+		sourceVarsCount = len(newEnvItems)
+		// For dotenv we default to local provider
+		defaultProvider = "local"
+		defaultProject = ""
+	case "ksvc":
+		logger.Debug("Reading ksvc file", "path", convertInfile)
+		items, provider, project, err := parseKsvcFile(convertInfile)
+		if err != nil {
+			return fmt.Errorf("failed to parse ksvc file: %w", err)
+		}
+		logger.Debug("Parsed ksvc file", "variables_count", len(items), "provider", provider, "project", project)
+
+		newEnvItems = items
+		sourceVarsCount = len(newEnvItems)
+		// For ksvc we default to gcp provider with project/namespace if present
+		if provider == "" {
+			provider = "gcp"
+		}
+		defaultProvider = provider
+		defaultProject = project
+	default:
+		return fmt.Errorf("unsupported source format: %s (supported: 'dotenv', 'ksvc')", convertFrom)
 	}
-	logger.Debug("Parsed dotenv file", "variables_count", len(envVars))
 
 	// Load existing kuba.yaml if it exists, or create new config
 	var kubaConfig *config.KubaConfig
@@ -107,10 +153,10 @@ func runConvert() error {
 	env, exists := kubaConfig.Environments[convertEnv]
 	if !exists {
 		logger.Debug("Creating new environment", "env", convertEnv)
-		// Create a new environment with local provider (since we're using values)
+		// Create a new environment
 		env = config.Environment{
-			Provider: "local",
-			Project:  "",
+			Provider: defaultProvider,
+			Project:  defaultProject,
 			Env:      make(map[string]config.EnvItem),
 		}
 	} else {
@@ -120,21 +166,10 @@ func runConvert() error {
 		}
 	}
 
-	// Add dotenv entries to the environment
-	// Since dotenv files contain actual values, we'll use the 'value' field
-	// If the environment uses a different provider, we'll keep that but still add values
-	// The user can later convert values to secrets if needed
-	// Skip empty values - they should not be included in the config
-	for key, value := range envVars {
-		// Skip empty values
-		if strings.TrimSpace(value) == "" {
-			logger.Debug("Skipping empty environment variable", "key", key)
-			continue
-		}
-		env.Env[key] = config.EnvItem{
-			Value: value,
-		}
-		logger.Debug("Added environment variable", "key", key)
+	// Add or update entries in the environment
+	for key, item := range newEnvItems {
+		env.Env[key] = item
+		logger.Debug("Added or updated environment variable", "key", key)
 	}
 
 	// Clean up empty values from the environment before writing
@@ -149,9 +184,97 @@ func runConvert() error {
 		return fmt.Errorf("failed to write kuba.yaml: %w", err)
 	}
 
-	fmt.Printf("Successfully converted %d variables from %s to kuba.yaml (environment: %s)\n", len(envVars), convertInfile, convertEnv)
+	fmt.Printf("Successfully converted %d variables from %s to kuba.yaml (environment: %s)\n", sourceVarsCount, convertInfile, convertEnv)
 	logger.Debug("Conversion completed successfully")
 	return nil
+}
+
+// parseKsvcFile reads and parses a Knative Service (ksvc) YAML file and converts
+// its container environment variables into kuba EnvItems.
+// It returns the env items, along with a suggested default provider and project.
+func parseKsvcFile(filePath string) (map[string]config.EnvItem, string, string, error) {
+	type ksvcEnv struct {
+		Name      string `yaml:"name"`
+		Value     string `yaml:"value,omitempty"`
+		ValueFrom struct {
+			SecretKeyRef struct {
+				Name string `yaml:"name"`
+				Key  string `yaml:"key"`
+			} `yaml:"secretKeyRef"`
+		} `yaml:"valueFrom,omitempty"`
+	}
+
+	type ksvcContainer struct {
+		Env []ksvcEnv `yaml:"env"`
+	}
+
+	type ksvcSpecTemplateSpec struct {
+		Containers []ksvcContainer `yaml:"containers"`
+	}
+
+	type ksvcSpecTemplate struct {
+		Spec ksvcSpecTemplateSpec `yaml:"spec"`
+	}
+
+	type ksvcSpec struct {
+		Template ksvcSpecTemplate `yaml:"template"`
+	}
+
+	type ksvcMetadata struct {
+		Namespace string `yaml:"namespace"`
+	}
+
+	type ksvcRoot struct {
+		Metadata ksvcMetadata `yaml:"metadata"`
+		Spec     ksvcSpec     `yaml:"spec"`
+	}
+
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, "", "", fmt.Errorf("failed to read file: %w", err)
+	}
+
+	var svc ksvcRoot
+	if err := yaml.Unmarshal(data, &svc); err != nil {
+		return nil, "", "", fmt.Errorf("failed to unmarshal ksvc yaml: %w", err)
+	}
+
+	envItems := make(map[string]config.EnvItem)
+
+	// Iterate all containers and their env vars; last one wins on duplicates
+	for _, container := range svc.Spec.Template.Spec.Containers {
+		for _, e := range container.Env {
+			if e.Name == "" {
+				continue
+			}
+
+			// Hard-coded value
+			if strings.TrimSpace(e.Value) != "" {
+				envItems[e.Name] = config.EnvItem{
+					Value: e.Value,
+				}
+				continue
+			}
+
+			// Secret reference
+			if e.ValueFrom.SecretKeyRef.Name != "" {
+				// We treat the Kubernetes secret name as the secret-key identifier.
+				// The key (often "latest") typically represents the version and is
+				// intentionally not modeled here; providers usually default to latest.
+				envItems[e.Name] = config.EnvItem{
+					SecretKey: e.ValueFrom.SecretKeyRef.Name,
+				}
+				continue
+			}
+		}
+	}
+
+	// Suggested provider/project defaults for the created environment.
+	// For Cloud Run/Knative on GCP the namespace is typically the project number.
+	suggestedProvider := "gcp"
+	suggestedProject := strings.TrimSpace(svc.Metadata.Namespace)
+
+	return envItems, suggestedProvider, suggestedProject, nil
 }
 
 // parseDotenvFile reads and parses a dotenv file
