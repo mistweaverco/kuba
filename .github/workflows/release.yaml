@@ -24,8 +24,11 @@ jobs:
         with:
           go-version: 1.24
       - name: Install C toolchain
-        run: sudo apt-get update && sudo apt-get install -y build-essential libc6-dev
+        run: sudo apt-get update && sudo apt-get install -y build-essential
       - name: Build for Linux
+        env:
+          CGO_ENABLED: 1
+          CC: gcc
         run: ./scripts/build.sh
       - name: Release for Linux
         run: ./scripts/release.sh
@@ -49,6 +52,8 @@ jobs:
         with:
           go-version: 1.24
       - name: Build for macOS
+        env:
+          CGO_ENABLED: 1
         run: ./scripts/build.sh
       - name: Install the Apple certificate, provisioning profile, and API key
         id: keychain
@@ -113,38 +118,31 @@ jobs:
   build-windows:
     name: Build for Windows
     runs-on: windows-latest
-    env:
-      CGO_ENABLED: 1
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - name: Set up env
         shell: pwsh
         run: |
           $version = "${env:GITHUB_REF_NAME}".TrimStart('v')
-          "VERSION=$version"       >> $env:GITHUB_ENV
-          "PLATFORM=windows"       >> $env:GITHUB_ENV
-
+          "VERSION=$version" >> $env:GITHUB_ENV
+          "PLATFORM=windows" >> $env:GITHUB_ENV
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: '1.24'
-
-      - name: Configure C toolchain (MSVC)
+      - name: Configure C compiler for cgo
         shell: pwsh
         run: |
-          # Use MSVC cl.exe for cgo
           "CC=cl" >> $env:GITHUB_ENV
-
+          "CGO_ENABLED=1" >> $env:GITHUB_ENV
       - name: Build for Windows
-        shell: bash
+        shell: pwsh
         run: ./scripts/build.sh
-
       - name: Release for Windows
-        shell: bash
+        shell: pwsh
         run: ./scripts/release.sh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
