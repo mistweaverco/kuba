@@ -6,7 +6,7 @@ build_wrapper() {
   if [ "$1" == "windows" ]; then
     windows_file_extension=".exe"
   fi
-  GOOS=$1 GOARCH=$2 CGO_ENABLED=0 go build -ldflags "-X 'github.com/mistweaverco/kuba/internal/lib/version.VERSION=${VERSION}'" -o "dist/kuba-$1-$2$windows_file_extension"
+  GOOS=$1 GOARCH=$2 CGO_ENABLED=1 go build -ldflags "-X 'github.com/mistweaverco/kuba/internal/lib/version.VERSION=${VERSION}'" -o "dist/kuba-$1-$2$windows_file_extension"
 }
 
 build_linux_arm64() {
