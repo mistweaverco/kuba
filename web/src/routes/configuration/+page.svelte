@@ -91,6 +91,33 @@
 						</p>
 					</div>
 				</div>
+
+				<div class="divider">OR</div>
+
+				<div class="card bg-base-200 mb-6">
+					<div class="card-body">
+						<h3 class="card-title">
+							Import from Knative Service (<code>ksvc</code>)
+						</h3>
+						<p class="mb-4">
+							If you're running on Cloud Run / Knative, you can generate a <code>kuba.yaml</code>
+							from an existing Knative Service manifest. Kuba will read the container
+							<code>env</code> entries, convert hard-coded values to <code>value</code> mappings and
+							<code>valueFrom.secretKeyRef</code> entries to <code>secret-key</code> mappings.
+						</p>
+						<pre><code
+								class="language-bash"
+								data-toolbar-order="copy-to-clipboard"
+								data-prismjs-copy="📋"
+								>kuba convert --from ksvc --infile service.yaml --env production</code
+							></pre>
+						<p class="mt-4">
+							For Knative Services running on GCP, the environment will default to provider
+							<code>gcp</code> and use the Service's <code>metadata.namespace</code> as the
+							<code>project</code> (which is typically the GCP project number for Cloud Run).
+						</p>
+					</div>
+				</div>
 			</section>
 
 			<section>

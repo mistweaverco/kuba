@@ -209,7 +209,7 @@ Kuba provides several commands to help you manage your configuration:
 - `completion`: Generates shell completion scripts for Kuba
 - `config`: Manages global Kuba configuration options such as:
   - `cache`: Enable or disable local caching of secrets
-- `convert`: Converts existing **dotenv** (`.env*`) files to `kuba.yaml` format
+- `convert`: Converts existing configuration sources (e.g. **dotenv** (`.env*`), **Knative Service** manifests) to `kuba.yaml` format
 - `help`: Displays help information for Kuba and its commands
 - `init`: Initializes a new `kuba.yaml` configuration file in the current directory
 - `run`: Runs an application with environment variables fetched from secrets
@@ -566,6 +566,30 @@ kuba convert --infile .env
 # Convert .env.staging to my-kuba.yaml for the staging environment
 kuba convert --infile .env.staging --outfile my-kuba.yaml --env staging
 ```
+
+### Converting Knative Service (`ksvc`) manifests
+
+If you already have a Knative Service (for example a Cloud Run service) with all
+your environment variables defined, you can generate a `kuba.yaml` from that
+manifest:
+
+```sh
+# Convert a Knative Service manifest to kuba.yaml for the production environment
+kuba convert --from ksvc --infile service.yaml --env production
+```
+
+Kuba will:
+
+- Read the container `env` section of the Service template.
+- Convert hard-coded `value` entries into `value` mappings in `kuba.yaml`.
+- Convert `valueFrom.secretKeyRef` entries into `secret-key` mappings, using the
+  Kubernetes Secret name as the secret identifier.
+
+For Knative Services running on GCP (Cloud Run), the generated environment will
+default to:
+
+- `provider: gcp`
+- `project`: the Service `metadata.namespace` (typically the GCP project number)
 
 ### Show effective environment variables
 
