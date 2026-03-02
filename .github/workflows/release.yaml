@@ -133,6 +133,10 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.24'
+      - name: Set up MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
       - name: Use MSVC for cgo
         shell: pwsh
         run: |
