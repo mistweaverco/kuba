@@ -505,8 +505,8 @@ func validateConfig(config *KubaConfig) error {
 			return fmt.Errorf("environment '%s': provider is required", envName)
 		}
 
-		// Project is required for all providers except AWS, Azure, OpenBao, and local
-		if env.Project == "" && env.Provider != "aws" && env.Provider != "azure" && env.Provider != "openbao" && env.Provider != "local" {
+		// Project is required for all providers except AWS, Azure, OpenBao, Bitwarden, and local
+		if env.Project == "" && env.Provider != "aws" && env.Provider != "azure" && env.Provider != "openbao" && env.Provider != "bitwarden" && env.Provider != "local" {
 			return fmt.Errorf("environment '%s': project is required for provider '%s'", envName, env.Provider)
 		}
 
@@ -575,7 +575,7 @@ func validateConfig(config *KubaConfig) error {
 
 // isValidProvider checks if the provider is supported
 func isValidProvider(provider string) bool {
-	validProviders := []string{"gcp", "aws", "azure", "openbao", "local"}
+	validProviders := []string{"gcp", "aws", "azure", "openbao", "bitwarden", "local"}
 	for _, p := range validProviders {
 		if p == provider {
 			return true

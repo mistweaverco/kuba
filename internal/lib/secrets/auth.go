@@ -7,6 +7,7 @@ import (
 
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
 	secretmanagerpb "cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
+	sdk "github.com/bitwarden/sdk-go/v2"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
@@ -281,7 +282,91 @@ func (f *SecretManagerFactory) TestAuthorization(ctx context.Context, provider s
 		return TestOpenBaoAuthorization(ctx, projectID)
 	case "local":
 		return TestLocalAuthorization(ctx, projectID)
+	case "bitwarden":
+		return TestBitwardenAuthorization(ctx, projectID)
 	default:
 		return nil, fmt.Errorf("unsupported provider: %s", provider)
 	}
+}
+
+// TestBitwardenAuthorization tests Bitwarden connection and permissions
+func TestBitwardenAuthorization(ctx context.Context, projectID string) (*AuthorizationTestResult, error) {
+	result := &AuthorizationTestResult{
+		Provider:  "bitwarden",
+		ProjectID: projectID,
+	}
+
+	// Determine organization ID (from projectID or env)
+	organizationID := projectID
+	if organizationID == "" {
+		organizationID = os.Getenv("BITWARDEN_ORGANIZATION_ID")
+	}
+	if organizationID == "" {
+		result.Authenticated = false
+		result.ErrorMessage = "Bitwarden organization ID is required. Set BITWARDEN_ORGANIZATION_ID or configure 'project' for the environment."
+		result.CredentialsInfo = "Missing organization ID."
+		return result, nil
+	}
+
+	accessToken := os.Getenv("BITWARDEN_ACCESS_TOKEN")
+	if accessToken == "" {
+		accessToken = os.Getenv("ACCESS_TOKEN")
+	}
+	if accessToken == "" {
+		result.Authenticated = false
+		result.ErrorMessage = "Bitwarden access token is required. Set BITWARDEN_ACCESS_TOKEN or ACCESS_TOKEN."
+		result.CredentialsInfo = "Missing access token."
+		return result, nil
+	}
+
+	var apiURLPtr *string
+	if apiURL := os.Getenv("BITWARDEN_API_URL"); apiURL != "" {
+		apiURLCopy := apiURL
+		apiURLPtr = &apiURLCopy
+	}
+
+	var identityURLPtr *string
+	if identityURL := os.Getenv("BITWARDEN_IDENTITY_URL"); identityURL != "" {
+		identityURLCopy := identityURL
+		identityURLPtr = &identityURLCopy
+	}
+
+	client, err := sdk.NewBitwardenClient(apiURLPtr, identityURLPtr)
+	if err != nil {
+		result.Authenticated = false
+		result.ErrorMessage = fmt.Sprintf("Failed to create Bitwarden client: %v", err)
+		result.CredentialsInfo = "Unable to initialize Bitwarden SDK client."
+		return result, nil
+	}
+	defer client.Close()
+
+	// Try logging in with the access token
+	if err := client.AccessTokenLogin(accessToken, nil); err != nil {
+		result.Authenticated = false
+		result.ErrorMessage = fmt.Sprintf("Failed to authenticate with Bitwarden: %v", err)
+		result.CredentialsInfo = "Access token login failed."
+		return result, nil
+	}
+
+	result.Authenticated = true
+	result.CredentialsInfo = "Successfully authenticated with Bitwarden."
+
+	// Try listing secrets to verify access
+	secrets, err := client.Secrets().List(organizationID)
+	if err != nil {
+		result.HasPermissions = false
+		result.ErrorMessage = fmt.Sprintf("Authenticated, but could not list Bitwarden secrets: %v", err)
+		return result, nil
+	}
+
+	result.HasPermissions = true
+	if secrets != nil && len(secrets.Data) > 0 {
+		// Use the first secret's key as an example
+		result.ExampleSecret = secrets.Data[0].Key
+		result.CredentialsInfo += fmt.Sprintf(" Example secret found: %s", secrets.Data[0].Key)
+	} else {
+		result.CredentialsInfo += " Successfully listed Bitwarden secrets (no secrets found)."
+	}
+
+	return result, nil
 }
