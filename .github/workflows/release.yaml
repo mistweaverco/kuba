@@ -24,7 +24,7 @@ jobs:
         with:
           go-version: 1.24
       - name: Install C toolchain
-        run: sudo apt-get update && sudo apt-get install -y build-essential
+        run: sudo apt-get update && sudo apt-get install -y build-essential libc6-dev
       - name: Build for Linux
         run: ./scripts/build.sh
       - name: Release for Linux
