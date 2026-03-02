@@ -112,24 +112,39 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   build-windows:
     name: Build for Windows
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
+    env:
+      CGO_ENABLED: 1
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
       - name: Set up env
+        shell: pwsh
         run: |
-          VERSION=${GITHUB_REF_NAME#v}
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-          echo "PLATFORM=windows" >> $GITHUB_ENV
+          $version = "${env:GITHUB_REF_NAME}".TrimStart('v')
+          "VERSION=$version"       >> $env:GITHUB_ENV
+          "PLATFORM=windows"       >> $env:GITHUB_ENV
+
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.24
+          go-version: '1.24'
+
+      - name: Configure C toolchain (MSVC)
+        shell: pwsh
+        run: |
+          # Use MSVC cl.exe for cgo
+          "CC=cl" >> $env:GITHUB_ENV
+
       - name: Build for Windows
-        run: export CC=cl && ./scripts/build.sh
+        shell: bash
+        run: ./scripts/build.sh
+
       - name: Release for Windows
+        shell: bash
         run: ./scripts/release.sh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
