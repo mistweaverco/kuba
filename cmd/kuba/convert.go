@@ -2,6 +2,7 @@ package kuba
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -10,6 +11,8 @@ import (
 	"github.com/mistweaverco/kuba/internal/config"
 	"github.com/mistweaverco/kuba/internal/lib/log"
 	"github.com/spf13/cobra"
+	run "google.golang.org/api/run/v1"
+	"google.golang.org/api/option"
 	"gopkg.in/yaml.v3"
 )
 
@@ -18,6 +21,8 @@ var (
 	convertEnv     string
 	convertInfile  string
 	convertOutfile string
+	convertProject string
+	convertName    string
 )
 
 var convertCmd = &cobra.Command{
@@ -46,9 +51,10 @@ func init() {
 	convertCmd.Flags().StringVarP(&convertEnv, "env", "e", "default", "Environment name to use in kuba.yaml (default: default)")
 	convertCmd.Flags().StringVar(&convertInfile, "infile", "", "Input file path (e.g., .env.example)")
 	convertCmd.Flags().StringVar(&convertOutfile, "outfile", "", "Output kuba.yaml file path (default: kuba.yaml in current directory)")
+	convertCmd.Flags().StringVar(&convertProject, "project", "", "Project/namespace to read Knative Service from when using --from ksvc")
+	convertCmd.Flags().StringVar(&convertName, "name", "", "Service name to read Knative Service from when using --from ksvc")
 
 	convertCmd.MarkFlagRequired("from")
-	convertCmd.MarkFlagRequired("infile")
 
 	rootCmd.AddCommand(convertCmd)
 }
@@ -58,6 +64,18 @@ func runConvert() error {
 
 	if convertFrom != "dotenv" && convertFrom != "ksvc" {
 		return fmt.Errorf("unsupported source format: %s (supported: 'dotenv', 'ksvc')", convertFrom)
+	}
+
+	// Validate input source flags
+	switch convertFrom {
+	case "dotenv":
+		if strings.TrimSpace(convertInfile) == "" {
+			return fmt.Errorf("--infile is required when --from is 'dotenv'")
+		}
+	case "ksvc":
+		if strings.TrimSpace(convertInfile) == "" && (strings.TrimSpace(convertProject) == "" || strings.TrimSpace(convertName) == "") {
+			return fmt.Errorf("for --from 'ksvc', either --infile must be provided or both --project and --name must be set")
+		}
 	}
 
 	// Determine output file path
@@ -101,8 +119,20 @@ func runConvert() error {
 		defaultProvider = "local"
 		defaultProject = ""
 	case "ksvc":
-		logger.Debug("Reading ksvc file", "path", convertInfile)
-		items, provider, project, err := parseKsvcFile(convertInfile)
+		var (
+			items    map[string]config.EnvItem
+			provider string
+			project  string
+			err      error
+		)
+
+		if strings.TrimSpace(convertInfile) != "" {
+			logger.Debug("Reading ksvc file from local infile", "path", convertInfile)
+			items, provider, project, err = parseKsvcFile(convertInfile)
+		} else {
+			logger.Debug("Reading ksvc manifest from provider API", "project", convertProject, "name", convertName)
+			items, provider, project, err = loadKsvcFromProvider(convertProject, convertName)
+		}
 		if err != nil {
 			return fmt.Errorf("failed to parse ksvc file: %w", err)
 		}
@@ -192,48 +222,56 @@ func runConvert() error {
 // parseKsvcFile reads and parses a Knative Service (ksvc) YAML file and converts
 // its container environment variables into kuba EnvItems.
 // It returns the env items, along with a suggested default provider and project.
+// ksvcEnv represents a single environment variable entry in a Knative Service spec.
+type ksvcEnv struct {
+	Name      string `yaml:"name"`
+	Value     string `yaml:"value,omitempty"`
+	ValueFrom struct {
+		SecretKeyRef struct {
+			Name string `yaml:"name"`
+			Key  string `yaml:"key"`
+		} `yaml:"secretKeyRef"`
+	} `yaml:"valueFrom,omitempty"`
+}
+
+type ksvcContainer struct {
+	Env []ksvcEnv `yaml:"env"`
+}
+
+type ksvcSpecTemplateSpec struct {
+	Containers []ksvcContainer `yaml:"containers"`
+}
+
+type ksvcSpecTemplate struct {
+	Spec ksvcSpecTemplateSpec `yaml:"spec"`
+}
+
+type ksvcSpec struct {
+	Template ksvcSpecTemplate `yaml:"template"`
+}
+
+type ksvcMetadata struct {
+	Namespace string `yaml:"namespace"`
+}
+
+type ksvcRoot struct {
+	Metadata ksvcMetadata `yaml:"metadata"`
+	Spec     ksvcSpec     `yaml:"spec"`
+}
+
 func parseKsvcFile(filePath string) (map[string]config.EnvItem, string, string, error) {
-	type ksvcEnv struct {
-		Name      string `yaml:"name"`
-		Value     string `yaml:"value,omitempty"`
-		ValueFrom struct {
-			SecretKeyRef struct {
-				Name string `yaml:"name"`
-				Key  string `yaml:"key"`
-			} `yaml:"secretKeyRef"`
-		} `yaml:"valueFrom,omitempty"`
-	}
-
-	type ksvcContainer struct {
-		Env []ksvcEnv `yaml:"env"`
-	}
-
-	type ksvcSpecTemplateSpec struct {
-		Containers []ksvcContainer `yaml:"containers"`
-	}
-
-	type ksvcSpecTemplate struct {
-		Spec ksvcSpecTemplateSpec `yaml:"spec"`
-	}
-
-	type ksvcSpec struct {
-		Template ksvcSpecTemplate `yaml:"template"`
-	}
-
-	type ksvcMetadata struct {
-		Namespace string `yaml:"namespace"`
-	}
-
-	type ksvcRoot struct {
-		Metadata ksvcMetadata `yaml:"metadata"`
-		Spec     ksvcSpec     `yaml:"spec"`
-	}
-
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, "", "", fmt.Errorf("failed to read file: %w", err)
 	}
 
+	return parseKsvcYAML(data)
+}
+
+// parseKsvcYAML parses the raw YAML of a Knative Service (ksvc) and converts
+// its container environment variables into kuba EnvItems.
+// It returns the env items, along with a suggested default provider and project.
+func parseKsvcYAML(data []byte) (map[string]config.EnvItem, string, string, error) {
 	var svc ksvcRoot
 	if err := yaml.Unmarshal(data, &svc); err != nil {
 		return nil, "", "", fmt.Errorf("failed to unmarshal ksvc yaml: %w", err)
@@ -275,6 +313,73 @@ func parseKsvcFile(filePath string) (map[string]config.EnvItem, string, string, 
 	suggestedProject := strings.TrimSpace(svc.Metadata.Namespace)
 
 	return envItems, suggestedProvider, suggestedProject, nil
+}
+
+// loadKsvcFromProvider fetches a Knative Service (for example a Cloud Run
+// service) from the cloud provider API and converts it into env items.
+// Currently this is implemented for GCP Cloud Run and assumes that:
+// - project is the GCP project ID or number
+// - name is the Cloud Run service name
+func loadKsvcFromProvider(project, name string) (map[string]config.EnvItem, string, string, error) {
+	project = strings.TrimSpace(project)
+	name = strings.TrimSpace(name)
+
+	if project == "" || name == "" {
+		return nil, "", "", fmt.Errorf("both project and name are required to load ksvc from provider")
+	}
+
+	ctx := context.Background()
+
+	// Cloud Run Admin API client. We only need read access.
+	runService, err := run.NewService(ctx, option.WithScopes(run.CloudPlatformScope))
+	if err != nil {
+		return nil, "", "", fmt.Errorf("failed to create Cloud Run client: %w", err)
+	}
+
+	// Use the "namespaces/{project}/services/{service}" form which works for
+	// Cloud Run when using a regional endpoint. This keeps the CLI surface
+	// simple (no extra region flag) while still allowing us to fetch the full
+	// Knative Service definition, including env vars.
+	fullName := fmt.Sprintf("namespaces/%s/services/%s", project, name)
+
+	svc, err := run.NewProjectsLocationsServicesService(runService).Get(fullName).Context(ctx).Do()
+	if err != nil {
+		return nil, "", "", fmt.Errorf("failed to fetch Cloud Run service %q in project %q: %w", name, project, err)
+	}
+
+	envItems := make(map[string]config.EnvItem)
+
+	if svc.Spec != nil && svc.Spec.Template != nil && svc.Spec.Template.Spec != nil {
+		for _, container := range svc.Spec.Template.Spec.Containers {
+			if container == nil {
+				continue
+			}
+			for _, e := range container.Env {
+				if e == nil || strings.TrimSpace(e.Name) == "" {
+					continue
+				}
+
+				// Hard-coded value
+				if strings.TrimSpace(e.Value) != "" {
+					envItems[e.Name] = config.EnvItem{
+						Value: e.Value,
+					}
+					continue
+				}
+
+				// Secret reference (Secret Manager)
+				if e.ValueFrom != nil && e.ValueFrom.SecretKeyRef != nil && strings.TrimSpace(e.ValueFrom.SecretKeyRef.Name) != "" {
+					envItems[e.Name] = config.EnvItem{
+						SecretKey: e.ValueFrom.SecretKeyRef.Name,
+					}
+					continue
+				}
+			}
+		}
+	}
+
+	// Provider/project defaults for the created environment.
+	return envItems, "gcp", project, nil
 }
 
 // parseDotenvFile reads and parses a dotenv file
