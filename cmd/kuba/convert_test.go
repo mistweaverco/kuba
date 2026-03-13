@@ -131,3 +131,98 @@ func TestKsvcItemsMergeIntoEnvironment(t *testing.T) {
 		t.Fatalf("expected BAZ secret-key 'secret-id', got %q", env.Env["BAZ"].SecretKey)
 	}
 }
+
+func TestParseAWSServiceAndRegion(t *testing.T) {
+	tests := []struct {
+		name       string
+		input      string
+		wantSvc    string
+		wantRegion string
+		wantErr    bool
+	}{
+		{
+			name:       "valid service and region",
+			input:      "my-service.us-east-1",
+			wantSvc:    "my-service",
+			wantRegion: "us-east-1",
+			wantErr:    false,
+		},
+		{
+			name:       "service name with dots",
+			input:      "api.my-service.eu-west-1",
+			wantSvc:    "api.my-service",
+			wantRegion: "eu-west-1",
+			wantErr:    false,
+		},
+		{
+			name:    "missing region",
+			input:   "my-service",
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotSvc, gotRegion, err := parseAWSServiceAndRegion(tt.input)
+			if tt.wantErr {
+				if err == nil {
+					t.Fatalf("expected error, got nil")
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if gotSvc != tt.wantSvc {
+				t.Fatalf("service: expected %q, got %q", tt.wantSvc, gotSvc)
+			}
+			if gotRegion != tt.wantRegion {
+				t.Fatalf("region: expected %q, got %q", tt.wantRegion, gotRegion)
+			}
+		})
+	}
+}
+
+func TestParseAzureAppAndResourceGroup(t *testing.T) {
+	tests := []struct {
+		name    string
+		input   string
+		wantApp string
+		wantRG  string
+		wantErr bool
+	}{
+		{
+			name:    "valid app and resource group",
+			input:   "my-app.my-resource-group",
+			wantApp: "my-app",
+			wantRG:  "my-resource-group",
+			wantErr: false,
+		},
+		{
+			name:    "missing resource group",
+			input:   "my-app",
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotApp, gotRG, err := parseAzureAppAndResourceGroup(tt.input)
+			if tt.wantErr {
+				if err == nil {
+					t.Fatalf("expected error, got nil")
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if gotApp != tt.wantApp {
+				t.Fatalf("app: expected %q, got %q", tt.wantApp, gotApp)
+			}
+			if gotRG != tt.wantRG {
+				t.Fatalf("resource group: expected %q, got %q", tt.wantRG, gotRG)
+			}
+		})
+	}
+}

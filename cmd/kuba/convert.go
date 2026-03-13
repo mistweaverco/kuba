@@ -2,22 +2,32 @@ package kuba
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/appcontainers/armappcontainers"
+	awsconfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/apprunner"
 	"github.com/mistweaverco/kuba/internal/config"
 	"github.com/mistweaverco/kuba/internal/lib/log"
 	"github.com/spf13/cobra"
+	"google.golang.org/api/option"
+	run "google.golang.org/api/run/v1"
 	"gopkg.in/yaml.v3"
 )
 
 var (
-	convertFrom    string
-	convertEnv     string
-	convertInfile  string
-	convertOutfile string
+	convertFrom     string
+	convertEnv      string
+	convertInfile   string
+	convertOutfile  string
+	convertProvider string
+	convertProject  string
+	convertName     string
 )
 
 var convertCmd = &cobra.Command{
@@ -46,9 +56,11 @@ func init() {
 	convertCmd.Flags().StringVarP(&convertEnv, "env", "e", "default", "Environment name to use in kuba.yaml (default: default)")
 	convertCmd.Flags().StringVar(&convertInfile, "infile", "", "Input file path (e.g., .env.example)")
 	convertCmd.Flags().StringVar(&convertOutfile, "outfile", "", "Output kuba.yaml file path (default: kuba.yaml in current directory)")
+	convertCmd.Flags().StringVar(&convertProvider, "provider", "", "Provider to read Knative Service from when using --from ksvc without --infile (gcp, aws, azure)")
+	convertCmd.Flags().StringVar(&convertProject, "project", "", "Project/namespace to read Knative Service from when using --from ksvc")
+	convertCmd.Flags().StringVar(&convertName, "name", "", "Service name to read Knative Service from when using --from ksvc")
 
 	convertCmd.MarkFlagRequired("from")
-	convertCmd.MarkFlagRequired("infile")
 
 	rootCmd.AddCommand(convertCmd)
 }
@@ -58,6 +70,28 @@ func runConvert() error {
 
 	if convertFrom != "dotenv" && convertFrom != "ksvc" {
 		return fmt.Errorf("unsupported source format: %s (supported: 'dotenv', 'ksvc')", convertFrom)
+	}
+
+	// Validate input source flags
+	switch convertFrom {
+	case "dotenv":
+		if strings.TrimSpace(convertInfile) == "" {
+			return fmt.Errorf("--infile is required when --from is 'dotenv'")
+		}
+	case "ksvc":
+		infile := strings.TrimSpace(convertInfile)
+		project := strings.TrimSpace(convertProject)
+		name := strings.TrimSpace(convertName)
+		provider := strings.TrimSpace(convertProvider)
+
+		if infile == "" {
+			if provider == "" {
+				return fmt.Errorf("--provider is required when --from 'ksvc' and --infile is omitted")
+			}
+			if project == "" || name == "" {
+				return fmt.Errorf("for --from 'ksvc' without --infile, both --project and --name must be set")
+			}
+		}
 	}
 
 	// Determine output file path
@@ -101,8 +135,20 @@ func runConvert() error {
 		defaultProvider = "local"
 		defaultProject = ""
 	case "ksvc":
-		logger.Debug("Reading ksvc file", "path", convertInfile)
-		items, provider, project, err := parseKsvcFile(convertInfile)
+		var (
+			items    map[string]config.EnvItem
+			provider string
+			project  string
+			err      error
+		)
+
+		if strings.TrimSpace(convertInfile) != "" {
+			logger.Debug("Reading ksvc file from local infile", "path", convertInfile)
+			items, provider, project, err = parseKsvcFile(convertInfile)
+		} else {
+			logger.Debug("Reading ksvc manifest from provider API", "provider", convertProvider, "project", convertProject, "name", convertName)
+			items, provider, project, err = loadKsvcFromProvider(convertProvider, convertProject, convertName)
+		}
 		if err != nil {
 			return fmt.Errorf("failed to parse ksvc file: %w", err)
 		}
@@ -192,48 +238,56 @@ func runConvert() error {
 // parseKsvcFile reads and parses a Knative Service (ksvc) YAML file and converts
 // its container environment variables into kuba EnvItems.
 // It returns the env items, along with a suggested default provider and project.
+// ksvcEnv represents a single environment variable entry in a Knative Service spec.
+type ksvcEnv struct {
+	Name      string `yaml:"name"`
+	Value     string `yaml:"value,omitempty"`
+	ValueFrom struct {
+		SecretKeyRef struct {
+			Name string `yaml:"name"`
+			Key  string `yaml:"key"`
+		} `yaml:"secretKeyRef"`
+	} `yaml:"valueFrom,omitempty"`
+}
+
+type ksvcContainer struct {
+	Env []ksvcEnv `yaml:"env"`
+}
+
+type ksvcSpecTemplateSpec struct {
+	Containers []ksvcContainer `yaml:"containers"`
+}
+
+type ksvcSpecTemplate struct {
+	Spec ksvcSpecTemplateSpec `yaml:"spec"`
+}
+
+type ksvcSpec struct {
+	Template ksvcSpecTemplate `yaml:"template"`
+}
+
+type ksvcMetadata struct {
+	Namespace string `yaml:"namespace"`
+}
+
+type ksvcRoot struct {
+	Metadata ksvcMetadata `yaml:"metadata"`
+	Spec     ksvcSpec     `yaml:"spec"`
+}
+
 func parseKsvcFile(filePath string) (map[string]config.EnvItem, string, string, error) {
-	type ksvcEnv struct {
-		Name      string `yaml:"name"`
-		Value     string `yaml:"value,omitempty"`
-		ValueFrom struct {
-			SecretKeyRef struct {
-				Name string `yaml:"name"`
-				Key  string `yaml:"key"`
-			} `yaml:"secretKeyRef"`
-		} `yaml:"valueFrom,omitempty"`
-	}
-
-	type ksvcContainer struct {
-		Env []ksvcEnv `yaml:"env"`
-	}
-
-	type ksvcSpecTemplateSpec struct {
-		Containers []ksvcContainer `yaml:"containers"`
-	}
-
-	type ksvcSpecTemplate struct {
-		Spec ksvcSpecTemplateSpec `yaml:"spec"`
-	}
-
-	type ksvcSpec struct {
-		Template ksvcSpecTemplate `yaml:"template"`
-	}
-
-	type ksvcMetadata struct {
-		Namespace string `yaml:"namespace"`
-	}
-
-	type ksvcRoot struct {
-		Metadata ksvcMetadata `yaml:"metadata"`
-		Spec     ksvcSpec     `yaml:"spec"`
-	}
-
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, "", "", fmt.Errorf("failed to read file: %w", err)
 	}
 
+	return parseKsvcYAML(data)
+}
+
+// parseKsvcYAML parses the raw YAML of a Knative Service (ksvc) and converts
+// its container environment variables into kuba EnvItems.
+// It returns the env items, along with a suggested default provider and project.
+func parseKsvcYAML(data []byte) (map[string]config.EnvItem, string, string, error) {
 	var svc ksvcRoot
 	if err := yaml.Unmarshal(data, &svc); err != nil {
 		return nil, "", "", fmt.Errorf("failed to unmarshal ksvc yaml: %w", err)
@@ -275,6 +329,288 @@ func parseKsvcFile(filePath string) (map[string]config.EnvItem, string, string, 
 	suggestedProject := strings.TrimSpace(svc.Metadata.Namespace)
 
 	return envItems, suggestedProvider, suggestedProject, nil
+}
+
+// loadKsvcFromProvider fetches a Knative-style service (e.g. Cloud Run or
+// equivalents) from the cloud provider API and converts it into env items.
+// It supports:
+// - GCP Cloud Run ("gcp")
+// - AWS App Runner ("aws")
+// - Azure Container Apps ("azure")
+func loadKsvcFromProvider(provider, project, name string) (map[string]config.EnvItem, string, string, error) {
+	provider = strings.TrimSpace(strings.ToLower(provider))
+	project = strings.TrimSpace(project)
+	name = strings.TrimSpace(name)
+
+	if provider == "" {
+		return nil, "", "", fmt.Errorf("provider is required to load ksvc from provider")
+	}
+	if project == "" || name == "" {
+		return nil, "", "", fmt.Errorf("both project and name are required to load ksvc from provider")
+	}
+
+	switch provider {
+	case "gcp":
+		return loadKsvcFromGCP(project, name)
+	case "aws":
+		return loadKsvcFromAWS(project, name)
+	case "azure":
+		return loadKsvcFromAzure(project, name)
+	default:
+		return nil, "", "", fmt.Errorf("unsupported provider %q for ksvc import (supported: gcp, aws, azure)", provider)
+	}
+}
+
+// loadKsvcFromGCP loads a Cloud Run service and extracts env vars.
+// project is the GCP project ID or number, name is the Cloud Run service name.
+func loadKsvcFromGCP(project, name string) (map[string]config.EnvItem, string, string, error) {
+	ctx := context.Background()
+
+	runService, err := run.NewService(ctx, option.WithScopes(run.CloudPlatformScope))
+	if err != nil {
+		return nil, "", "", fmt.Errorf("failed to create Cloud Run client: %w", err)
+	}
+
+	svcClient := run.NewProjectsLocationsServicesService(runService)
+
+	// List services across all regions for this project and find the one with
+	// the matching metadata.name. This avoids needing an explicit region flag
+	// while still working with the Cloud Run Admin API resource model.
+	parent := fmt.Sprintf("projects/%s/locations/-", project)
+
+	var svc *run.Service
+	listCall := svcClient.List(parent).Context(ctx)
+	for {
+		resp, err := listCall.Do()
+		if err != nil {
+			return nil, "", "", fmt.Errorf("failed to list Cloud Run services for project %q: %w", project, err)
+		}
+		for _, item := range resp.Items {
+			if item != nil && item.Metadata != nil && item.Metadata.Name == name {
+				svc = item
+				break
+			}
+		}
+		nextToken := ""
+		if resp.Metadata != nil {
+			nextToken = resp.Metadata.Continue
+		}
+
+		if svc != nil || nextToken == "" {
+			break
+		}
+		listCall = listCall.Continue(nextToken)
+	}
+
+	if svc == nil {
+		return nil, "", "", fmt.Errorf("could not find Cloud Run service %q in project %q", name, project)
+	}
+
+	envItems := make(map[string]config.EnvItem)
+
+	if svc.Spec != nil && svc.Spec.Template != nil && svc.Spec.Template.Spec != nil {
+		for _, container := range svc.Spec.Template.Spec.Containers {
+			if container == nil {
+				continue
+			}
+			for _, e := range container.Env {
+				if e == nil || strings.TrimSpace(e.Name) == "" {
+					continue
+				}
+
+				if strings.TrimSpace(e.Value) != "" {
+					envItems[e.Name] = config.EnvItem{
+						Value: e.Value,
+					}
+					continue
+				}
+
+				if e.ValueFrom != nil && e.ValueFrom.SecretKeyRef != nil && strings.TrimSpace(e.ValueFrom.SecretKeyRef.Name) != "" {
+					envItems[e.Name] = config.EnvItem{
+						SecretKey: e.ValueFrom.SecretKeyRef.Name,
+					}
+					continue
+				}
+			}
+		}
+	}
+
+	return envItems, "gcp", project, nil
+}
+
+// parseAWSServiceAndRegion splits a name of the form "service.region"
+// (e.g. "my-service.us-east-1") into service name and region.
+func parseAWSServiceAndRegion(name string) (string, string, error) {
+	parts := strings.Split(name, ".")
+	if len(parts) < 2 {
+		return "", "", fmt.Errorf("invalid AWS service name %q, expected format 'service.region'", name)
+	}
+	region := parts[len(parts)-1]
+	serviceName := strings.Join(parts[:len(parts)-1], ".")
+	if strings.TrimSpace(serviceName) == "" || strings.TrimSpace(region) == "" {
+		return "", "", fmt.Errorf("invalid AWS service name %q, expected non-empty service and region", name)
+	}
+	return serviceName, region, nil
+}
+
+// loadKsvcFromAWS loads environment variables from an AWS App Runner service.
+// project is the AWS account ID (not strictly required for the API call),
+// name is "service.region" (for example "my-service.us-east-1").
+func loadKsvcFromAWS(project, name string) (map[string]config.EnvItem, string, string, error) {
+	serviceName, region, err := parseAWSServiceAndRegion(name)
+	if err != nil {
+		return nil, "", "", err
+	}
+
+	ctx := context.Background()
+	cfg, err := awsconfig.LoadDefaultConfig(ctx, awsconfig.WithRegion(region))
+	if err != nil {
+		return nil, "", "", fmt.Errorf("failed to load AWS config for region %q: %w", region, err)
+	}
+
+	client := apprunner.NewFromConfig(cfg)
+
+	// Find the service ARN by listing services and matching by name.
+	listOut, err := client.ListServices(ctx, &apprunner.ListServicesInput{})
+	if err != nil {
+		return nil, "", "", fmt.Errorf("failed to list App Runner services in region %q: %w", region, err)
+	}
+
+	var serviceArn string
+	for _, s := range listOut.ServiceSummaryList {
+		if s.ServiceName != nil && *s.ServiceName == serviceName && s.ServiceArn != nil {
+			serviceArn = *s.ServiceArn
+			break
+		}
+	}
+
+	if serviceArn == "" {
+		return nil, "", "", fmt.Errorf("could not find App Runner service %q in region %q", serviceName, region)
+	}
+
+	descOut, err := client.DescribeService(ctx, &apprunner.DescribeServiceInput{
+		ServiceArn: &serviceArn,
+	})
+	if err != nil {
+		return nil, "", "", fmt.Errorf("failed to describe App Runner service %q: %w", serviceName, err)
+	}
+
+	envItems := make(map[string]config.EnvItem)
+
+	if descOut.Service != nil &&
+		descOut.Service.SourceConfiguration != nil &&
+		descOut.Service.SourceConfiguration.ImageRepository != nil &&
+		descOut.Service.SourceConfiguration.ImageRepository.ImageConfiguration != nil {
+
+		imgCfg := descOut.Service.SourceConfiguration.ImageRepository.ImageConfiguration
+
+		// Plain environment variables (map[string]string)
+		for name, value := range imgCfg.RuntimeEnvironmentVariables {
+			if strings.TrimSpace(name) == "" {
+				continue
+			}
+			if strings.TrimSpace(value) == "" {
+				continue
+			}
+			envItems[name] = config.EnvItem{
+				Value: value,
+			}
+		}
+
+		// Secrets-backed env vars (Secrets Manager) - map[string]string
+		for name, arn := range imgCfg.RuntimeEnvironmentSecrets {
+			if strings.TrimSpace(name) == "" {
+				continue
+			}
+			if strings.TrimSpace(arn) == "" {
+				continue
+			}
+			parts := strings.Split(arn, ":")
+			secretID := arn
+			if len(parts) >= 6 {
+				// arn:partition:service:region:account-id:resource
+				secretID = parts[len(parts)-1]
+			}
+			envItems[name] = config.EnvItem{
+				SecretKey: secretID,
+			}
+		}
+	}
+
+	return envItems, "aws", project, nil
+}
+
+// parseAzureAppAndResourceGroup splits a name of the form
+// "app.resource-group" into app name and resource group name.
+func parseAzureAppAndResourceGroup(name string) (string, string, error) {
+	parts := strings.SplitN(name, ".", 2)
+	if len(parts) != 2 {
+		return "", "", fmt.Errorf("invalid Azure service name %q, expected format 'app.resource-group'", name)
+	}
+	app := strings.TrimSpace(parts[0])
+	rg := strings.TrimSpace(parts[1])
+	if app == "" || rg == "" {
+		return "", "", fmt.Errorf("invalid Azure service name %q, expected non-empty app and resource-group", name)
+	}
+	return app, rg, nil
+}
+
+// loadKsvcFromAzure loads environment variables from an Azure Container App.
+// project is the Azure subscription ID, name is "app.resource-group".
+func loadKsvcFromAzure(subscriptionID, name string) (map[string]config.EnvItem, string, string, error) {
+	appName, rg, err := parseAzureAppAndResourceGroup(name)
+	if err != nil {
+		return nil, "", "", err
+	}
+
+	ctx := context.Background()
+
+	cred, err := azidentity.NewDefaultAzureCredential(nil)
+	if err != nil {
+		return nil, "", "", fmt.Errorf("failed to create Azure credential: %w", err)
+	}
+
+	client, err := armappcontainers.NewContainerAppsClient(subscriptionID, cred, nil)
+	if err != nil {
+		return nil, "", "", fmt.Errorf("failed to create Azure Container Apps client: %w", err)
+	}
+
+	resp, err := client.Get(ctx, rg, appName, nil)
+	if err != nil {
+		return nil, "", "", fmt.Errorf("failed to fetch Azure Container App %q in resource group %q: %w", appName, rg, err)
+	}
+
+	envItems := make(map[string]config.EnvItem)
+
+	if resp.Properties != nil && resp.Properties.Template != nil {
+		for _, c := range resp.Properties.Template.Containers {
+			if c == nil || c.Env == nil {
+				continue
+			}
+			for _, ev := range c.Env {
+				if ev == nil || ev.Name == nil || strings.TrimSpace(*ev.Name) == "" {
+					continue
+				}
+
+				// Secrets-backed env vars reference an app secret by name via SecretRef.
+				if ev.SecretRef != nil && strings.TrimSpace(*ev.SecretRef) != "" {
+					envItems[*ev.Name] = config.EnvItem{
+						SecretKey: *ev.SecretRef,
+					}
+					continue
+				}
+
+				if ev.Value != nil && strings.TrimSpace(*ev.Value) != "" {
+					envItems[*ev.Name] = config.EnvItem{
+						Value: *ev.Value,
+					}
+					continue
+				}
+			}
+		}
+	}
+
+	return envItems, "azure", subscriptionID, nil
 }
 
 // parseDotenvFile reads and parses a dotenv file
