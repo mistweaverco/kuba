@@ -148,3 +148,29 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./scripts/release.sh
+  deploy-aur:
+    name: Deploy to AUR
+    needs: build-linux
+    runs-on: ubuntu-latest
+    container:
+      # INFO:  Use Arch image to access updpkgsums
+      image: archlinux:latest
+    steps:
+      - name: Install dependencies
+        run: pacman -Syu --noconfirm pacman-contrib git openssh
+      - uses: actions/checkout@v5
+      - name: Update Version in PKGBUILD
+        run: |
+          VERSION=${{ github.ref_name }}
+          VERSION_NO_V=${VERSION#v}
+          sed -i "s/pkgver=.*/pkgver=$VERSION_NO_V/" ./scripts/PKGBUILD
+      - name: Publish to AUR
+        uses: KSXGitHub/github-actions-deploy-aur@v4.1.1
+        with:
+          pkgname: kuba
+          pkgbuild: ./scripts/PKGBUILD
+          commit_username: ${{ secrets.AUR_USERNAME }}
+          commit_email: ${{ secrets.AUR_EMAIL }}
+          ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+          commit_message: "Update to v${{ env.CLEAN_VERSION }}"
+          updpkgsums: true
