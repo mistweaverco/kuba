@@ -3,6 +3,7 @@ package fileutils
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/afero"
 )
@@ -67,11 +68,7 @@ var (
 )
 
 func JoinPath(elem ...string) string {
-	var path string
-	for _, e := range elem {
-		path = path + string(os.PathSeparator) + e
-	}
-	return path
+	return filepath.Join(elem...)
 }
 
 // SetFileSystem sets the file system implementation
