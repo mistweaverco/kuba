@@ -199,7 +199,7 @@ function Install-Binary {
         Add-ToPath -InstallPath $InstallPath
 
     } catch {
-        Write-Error "Failed to install $BinaryName: $($_.Exception.Message)"
+        Write-Error "Failed to install ${BinaryName}: $($_.Exception.Message)"
         exit 1
     }
 }
