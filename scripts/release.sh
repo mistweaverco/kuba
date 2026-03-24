@@ -21,16 +21,6 @@ WINDOWS_FILES=(
   "dist/${BIN_NAME}-windows-amd64.exe"
 )
 
-set_release_action() {
-  if gh release view "$GH_TAG" --json id --jq .id > /dev/null 2>&1; then
-    echo "Release $GH_TAG already exists, updating it"
-    RELEASE_ACTION="edit"
-  else
-    echo "Release $GH_TAG does not exist, creating it"
-    RELEASE_ACTION="create"
-  fi
-}
-
 check_files_exist() {
   files=()
   for file in "${FILES[@]}"; do
@@ -49,22 +39,12 @@ check_files_exist() {
   fi
 }
 
-set_files_based_on_platform() {
-  case $TARGET_PLATFORM in
-    linux)
-      FILES=("${LINUX_FILES[@]}")
-      ;;
-    macos)
-      FILES=("${MACOS_FILES[@]}")
-      ;;
-    windows)
-      FILES=("${WINDOWS_FILES[@]}")
-      ;;
-    *)
-      echo "Error: PLATFORM $TARGET_PLATFORM is not supported"
-      exit 1
-      ;;
-  esac
+merge_all_platform_files() {
+  FILES=(
+    "${LINUX_FILES[@]}"
+    "${MACOS_FILES[@]}"
+    "${WINDOWS_FILES[@]}"
+  )
 }
 
 print_files() {
@@ -75,20 +55,14 @@ print_files() {
 }
 
 do_gh_release() {
-  if [ "$RELEASE_ACTION" == "edit" ]; then
-    echo "Overwriting existing release $GH_TAG"
-    print_files
-    gh release upload --clobber "$GH_TAG" "${FILES[@]}"
-  else
-    echo "Creating new release $GH_TAG"
-    print_files
-    gh release create --generate-notes "$GH_TAG" "${FILES[@]}" || RELEASE_ACTION="edit" && do_gh_release
-  fi
+  echo "Creating new release $GH_TAG"
+  print_files
+  gh release create --generate-notes "$GH_TAG" "${FILES[@]}"
 }
 
 release() {
   set_release_action
-  set_files_based_on_platform
+  merge_all_platform_files
   check_files_exist
   do_gh_release
 }

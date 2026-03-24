@@ -30,10 +30,14 @@ jobs:
           CGO_ENABLED: 1
           CC: gcc
         run: ./scripts/build.sh
-      - name: Release for Linux
-        run: ./scripts/release.sh
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify Linux binary
+        run: ./dist/kuba-linux-amd64 --version
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kuba-linux-amd64
+          path: dist/kuba-linux-amd64
+          if-no-files-found: error
   build-macos:
     name: Build for macOS
     runs-on: macos-latest
@@ -111,10 +115,22 @@ jobs:
             --key-id "$KEY_ID" \
             --issuer "$ISSUER" \
             --wait
-      - name: Release for macOS
-        run: ./scripts/release.sh
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify macOS binaries
+        run: |
+          ./dist/kuba-darwin-amd64 --version
+          ./dist/kuba-darwin-arm64 --version
+      - name: Upload macOS amd64 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kuba-darwin-amd64
+          path: dist/kuba-darwin-amd64
+          if-no-files-found: error
+      - name: Upload macOS arm64 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kuba-darwin-arm64
+          path: dist/kuba-darwin-arm64
+          if-no-files-found: error
   build-windows:
     name: Build for Windows
     runs-on: windows-latest
@@ -143,14 +159,58 @@ jobs:
       - name: Build for Windows
         shell: bash
         run: ./scripts/build.sh
-      - name: Release for Windows
-        shell: bash
+      - name: Verify Windows binary
+        shell: pwsh
+        run: .\dist\kuba-windows-amd64.exe --version
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kuba-windows-amd64-exe
+          path: dist/kuba-windows-amd64.exe
+          if-no-files-found: error
+  publish-release:
+    name: Publish GitHub Release
+    needs:
+      - build-linux
+      - build-macos
+      - build-windows
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up env
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+      - name: Download Linux artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: kuba-linux-amd64
+          path: dist
+      - name: Download macOS amd64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: kuba-darwin-amd64
+          path: dist
+      - name: Download macOS arm64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: kuba-darwin-arm64
+          path: dist
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: kuba-windows-amd64-exe
+          path: dist
+      - name: Publish release with all artifacts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./scripts/release.sh
   deploy-aur:
     name: Deploy to AUR
-    needs: build-linux
+    needs: publish-release
     runs-on: ubuntu-latest
     container:
       # INFO:  Use Arch image to access updpkgsums

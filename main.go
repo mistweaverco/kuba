@@ -1,19 +1,6 @@
-/*
-#cgo LDFLAGS: -lbitwarden_c -lm
-#include <math.h>
-*/
-
 package main
 
-//	@FIX:
-// See official Bitwarden SDK has a "bug" on windows:
-// Therefore we need this mumbo-jumbo of LDFLAGS and C import to
-// prevent the "missing entry point" error when running the binary on windows.
-// until this gets fixed.
-// https://github.com/bitwarden/sdk-sm/issues/1199
-
 import (
-	"C"
 	"io"
 	"log"
 	"os"

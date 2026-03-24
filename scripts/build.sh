@@ -3,10 +3,13 @@
 build_wrapper() {
   echo "Building for $1 $2"
   local windows_file_extension=""
+  local extra_ldflags=""
   if [ "$1" == "windows" ]; then
     windows_file_extension=".exe"
+    # Build a self-contained Windows binary (no external bitwarden_c.dll).
+    extra_ldflags=" -extldflags '-static'"
   fi
-  GOOS=$1 GOARCH=$2 go build -ldflags "-X 'github.com/mistweaverco/kuba/internal/lib/version.VERSION=${VERSION}'" -o "dist/kuba-$1-$2$windows_file_extension"
+  GOOS=$1 GOARCH=$2 go build -ldflags "-X 'github.com/mistweaverco/kuba/internal/lib/version.VERSION=${VERSION}'${extra_ldflags}" -o "dist/kuba-$1-$2$windows_file_extension"
 }
 
 build_linux_arm64() {
