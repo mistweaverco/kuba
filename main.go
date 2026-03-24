@@ -6,10 +6,11 @@ import (
 	"os"
 
 	"github.com/mistweaverco/kuba/cmd/kuba"
+	"github.com/mistweaverco/kuba/internal/lib/fileutils"
 )
 
 func main() {
-	f, err := os.OpenFile("/tmp/kuba.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	f, err := os.OpenFile(fileutils.JoinPath(fileutils.GetTempPath(), "kuba.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatalf("error opening file: %v", err)
 	}

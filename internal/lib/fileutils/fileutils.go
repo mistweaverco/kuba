@@ -66,6 +66,14 @@ var (
 	fileSystem FileSystem = &defaultFileSystem{fs: afero.NewOsFs()}
 )
 
+func JoinPath(elem ...string) string {
+	var path string
+	for _, e := range elem {
+		path = path + string(os.PathSeparator) + e
+	}
+	return path
+}
+
 // SetFileSystem sets the file system implementation
 func SetFileSystem(fs FileSystem) {
 	fileSystem = fs
