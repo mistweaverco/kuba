@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 
 if [ -z "$VERSION" ]; then echo "Error: VERSION is not set"; exit 1; fi
-if [ -z "$TARGET_PLATFORM" ]; then echo "Error: TARGET_PLATFORM is not set"; exit 1; fi
 
 BIN_NAME="kuba"
-RELEASE_ACTION="create"
 GH_TAG="v$VERSION"
 FILES=()
 

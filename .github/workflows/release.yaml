@@ -20,7 +20,7 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "TARGET_PLATFORM=linux" >> $GITHUB_ENV
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6.3.0
         with:
           go-version: 1.24
       - name: Install C toolchain
@@ -52,7 +52,7 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "TARGET_PLATFORM=macos" >> $GITHUB_ENV
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6.3.0
         with:
           go-version: 1.24
       - name: Build for macOS
@@ -146,7 +146,7 @@ jobs:
           "VERSION=$version" >> $env:GITHUB_ENV
           "TARGET_PLATFORM=windows" >> $env:GITHUB_ENV
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6.3.0
         with:
           go-version: '1.24'
       - name: Install MinGW
@@ -185,22 +185,22 @@ jobs:
           VERSION=${GITHUB_REF_NAME#v}
           echo "VERSION=$VERSION" >> $GITHUB_ENV
       - name: Download Linux artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8.0.1
         with:
           name: kuba-linux-amd64
           path: dist
       - name: Download macOS amd64 artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8.0.1
         with:
           name: kuba-darwin-amd64
           path: dist
       - name: Download macOS arm64 artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8.0.1
         with:
           name: kuba-darwin-arm64
           path: dist
       - name: Download Windows artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8.0.1
         with:
           name: kuba-windows-amd64-exe
           path: dist
@@ -218,7 +218,7 @@ jobs:
     steps:
       - name: Install dependencies
         run: pacman -Syu --noconfirm pacman-contrib git openssh
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6.0.2
       - name: Update Version in PKGBUILD
         run: |
           VERSION=${{ github.ref_name }}
