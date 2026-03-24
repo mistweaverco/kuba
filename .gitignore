@@ -3,3 +3,4 @@
 .env.*
 coverage.out
 dist/
+node_modules/

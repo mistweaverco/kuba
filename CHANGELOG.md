@@ -1,0 +1,152 @@
+
+## <small>1.6.1 (2026-03-24)</small>
+
+* fix(ci): pkgname was missing -bin suffix (#57) ([cb8478c](https://github.com/mistweaverco/kuba/commit/cb8478c)), closes [#57](https://github.com/mistweaverco/kuba/issues/57)
+* fix(windows): crash on windows due to bitwarden sdk bug (#55) ([87ec150](https://github.com/mistweaverco/kuba/commit/87ec150)), closes [#55](https://github.com/mistweaverco/kuba/issues/55)
+* fix(windows): Don't use hardcoded temp directory (#54) ([23d42d7](https://github.com/mistweaverco/kuba/commit/23d42d7)), closes [#54](https://github.com/mistweaverco/kuba/issues/54)
+* fix(windows): install.ps1 caused syntax errors (#56) ([a95a9c1](https://github.com/mistweaverco/kuba/commit/a95a9c1)), closes [#56](https://github.com/mistweaverco/kuba/issues/56)
+* feat(CI): Add PKGBUILD for Arch Linux + release workflow (#53) ([bbb8bc2](https://github.com/mistweaverco/kuba/commit/bbb8bc2)), closes [#53](https://github.com/mistweaverco/kuba/issues/53)
+
+## 1.6.0 (2026-03-13)
+
+* feat(convert): extend from kscv to support remote imports (#52) ([e74a3c6](https://github.com/mistweaverco/kuba/commit/e74a3c6)), closes [#52](https://github.com/mistweaverco/kuba/issues/52)
+
+## 1.5.0 (2026-03-02)
+
+* fix(ci): add c dep for linux ([886fd37](https://github.com/mistweaverco/kuba/commit/886fd37))
+* fix(ci): build for linux and windows ([6c1a4c8](https://github.com/mistweaverco/kuba/commit/6c1a4c8))
+* fix(ci): build for windows needs a windows runner ([d3c424d](https://github.com/mistweaverco/kuba/commit/d3c424d))
+* fix(ci): conflict with windows reserved PLATFORM env var ([656afe7](https://github.com/mistweaverco/kuba/commit/656afe7))
+* fix(ci): enable CGO for bitwarden ([09a3b13](https://github.com/mistweaverco/kuba/commit/09a3b13))
+* fix(ci): make cc available in path ([da5b9d0](https://github.com/mistweaverco/kuba/commit/da5b9d0))
+* fix(ci): release.sh still referenced PLATFORM instead of TARGET_* ([277a55f](https://github.com/mistweaverco/kuba/commit/277a55f))
+* fix(ci): remove 32 bit version ([45bc035](https://github.com/mistweaverco/kuba/commit/45bc035))
+* fix(ci): use correct c toolchain ([3bf7ace](https://github.com/mistweaverco/kuba/commit/3bf7ace))
+* fix(ci): use mingw gcc for cgo on windows ([39c6b26](https://github.com/mistweaverco/kuba/commit/39c6b26))
+* feat(docs): add bitwarden to TOC iin README ([f5fdd76](https://github.com/mistweaverco/kuba/commit/f5fdd76))
+* feat(providers): add bitwarden support (#50) ([7b7917a](https://github.com/mistweaverco/kuba/commit/7b7917a)), closes [#50](https://github.com/mistweaverco/kuba/issues/50)
+
+## 1.4.0 (2026-03-02)
+
+* feat(convert): add "import" from knative service (ksvc) (#48) ([abe6f1b](https://github.com/mistweaverco/kuba/commit/abe6f1b)), closes [#48](https://github.com/mistweaverco/kuba/issues/48)
+* feat(docs): update docs for "import from knative service" (#49) ([41ef6f1](https://github.com/mistweaverco/kuba/commit/41ef6f1)), closes [#49](https://github.com/mistweaverco/kuba/issues/49)
+
+## 1.3.0 (2025-12-15)
+
+* feat(cli): `kuba show --env` lists all available envs now (#46) ([bce2942](https://github.com/mistweaverco/kuba/commit/bce2942)), closes [#46](https://github.com/mistweaverco/kuba/issues/46)
+* feat(cli): `kuba show` now support `-o`/`--output` flag (#47) ([a35a6ab](https://github.com/mistweaverco/kuba/commit/a35a6ab)), closes [#47](https://github.com/mistweaverco/kuba/issues/47)
+* chore(web): add deep links to providers auth-methods (#43) ([6cb286e](https://github.com/mistweaverco/kuba/commit/6cb286e)), closes [#43](https://github.com/mistweaverco/kuba/issues/43)
+* chore(web): update website with latest features (#42) ([e7fee72](https://github.com/mistweaverco/kuba/commit/e7fee72)), closes [#42](https://github.com/mistweaverco/kuba/issues/42)
+* fix(web): spelling ([71c153b](https://github.com/mistweaverco/kuba/commit/71c153b))
+
+## 1.2.0 (2025-12-06)
+
+* feat(cli): add `--command` flag to `run` command (#41) ([849d1a8](https://github.com/mistweaverco/kuba/commit/849d1a8)), closes [#41](https://github.com/mistweaverco/kuba/issues/41)
+* fix(cli): remove commands registered twice (#40) ([91631b5](https://github.com/mistweaverco/kuba/commit/91631b5)), closes [#40](https://github.com/mistweaverco/kuba/issues/40)
+* fix(docs): update README (#39) ([10fc57b](https://github.com/mistweaverco/kuba/commit/10fc57b)), closes [#39](https://github.com/mistweaverco/kuba/issues/39)
+
+## 1.1.0 (2025-12-05)
+
+* feat(convert): add convert command (#35) ([518bcac](https://github.com/mistweaverco/kuba/commit/518bcac)), closes [#35](https://github.com/mistweaverco/kuba/issues/35)
+* feat(dx): add show command (#37) ([355b486](https://github.com/mistweaverco/kuba/commit/355b486)), closes [#37](https://github.com/mistweaverco/kuba/issues/37)
+* feat(test): improve test command and give better feedback (#36) ([5aadad9](https://github.com/mistweaverco/kuba/commit/5aadad9)), closes [#36](https://github.com/mistweaverco/kuba/issues/36)
+
+## 1.0.0 (2025-10-04)
+
+* feat(cache): add management commands (#29) ([11b361a](https://github.com/mistweaverco/kuba/commit/11b361a)), closes [#29](https://github.com/mistweaverco/kuba/issues/29)
+
+## 0.10.0 (2025-10-04)
+
+* feat(cache): add cache (#28) ([bd8348b](https://github.com/mistweaverco/kuba/commit/bd8348b)), closes [#28](https://github.com/mistweaverco/kuba/issues/28)
+* feat(kuba): add update subcommand (#27) ([f199aec](https://github.com/mistweaverco/kuba/commit/f199aec)), closes [#27](https://github.com/mistweaverco/kuba/issues/27)
+
+## <small>0.9.4 (2025-10-04)</small>
+
+* fix(manager): correctly interpolate variables (#26) ([312f705](https://github.com/mistweaverco/kuba/commit/312f705)), closes [#26](https://github.com/mistweaverco/kuba/issues/26)
+* feat(docs): add development-status badge ([0669b33](https://github.com/mistweaverco/kuba/commit/0669b33))
+
+## <small>0.9.3 (2025-09-19)</small>
+
+* fix(config): multiple var interpolation (#22) ([1fe6f23](https://github.com/mistweaverco/kuba/commit/1fe6f23)), closes [#22](https://github.com/mistweaverco/kuba/issues/22)
+
+## <small>0.9.2 (2025-09-18)</small>
+
+* fix(kuba-init): replace mappings with env key (#21) ([46c4171](https://github.com/mistweaverco/kuba/commit/46c4171)), closes [#21](https://github.com/mistweaverco/kuba/issues/21)
+
+## <small>0.9.1 (2025-09-18)</small>
+
+* fix(init): kuba init produced old kuba.yaml format (#20) ([0710f3f](https://github.com/mistweaverco/kuba/commit/0710f3f)), closes [#20](https://github.com/mistweaverco/kuba/issues/20)
+* fix(schema): kuba.schema.json was enforcing wrong rules (#19) ([ade9c37](https://github.com/mistweaverco/kuba/commit/ade9c37)), closes [#19](https://github.com/mistweaverco/kuba/issues/19)
+
+## 0.9.0 (2025-09-18)
+
+* feat(config): add inherits from env block (#18) ([96d1b7e](https://github.com/mistweaverco/kuba/commit/96d1b7e)), closes [#18](https://github.com/mistweaverco/kuba/issues/18)
+* feat(schema)!: kuba.yaml format changed (#17) ([4f6662d](https://github.com/mistweaverco/kuba/commit/4f6662d)), closes [#17](https://github.com/mistweaverco/kuba/issues/17)
+* fix(docs): docker --env-file needs = ([d1a6ddd](https://github.com/mistweaverco/kuba/commit/d1a6ddd))
+* fix(docs): docker usage (#14) ([218ae12](https://github.com/mistweaverco/kuba/commit/218ae12)), closes [#14](https://github.com/mistweaverco/kuba/issues/14)
+
+## 0.8.0 (2025-09-11)
+
+* feat(flag): add contain flag (#13) ([99409bb](https://github.com/mistweaverco/kuba/commit/99409bb)), closes [#13](https://github.com/mistweaverco/kuba/issues/13)
+* fix(web): install.sh ([f85eb61](https://github.com/mistweaverco/kuba/commit/f85eb61))
+* fix(web): install.sh move echo ([594b1f7](https://github.com/mistweaverco/kuba/commit/594b1f7))
+
+## <small>0.7.1 (2025-09-10)</small>
+
+* fix(ci): apple sign and notarize ([694d0cb](https://github.com/mistweaverco/kuba/commit/694d0cb))
+* fix(ci): mac builds need to run macos ([4716fc8](https://github.com/mistweaverco/kuba/commit/4716fc8))
+* fix(ci): sign and notarize for macos (#12) ([7c8a7dd](https://github.com/mistweaverco/kuba/commit/7c8a7dd)), closes [#12](https://github.com/mistweaverco/kuba/issues/12)
+
+## 0.7.0 (2025-09-10)
+
+* feat(cmd): add test subcommand (#11) ([59cd9e7](https://github.com/mistweaverco/kuba/commit/59cd9e7)), closes [#11](https://github.com/mistweaverco/kuba/issues/11)
+* feat(web): add clickable headlines ([25b838c](https://github.com/mistweaverco/kuba/commit/25b838c))
+* feat(web): add open-graph ([f194805](https://github.com/mistweaverco/kuba/commit/f194805))
+* feat(web): add toast to ClickableHeadline ([07e15dc](https://github.com/mistweaverco/kuba/commit/07e15dc))
+* feat(web): use dracula daisyui theme ([4d40c85](https://github.com/mistweaverco/kuba/commit/4d40c85))
+* fix(ClickableHeadline): make it more pleasant to view at ([f7c072a](https://github.com/mistweaverco/kuba/commit/f7c072a))
+* fix(examples): also use clickable headline component ([7e5fdb3](https://github.com/mistweaverco/kuba/commit/7e5fdb3))
+* fix(web): add json highlighting ([ea75bbe](https://github.com/mistweaverco/kuba/commit/ea75bbe))
+* fix(web): fix colors ([8238bad](https://github.com/mistweaverco/kuba/commit/8238bad))
+* fix(web): linter ([98e640b](https://github.com/mistweaverco/kuba/commit/98e640b))
+
+## 0.6.0 (2025-08-25)
+
+* feat(cmd): add debug mode flag (#10) ([e1cb144](https://github.com/mistweaverco/kuba/commit/e1cb144)), closes [#10](https://github.com/mistweaverco/kuba/issues/10)
+* feat(docs): update README with TOC ([7a5b37f](https://github.com/mistweaverco/kuba/commit/7a5b37f))
+* feat(web): overhaul website (#9) ([2d05d90](https://github.com/mistweaverco/kuba/commit/2d05d90)), closes [#9](https://github.com/mistweaverco/kuba/issues/9)
+* fix(web): build ([843050c](https://github.com/mistweaverco/kuba/commit/843050c))
+
+## 0.5.0 (2025-08-25)
+
+* feat(secret-path): enforce all uppercase, add vale-config, add docs (#8) ([aeacc73](https://github.com/mistweaverco/kuba/commit/aeacc73)), closes [#8](https://github.com/mistweaverco/kuba/issues/8)
+
+## 0.4.0 (2025-08-24)
+
+* feat(manager): add secret-path (#6) ([594dd1a](https://github.com/mistweaverco/kuba/commit/594dd1a)), closes [#6](https://github.com/mistweaverco/kuba/issues/6)
+* feat(managers): add env interpolation (#7) ([4248f33](https://github.com/mistweaverco/kuba/commit/4248f33)), closes [#7](https://github.com/mistweaverco/kuba/issues/7)
+
+## 0.3.0 (2025-08-22)
+
+* feat(managers): add OpenBao support (#5) ([1177125](https://github.com/mistweaverco/kuba/commit/1177125)), closes [#5](https://github.com/mistweaverco/kuba/issues/5)
+* feat(web): add website (#4) ([3ee56fc](https://github.com/mistweaverco/kuba/commit/3ee56fc)), closes [#4](https://github.com/mistweaverco/kuba/issues/4)
+* fix(ci): web deployment ([f4bd797](https://github.com/mistweaverco/kuba/commit/f4bd797))
+* fix(docs): fix typo ([a448d33](https://github.com/mistweaverco/kuba/commit/a448d33))
+* fix(web): install script ([5cc8a33](https://github.com/mistweaverco/kuba/commit/5cc8a33))
+* Create CNAME ([99a64f8](https://github.com/mistweaverco/kuba/commit/99a64f8))
+
+## 0.2.0 (2025-08-20)
+
+* Feat: add aws and azure managers (#2) ([80d0d49](https://github.com/mistweaverco/kuba/commit/80d0d49)), closes [#2](https://github.com/mistweaverco/kuba/issues/2)
+* fix(docs): README gcp id ([a6f0782](https://github.com/mistweaverco/kuba/commit/a6f0782))
+
+## 0.1.0 (2025-08-19)
+
+* fix(ci): fix macos signing ([f52666c](https://github.com/mistweaverco/kuba/commit/f52666c))
+* feat(app): add bare app skeleton ([c921cfb](https://github.com/mistweaverco/kuba/commit/c921cfb))
+* feat(cmd): add init subcommand ([b4c6df9](https://github.com/mistweaverco/kuba/commit/b4c6df9))
+* feat(docs): add schema ([6f931e5](https://github.com/mistweaverco/kuba/commit/6f931e5))
+* feat(docs): reworked README ([48ae181](https://github.com/mistweaverco/kuba/commit/48ae181))
+* feat(Makefile): add Makefile ([ee4a112](https://github.com/mistweaverco/kuba/commit/ee4a112))
+* feat(secrets): add gcp secret provider ([a428360](https://github.com/mistweaverco/kuba/commit/a428360))
+* Initial import ([91064eb](https://github.com/mistweaverco/kuba/commit/91064eb))
