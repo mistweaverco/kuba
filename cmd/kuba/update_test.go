@@ -2,6 +2,9 @@ package kuba
 
 import (
 	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -144,6 +147,54 @@ func TestCopyFile(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, srcContent, dstContent, "Copied file content should match source")
+}
+
+func TestReplaceBinaryWindowsStagesAndStartsHelper(t *testing.T) {
+	currentPath := filepath.Join(t.TempDir(), "kuba.exe")
+	newBinaryPath, err := createTempFile("new binary content")
+	require.NoError(t, err)
+	defer os.Remove(newBinaryPath)
+
+	var capturedName string
+	var capturedArgs []string
+
+	originalExec := newExecCommand
+	newExecCommand = func(name string, args ...string) *exec.Cmd {
+		capturedName = name
+		capturedArgs = args
+		return exec.Command("sh", "-c", "true")
+	}
+	defer func() { newExecCommand = originalExec }()
+
+	err = replaceBinaryWindows(currentPath, newBinaryPath)
+	require.NoError(t, err)
+
+	stagedPath := currentPath + ".new"
+	stagedContent, err := os.ReadFile(stagedPath)
+	require.NoError(t, err)
+	assert.Equal(t, "new binary content", string(stagedContent))
+
+	assert.Equal(t, "powershell.exe", capturedName)
+	require.GreaterOrEqual(t, len(capturedArgs), 5)
+	assert.Equal(t, "-File", capturedArgs[len(capturedArgs)-2])
+
+	scriptPath := capturedArgs[len(capturedArgs)-1]
+	scriptContent, err := os.ReadFile(scriptPath)
+	require.NoError(t, err)
+	assert.Contains(t, string(scriptContent), "$maxAttempts = 120")
+	assert.Contains(t, string(scriptContent), "$current = '"+escapePowerShellSingleQuotedPath(currentPath)+"'")
+	assert.Contains(t, string(scriptContent), "$staged = '"+escapePowerShellSingleQuotedPath(stagedPath)+"'")
+
+	// Cleanup artifacts created by this unit test.
+	_ = os.Remove(stagedPath)
+	_ = os.Remove(scriptPath)
+}
+
+func TestEscapePowerShellSingleQuotedPath(t *testing.T) {
+	input := `C:\Users\O'Brien\bin\kuba.exe`
+	escaped := escapePowerShellSingleQuotedPath(input)
+	assert.Equal(t, `C:\Users\O''Brien\bin\kuba.exe`, escaped)
+	assert.False(t, strings.Contains(escaped, "O'Brien"))
 }
 
 // Helper function to create a temporary file with content

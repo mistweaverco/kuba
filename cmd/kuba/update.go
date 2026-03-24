@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -33,6 +34,9 @@ The update process follows the same backup strategy as the installation scripts.
 		return runUpdate()
 	},
 }
+
+var currentGOOS = runtime.GOOS
+var newExecCommand = exec.Command
 
 // GitHubRelease represents a GitHub release
 type GitHubRelease struct {
@@ -251,6 +255,10 @@ func copyFile(src, dst string) error {
 
 // replaceBinary replaces the current binary with the new one
 func replaceBinary(currentPath, newBinaryPath string) error {
+	if currentGOOS == "windows" {
+		return replaceBinaryWindows(currentPath, newBinaryPath)
+	}
+
 	// Remove the current binary
 	if err := os.Remove(currentPath); err != nil {
 		return fmt.Errorf("failed to remove current binary: %w", err)
@@ -262,6 +270,61 @@ func replaceBinary(currentPath, newBinaryPath string) error {
 	}
 
 	return nil
+}
+
+// replaceBinaryWindows schedules a deferred binary replacement in a detached
+// PowerShell process so the current executable can exit and release its lock.
+func replaceBinaryWindows(currentPath, newBinaryPath string) error {
+	stagedPath := currentPath + ".new"
+	if err := copyFile(newBinaryPath, stagedPath); err != nil {
+		return fmt.Errorf("failed to stage new binary: %w", err)
+	}
+
+	scriptFile, err := os.CreateTemp("", "kuba-update-*.ps1")
+	if err != nil {
+		_ = os.Remove(stagedPath)
+		return fmt.Errorf("failed to create updater script: %w", err)
+	}
+	defer scriptFile.Close()
+
+	// Retry copy for up to 60s while current process exits and file lock clears.
+	script := fmt.Sprintf(`$ErrorActionPreference = 'Stop'
+$current = '%s'
+$staged = '%s'
+$maxAttempts = 120
+
+for ($i = 0; $i -lt $maxAttempts; $i++) {
+  try {
+    Copy-Item -Path $staged -Destination $current -Force
+    Remove-Item -Path $staged -Force -ErrorAction SilentlyContinue
+    Remove-Item -Path $PSCommandPath -Force -ErrorAction SilentlyContinue
+    exit 0
+  } catch {
+    Start-Sleep -Milliseconds 500
+  }
+}
+
+exit 1
+`, escapePowerShellSingleQuotedPath(currentPath), escapePowerShellSingleQuotedPath(stagedPath))
+
+	if _, err := scriptFile.WriteString(script); err != nil {
+		_ = os.Remove(stagedPath)
+		_ = os.Remove(scriptFile.Name())
+		return fmt.Errorf("failed to write updater script: %w", err)
+	}
+
+	cmd := newExecCommand("powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", scriptFile.Name())
+	if err := cmd.Start(); err != nil {
+		_ = os.Remove(stagedPath)
+		_ = os.Remove(scriptFile.Name())
+		return fmt.Errorf("failed to start updater helper: %w", err)
+	}
+
+	return nil
+}
+
+func escapePowerShellSingleQuotedPath(path string) string {
+	return strings.ReplaceAll(path, "'", "''")
 }
 
 // runUpdate executes the update process
@@ -322,7 +385,12 @@ func runUpdate() error {
 		return fmt.Errorf("failed to replace binary: %w", err)
 	}
 
-	fmt.Printf("Successfully updated kuba from %s to %s\n", currentVersion, latestVersion)
+	if currentGOOS == "windows" {
+		fmt.Printf("Update scheduled from %s to %s\n", currentVersion, latestVersion)
+		fmt.Printf("Please wait a few seconds, then run: kuba version\n")
+	} else {
+		fmt.Printf("Successfully updated kuba from %s to %s\n", currentVersion, latestVersion)
+	}
 	fmt.Printf("Backup saved as: %s\n", backupPath)
 
 	return nil
