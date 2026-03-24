@@ -1,4 +1,12 @@
 
+## <small>1.6.2 (2026-03-24)</small>
+
+* chore(ci): update release workflow actions (#62) ([1a8ead8](https://github.com/mistweaverco/kuba/commit/1a8ead8)), closes [#62](https://github.com/mistweaverco/kuba/issues/62)
+* fix/ci release script (#61) ([b1fd526](https://github.com/mistweaverco/kuba/commit/b1fd526)), closes [#61](https://github.com/mistweaverco/kuba/issues/61)
+* fix(windows): crash due to missing bitwarden dll (#59) ([7a61b69](https://github.com/mistweaverco/kuba/commit/7a61b69)), closes [#59](https://github.com/mistweaverco/kuba/issues/59)
+* fix(windows): crash due to wrong filepath join (#60) ([e3170a8](https://github.com/mistweaverco/kuba/commit/e3170a8)), closes [#60](https://github.com/mistweaverco/kuba/issues/60)
+* fix(windows): kuba update (#58) ([a005678](https://github.com/mistweaverco/kuba/commit/a005678)), closes [#58](https://github.com/mistweaverco/kuba/issues/58)
+
 ## <small>1.6.1 (2026-03-24)</small>
 
 * fix(ci): pkgname was missing -bin suffix (#57) ([cb8478c](https://github.com/mistweaverco/kuba/commit/cb8478c)), closes [#57](https://github.com/mistweaverco/kuba/issues/57)
