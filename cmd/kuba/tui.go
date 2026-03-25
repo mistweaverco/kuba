@@ -33,4 +33,3 @@ func init() {
 	tuiCmd.Flags().StringVarP(&tuiConfigFile, "config", "c", "", "Path to kuba.yaml configuration file")
 	rootCmd.AddCommand(tuiCmd)
 }
-

@@ -15,4 +15,3 @@ func Run(ctx context.Context, configPath string) error {
 	_, err = tea.NewProgram(m, tea.WithAltScreen()).Run()
 	return err
 }
-

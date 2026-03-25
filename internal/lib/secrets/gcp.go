@@ -15,10 +15,10 @@ import (
 
 // GCPSecretManager handles GCP Secret Manager operations
 type GCPSecretManager struct {
-	client *secretmanager.Client
-	ctx    context.Context
-	projectID        string
-	createLocations  []string
+	client          *secretmanager.Client
+	ctx             context.Context
+	projectID       string
+	createLocations []string
 }
 
 // NewGCPSecretManager creates a new GCP Secret Manager client

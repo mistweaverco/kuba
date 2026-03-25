@@ -43,4 +43,3 @@ func (o *openBaoMutator) DeleteSecret(secretName string, forceDelete bool) error
 	_ = forceDelete // OpenBao does not have soft delete here
 	return o.m.DeleteSecret(secretName)
 }
-

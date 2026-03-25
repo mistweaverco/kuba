@@ -180,9 +180,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if ws, ok := msg.(tea.WindowSizeMsg); ok {
 		m.winW = ws.Width
 		m.winH = ws.Height
-		// Keep the various lists/tables sized reasonably.
-		m.envList.SetSize(ws.Width, ws.Height)
-		m.gcpLocList.SetSize(ws.Width, ws.Height)
+		innerW, innerH := panelInnerSize(ws.Width, ws.Height)
+		// Keep the various lists/tables sized to panel inner area.
+		m.envList.SetSize(innerW, innerH)
+		m.gcpLocList.SetSize(innerW, innerH)
 	}
 
 	switch m.screen {
@@ -208,7 +209,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m Model) View() string {
 	switch m.screen {
 	case screenEnvs:
-		return m.envList.View()
+		box := lipgloss.NewStyle().
+			Border(lipgloss.NormalBorder()).
+			Padding(1, 2)
+		if m.winW > 0 {
+			box = box.Width(max(20, m.winW-4))
+		}
+		return box.Render(m.envList.View())
 	case screenSecrets:
 		return m.viewSecrets()
 	case screenView:
@@ -257,7 +264,8 @@ func (m Model) View() string {
 func (m Model) updateEnvs(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		m.envList.SetSize(msg.Width, msg.Height)
+		innerW, innerH := panelInnerSize(msg.Width, msg.Height)
+		m.envList.SetSize(innerW, innerH)
 		return m, nil
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -398,14 +406,30 @@ func (m Model) viewSecrets() string {
 		parts = append(parts, filterLine)
 	}
 	parts = append(parts, m.secretTable.View(), help)
-	return strings.Join(parts, "\n\n")
+	content := strings.Join(parts, "\n\n")
+
+	box := lipgloss.NewStyle().
+		Border(lipgloss.NormalBorder()).
+		Padding(1, 2)
+	if m.winW > 0 {
+		box = box.Width(max(20, m.winW-4))
+	}
+	return box.Render(content)
 }
 
 func (m Model) viewModal(title, body string) string {
 	box := lipgloss.NewStyle().
 		Border(lipgloss.NormalBorder()).
-		Padding(1, 2).
-		Width(80)
+		Padding(1, 2)
+
+	if m.winW > 0 {
+		// Leave a small gutter so borders don't clip.
+		box = box.Width(max(20, m.winW-4))
+	}
+	if m.winH > 0 {
+		// Use most of the available height (best-effort; content may still scroll).
+		box = box.Height(max(8, m.winH-4))
+	}
 	return box.Render(lipgloss.NewStyle().Bold(true).Render(title) + "\n\n" + body)
 }
 
@@ -415,8 +439,9 @@ func (m Model) updateSecrets(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		// reserve space for header/help
-		m.secretTable.SetWidth(msg.Width - 4)
-		m.secretTable.SetHeight(msg.Height - 8)
+		innerW, innerH := panelInnerSize(msg.Width, msg.Height)
+		m.secretTable.SetWidth(innerW)
+		m.secretTable.SetHeight(max(4, innerH-6))
 		m.filter.Width = min(60, msg.Width-6)
 		m.editArea.SetWidth(min(90, msg.Width-10))
 		m.editArea.SetHeight(max(6, msg.Height-12))
@@ -945,4 +970,17 @@ func max(a, b int) int {
 		return a
 	}
 	return b
+}
+
+func panelInnerSize(w, h int) (int, int) {
+	// Border takes 2 cols/rows, padding(1,2) takes 4 cols and 2 rows.
+	innerW := w - 8
+	innerH := h - 4
+	if innerW < 10 {
+		innerW = 10
+	}
+	if innerH < 4 {
+		innerH = 4
+	}
+	return innerW, innerH
 }
