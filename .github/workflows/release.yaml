@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 0
       - name: Set up env
@@ -33,7 +33,7 @@ jobs:
       - name: Verify Linux binary
         run: ./dist/kuba-linux-amd64 --version
       - name: Upload Linux artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.0
         with:
           name: kuba-linux-amd64
           path: dist/kuba-linux-amd64
@@ -43,7 +43,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 0
       - name: Set up env
@@ -120,13 +120,13 @@ jobs:
           ./dist/kuba-darwin-amd64 --version
           ./dist/kuba-darwin-arm64 --version
       - name: Upload macOS amd64 artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.0
         with:
           name: kuba-darwin-amd64
           path: dist/kuba-darwin-amd64
           if-no-files-found: error
       - name: Upload macOS arm64 artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.0
         with:
           name: kuba-darwin-arm64
           path: dist/kuba-darwin-arm64
@@ -136,7 +136,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 0
       - name: Set up env
@@ -163,7 +163,7 @@ jobs:
         shell: pwsh
         run: .\dist\kuba-windows-amd64.exe --version
       - name: Upload Windows artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.0
         with:
           name: kuba-windows-amd64-exe
           path: dist/kuba-windows-amd64.exe
@@ -177,7 +177,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 0
       - name: Set up env
