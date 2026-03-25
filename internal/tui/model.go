@@ -795,8 +795,6 @@ func (m *Model) refreshGcpLocListTitles() tea.Cmd {
 	cmd := m.gcpLocList.SetItems(items)
 
 	// Restore filter text (SetItems can cause internal filter recalcs).
-	// We intentionally leave "filter editing" mode after toggles so that
-	// toggle keys (like x) won't get inserted into the filter input.
 	m.gcpLocList.SetFilterText(filterText)
 	if strings.TrimSpace(filterText) == "" {
 		m.gcpLocList.SetFilterState(list.Unfiltered)
