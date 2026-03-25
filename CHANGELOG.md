@@ -1,4 +1,11 @@
 
+## 1.7.0 (2026-03-25)
+
+* fix(ci): update go to 1.25 (#65) ([397b9c6](https://github.com/mistweaverco/kuba/commit/397b9c6)), closes [#65](https://github.com/mistweaverco/kuba/issues/65)
+* feat(tui): add tui for viewing, editing and adding secrets (#64) ([31d37bd](https://github.com/mistweaverco/kuba/commit/31d37bd)), closes [#64](https://github.com/mistweaverco/kuba/issues/64)
+* feat(ux): add changelog generation script (#63) ([17cb5d9](https://github.com/mistweaverco/kuba/commit/17cb5d9)), closes [#63](https://github.com/mistweaverco/kuba/issues/63)
+* chore(docs): update changelog ([9c89bc1](https://github.com/mistweaverco/kuba/commit/9c89bc1))
+
 ## <small>1.6.2 (2026-03-24)</small>
 
 * chore(ci): update release workflow actions (#62) ([1a8ead8](https://github.com/mistweaverco/kuba/commit/1a8ead8)), closes [#62](https://github.com/mistweaverco/kuba/issues/62)
