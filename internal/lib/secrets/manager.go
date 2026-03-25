@@ -20,6 +20,14 @@ type SecretManager interface {
 	Close() error
 }
 
+// SecretMutator is an optional interface implemented by providers that support
+// creating/updating/deleting secrets (used by interactive tooling like the TUI).
+type SecretMutator interface {
+	CreateSecret(secretName, secretValue, description string) error
+	UpdateSecret(secretName, secretValue string) error
+	DeleteSecret(secretName string, forceDelete bool) error
+}
+
 // SecretManagerFactory creates secret managers for different cloud providers
 type SecretManagerFactory struct{}
 
@@ -34,7 +42,7 @@ func (f *SecretManagerFactory) CreateSecretManager(ctx context.Context, provider
 	case "gcp":
 		// Check for GCP credentials
 		credentialsFile := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
-		return NewGCPSecretManager(ctx, credentialsFile)
+		return NewGCPSecretManager(ctx, credentialsFile, projectID)
 	case "aws":
 		// Check for AWS region and profile
 		region := os.Getenv("AWS_REGION")

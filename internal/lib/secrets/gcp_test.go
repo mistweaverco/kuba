@@ -9,7 +9,7 @@ func TestNewGCPSecretManager(t *testing.T) {
 	ctx := context.Background()
 
 	// Test with no credentials file (should use default credentials)
-	manager, err := NewGCPSecretManager(ctx, "")
+	manager, err := NewGCPSecretManager(ctx, "", "test-project")
 	if err != nil {
 		// This might fail if no GCP credentials are available, which is expected in test environment
 		t.Logf("Expected error when no GCP credentials available: %v", err)
@@ -37,7 +37,7 @@ func TestGCPSecretManager_GetSecret(t *testing.T) {
 	// In a real test environment, you would mock the client or use test credentials
 	t.Skip("Skipping test that requires GCP credentials")
 
-	manager, err := NewGCPSecretManager(ctx, "")
+	manager, err := NewGCPSecretManager(ctx, "", "test-project")
 	if err != nil {
 		t.Fatalf("Failed to create manager: %v", err)
 	}
@@ -61,7 +61,7 @@ func TestGCPSecretManager_GetSecrets(t *testing.T) {
 	// In a real test environment, you would mock the client or use test credentials
 	t.Skip("Skipping test that requires GCP credentials")
 
-	manager, err := NewGCPSecretManager(ctx, "")
+	manager, err := NewGCPSecretManager(ctx, "", "test-project")
 	if err != nil {
 		t.Fatalf("Failed to create manager: %v", err)
 	}
