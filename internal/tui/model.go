@@ -17,29 +17,6 @@ import (
 	"github.com/mistweaverco/kuba/internal/lib/secrets"
 )
 
-type Screen int
-
-const (
-	screenEnvs Screen = iota
-	screenSecrets
-	screenView
-	screenEdit
-	screenCreate
-	screenConfirmDelete
-	screenError
-	screenBusy
-)
-
-type secretRow struct {
-	envVar   string
-	value    string
-	item     config.EnvItem
-	provider string
-	project  string
-	refKind  string // secret-key | secret-path | value
-	ref      string // secret-key or secret-path
-}
-
 type Model struct {
 	ctx        context.Context
 	configPath string
@@ -95,16 +72,6 @@ type Model struct {
 	busyText string
 	spinner  spinner.Model
 }
-
-type createDoneMsg struct{ err error }
-type editDoneMsg struct{ err error }
-type deleteDoneMsg struct{ err error }
-
-type envItem struct{ name string }
-
-func (e envItem) Title() string       { return e.name }
-func (e envItem) Description() string { return "" }
-func (e envItem) FilterValue() string { return e.name }
 
 func New(ctx context.Context, configPath string) (*Model, error) {
 	cfg, err := config.LoadKubaConfig(configPath)
@@ -267,45 +234,6 @@ func (m *Model) View() tea.View {
 	}
 }
 
-func (m *Model) updateEnvs(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.WindowSizeMsg:
-		innerW, innerH := panelInnerSize(msg.Width, msg.Height, panelStyle())
-		m.envList.SetSize(innerW, innerH)
-		return m, nil
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "enter":
-			if it, ok := m.envList.SelectedItem().(envItem); ok {
-				m.selectedEnvName = it.name
-				env, err := m.cfg.GetEnvironment(it.name)
-				if err != nil {
-					m.errMsg = err.Error()
-					return m, nil
-				}
-				m.selectedEnv = env
-				if err := m.reloadSecrets(); err != nil {
-					m.errMsg = err.Error()
-					return m, nil
-				}
-				m.screen = screenSecrets
-				m.filter.SetValue("")
-				m.filter.Blur()
-				// Ensure the secrets table is sized immediately, even if we haven't
-				// received a WindowSizeMsg on this screen yet.
-				if m.winW > 0 && m.winH > 0 {
-					return m.updateSecrets(tea.WindowSizeMsg{Width: m.winW, Height: m.winH})
-				}
-				return m, nil
-			}
-		}
-	}
-
-	var cmd tea.Cmd
-	m.envList, cmd = m.envList.Update(msg)
-	return m, cmd
-}
-
 func (m *Model) reloadSecrets() error {
 	if m.selectedEnv == nil {
 		return fmt.Errorf("no environment selected")
@@ -421,11 +349,6 @@ func (m *Model) viewSecrets() string {
 
 	box := fitPanelToWindow(panelStyle(), m.winW, m.winH)
 	return box.Render(content)
-}
-
-func (m *Model) viewModal(title, body string) string {
-	box := fitPanelToWindow(panelStyle(), m.winW, m.winH)
-	return box.Render(lipgloss.NewStyle().Bold(true).Render(title) + "\n\n" + body)
 }
 
 func (m *Model) updateSecrets(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -652,34 +575,6 @@ func (m *Model) saveEdit(row secretRow, newValue string) error {
 	return mut.UpdateSecret(row.ref, newValue)
 }
 
-type createInput struct {
-	envVar      string
-	secretKey   string
-	value       string
-	desc        string
-	replication string
-	locations   []string
-	provider    string
-	project     string
-	envName     string
-	configPath  string
-}
-
-func (m *Model) snapshotCreateInput() createInput {
-	return createInput{
-		envVar:      strings.TrimSpace(m.createEnvVar),
-		secretKey:   strings.TrimSpace(m.createSecretKey),
-		value:       m.createValue,
-		desc:        strings.TrimSpace(m.createDesc),
-		replication: m.createReplication,
-		locations:   append([]string(nil), m.createLocations...),
-		provider:    m.selectedEnv.Provider,
-		project:     m.selectedEnv.Project,
-		envName:     m.selectedEnvName,
-		configPath:  m.configPath,
-	}
-}
-
 func (m *Model) updateCreate(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if ws, ok := msg.(tea.WindowSizeMsg); ok {
 		// Constrain the form to the modal body area so it can scroll internally
@@ -767,83 +662,6 @@ func (m *Model) updateCreate(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	return m, cmd
-}
-
-func (m *Model) ensureGCPLocationsLoaded() error {
-	if m.selectedEnv == nil || m.selectedEnv.Provider != "gcp" {
-		return nil
-	}
-	if len(m.gcpLocations) > 0 {
-		return nil
-	}
-
-	factory := secrets.NewSecretManagerFactory()
-	sm, err := factory.CreateSecretManager(m.ctx, "gcp", m.selectedEnv.Project)
-	if err != nil {
-		return err
-	}
-	defer sm.Close()
-
-	gcpSM, ok := sm.(*secrets.GCPSecretManager)
-	if !ok {
-		return fmt.Errorf("unexpected gcp secret manager type")
-	}
-
-	locs, err := gcpSM.SupportedLocations(m.selectedEnv.Project)
-	if err != nil {
-		return err
-	}
-	m.gcpLocations = locs
-	return nil
-}
-
-func (m *Model) doCreateFromForm(in createInput) error {
-	envVar := strings.TrimSpace(in.envVar)
-	secretKey := strings.TrimSpace(in.secretKey)
-	val := in.value
-	desc := strings.TrimSpace(in.desc)
-
-	if envVar == "" || secretKey == "" {
-		return fmt.Errorf("env var and secret key are required")
-	}
-
-	// Create secret in provider for this environment.
-	provider := in.provider
-	project := in.project
-
-	factory := secrets.NewSecretManagerFactory()
-	sm, err := factory.CreateSecretManager(m.ctx, provider, project)
-	if err != nil {
-		return err
-	}
-	defer sm.Close()
-
-	mut, err := secrets.AsMutator(sm)
-	if err != nil {
-		return err
-	}
-
-	// If GCP, optionally set per-create locations for replication on the manager instance.
-	if provider == "gcp" {
-		if gcpSM, ok := sm.(*secrets.GCPSecretManager); ok {
-			if in.replication == "user-managed" && len(in.locations) > 0 {
-				gcpSM.SetCreateLocations(in.locations)
-			} else {
-				gcpSM.SetCreateLocations(nil)
-			}
-		}
-	}
-
-	if err := mut.CreateSecret(secretKey, val, desc); err != nil {
-		return err
-	}
-
-	// Add mapping to kuba.yaml.
-	if err := config.AddOrUpdateEnvSecretKeyMapping(in.configPath, in.envName, envVar, secretKey); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (m *Model) updateConfirmDelete(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -963,59 +781,6 @@ func (m *Model) updateError(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-func (m *Model) updateBusy(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case spinner.TickMsg:
-		var cmd tea.Cmd
-		m.spinner, cmd = m.spinner.Update(msg)
-		return m, cmd
-	case createDoneMsg:
-		m.busyText = ""
-		m.screen = screenSecrets
-		if msg.err != nil {
-			// Re-open create form with current values intact.
-			m.createForm = m.newCreateForm()
-			m.screen = screenCreate
-			return m.openError(screenCreate, "Create failed", msg.err.Error())
-		}
-		// Reload config + secrets
-		if cfg, err := config.LoadKubaConfig(m.configPath); err == nil {
-			m.cfg = cfg
-			if env, err := m.cfg.GetEnvironment(m.selectedEnvName); err == nil {
-				m.selectedEnv = env
-			}
-		}
-		_ = m.reloadSecrets()
-		return m, nil
-	case editDoneMsg:
-		m.busyText = ""
-		m.screen = screenSecrets
-		if msg.err != nil {
-			// Return to edit
-			m.editForm = m.newEditForm()
-			m.screen = screenEdit
-			return m.openError(screenEdit, "Save failed", msg.err.Error())
-		}
-		_ = m.reloadSecrets()
-		return m, nil
-	case deleteDoneMsg:
-		m.busyText = ""
-		m.screen = screenSecrets
-		if msg.err != nil {
-			return m.openError(screenSecrets, "Delete failed", msg.err.Error())
-		}
-		_ = m.reloadSecrets()
-		return m, nil
-	case tea.KeyMsg:
-		// Prevent accidental interaction while busy.
-		if msg.String() == "ctrl+c" {
-			return m, tea.Quit
-		}
-		return m, nil
-	}
-	return m, nil
-}
-
 func (m *Model) doDelete(row secretRow) error {
 	factory := secrets.NewSecretManagerFactory()
 	sm, err := factory.CreateSecretManager(m.ctx, row.provider, row.project)
@@ -1049,57 +814,6 @@ func (m *Model) doDelete(row secretRow) error {
 	return nil
 }
 
-func (m *Model) newEditForm() *huh.Form {
-	return huh.NewForm(
-		huh.NewGroup(
-			huh.NewText().
-				Title("Secret value").
-				Value(&m.editValue),
-			huh.NewConfirm().
-				Title("Save changes?").
-				Affirmative("Save").
-				Negative("Cancel").
-				Value(&m.editSave),
-		),
-	)
-}
-
-func (m *Model) newDeleteForm() *huh.Form {
-	return huh.NewForm(
-		huh.NewGroup(
-			huh.NewNote().
-				Title("Delete secret").
-				Description(mdEscape(m.confirmText)),
-			huh.NewConfirm().
-				Title("Proceed?").
-				Affirmative("Delete").
-				Negative("Cancel").
-				Value(&m.deleteYes),
-		),
-	)
-}
-
-func (m *Model) newErrorForm(title, text string) *huh.Form {
-	if strings.TrimSpace(title) == "" {
-		title = "Error"
-	}
-	if strings.TrimSpace(text) == "" {
-		text = "Unknown error"
-	}
-	back := "back"
-	return huh.NewForm(
-		huh.NewGroup(
-			huh.NewNote().
-				Title(title).
-				Description(text),
-			huh.NewSelect[string]().
-				Title("").
-				Options(huh.NewOption("Back", "back")).
-				Value(&back),
-		),
-	)
-}
-
 func (m *Model) openError(returnTo Screen, title, text string) (tea.Model, tea.Cmd) {
 	m.errorReturn = returnTo
 	m.errorTitle = title
@@ -1107,227 +821,6 @@ func (m *Model) openError(returnTo Screen, title, text string) (tea.Model, tea.C
 	m.errorForm = m.newErrorForm(title, text)
 	m.screen = screenError
 	return m, m.errorForm.Init()
-}
-
-func (m *Model) newCreateForm() *huh.Form {
-	mainFields := []huh.Field{
-		huh.NewInput().
-			Title("Env var").
-			Placeholder("ENV_VAR_NAME").
-			Value(&m.createEnvVar).
-			Validate(func(s string) error {
-				if strings.TrimSpace(s) == "" {
-					return fmt.Errorf("env var is required")
-				}
-				return nil
-			}),
-		huh.NewInput().
-			Title("Secret key/id").
-			Placeholder("provider secret key/id/path").
-			Value(&m.createSecretKey).
-			Validate(func(s string) error {
-				if strings.TrimSpace(s) == "" {
-					return fmt.Errorf("secret key/id is required")
-				}
-				return nil
-			}),
-		huh.NewText().
-			Title("Value").
-			Value(&m.createValue),
-		huh.NewInput().
-			Title("Description (optional)").
-			Value(&m.createDesc),
-	}
-
-	// Keep GCP region selection on the *same page* so it's hard to miss.
-	if m.selectedEnv != nil && m.selectedEnv.Provider == "gcp" {
-		mainFields = append(mainFields,
-			huh.NewSelect[string]().
-				Title("Replication").
-				Options(
-					huh.NewOption("Global (automatic replication)", "global"),
-					huh.NewOption("User-managed (choose locations)", "user-managed"),
-				).
-				Value(&m.createReplication),
-			huh.NewMultiSelect[string]().
-				TitleFunc(func() string {
-					if m.createReplication == "global" {
-						return "Locations (set replication to user-managed to choose)"
-					}
-					return "Locations"
-				}, &m.createReplication).
-				OptionsFunc(func() []huh.Option[string] {
-					if m.createReplication == "global" {
-						return nil
-					}
-					opts := make([]huh.Option[string], 0, len(m.gcpLocations))
-					for _, l := range m.gcpLocations {
-						opts = append(opts, huh.NewOption(l, l))
-					}
-					return opts
-				}, &m.createReplication).
-				Value(&m.createLocations).
-				Validate(func(v []string) error {
-					if m.createReplication == "user-managed" && len(v) == 0 {
-						return fmt.Errorf("select at least one location")
-					}
-					return nil
-				}),
-		)
-	}
-
-	summary := func() string {
-		if m.selectedEnv == nil {
-			return ""
-		}
-
-		envVar := strings.TrimSpace(m.createEnvVar)
-		secretKey := strings.TrimSpace(m.createSecretKey)
-		desc := strings.TrimSpace(m.createDesc)
-
-		var b strings.Builder
-		b.WriteString(fmt.Sprintf("Environment: %s\n", mdEscape(m.selectedEnvName)))
-		b.WriteString(fmt.Sprintf("Provider: %s\n", mdEscape(m.selectedEnv.Provider)))
-		b.WriteString(fmt.Sprintf("Project: %s\n", mdEscape(m.selectedEnv.Project)))
-		if envVar != "" {
-			b.WriteString(fmt.Sprintf("Env var: %s\n", mdEscape(envVar)))
-		}
-		if secretKey != "" {
-			b.WriteString(fmt.Sprintf("Secret key/id: %s\n", mdEscape(secretKey)))
-		}
-		if desc != "" {
-			b.WriteString(fmt.Sprintf("Description: %s\n", mdEscape(desc)))
-		}
-
-		if m.selectedEnv.Provider == "gcp" {
-			b.WriteString("Replication: ")
-			if m.createReplication == "user-managed" {
-				b.WriteString("User-managed\n")
-				if len(m.createLocations) > 0 {
-					b.WriteString("Locations:\n")
-					for _, l := range m.createLocations {
-						b.WriteString("  - " + mdEscape(l) + "\n")
-					}
-				} else {
-					b.WriteString("Locations: (none)\n")
-				}
-			} else {
-				b.WriteString("Global\n")
-			}
-		}
-
-		return strings.TrimSpace(b.String())
-	}
-
-	mainFields = append(mainFields,
-		huh.NewNote().
-			Title("Summary").
-			DescriptionFunc(summary, &m.createSummaryTick),
-		huh.NewSelect[string]().
-			Title("Action").
-			Options(
-				huh.NewOption("Create secret & mapping", "create"),
-				huh.NewOption("Cancel", "cancel"),
-			).
-			Value(&m.createAction),
-	)
-
-	return huh.NewForm(huh.NewGroup(mainFields...))
-}
-
-func mdEscape(s string) string {
-	// huh Note fields render markdown; escape characters that would be
-	// interpreted as formatting (notably "_" in ENV_VAR names).
-	//
-	// We keep this intentionally minimal: the goal is to preserve the exact
-	// visible value rather than apply markdown styling.
-	repl := strings.NewReplacer(
-		"\\", "\\\\",
-		"_", "\\_",
-		"*", "\\*",
-		"`", "\\`",
-	)
-	return repl.Replace(s)
-}
-
-func formArrowNavCmd(form *huh.Form, dir string) (tea.Cmd, bool) {
-	// Only intercept up/down when the focused field isn't one that uses arrow
-	// keys for internal navigation (Select/MultiSelect/Text).
-	f := form.GetFocusedField()
-	switch f.(type) {
-	case *huh.Text:
-		return nil, false
-	case *huh.Input, *huh.Confirm:
-		// ok
-	default:
-		// Select/MultiSelect and others should keep arrow behavior.
-		return nil, false
-	}
-
-	if dir == "up" {
-		return form.PrevField(), true
-	}
-	if dir == "down" {
-		return form.NextField(), true
-	}
-	return nil, false
-}
-
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
-
-func clampMin(v, minV int) int {
-	if v < minV {
-		return minV
-	}
-	return v
-}
-
-func clamp(v, minV, maxV int) int {
-	if v < minV {
-		return minV
-	}
-	if v > maxV {
-		return maxV
-	}
-	return v
-}
-
-func panelStyle() lipgloss.Style {
-	return lipgloss.NewStyle().
-		Border(lipgloss.NormalBorder()).
-		Padding(1, 2)
-}
-
-func fitPanelToWindow(s lipgloss.Style, winW, winH int) lipgloss.Style {
-	if winW <= 0 || winH <= 0 {
-		return s
-	}
-	// Width/Height represent the full block size (before margins), which
-	// includes borders and padding. Using the full window size avoids
-	// over-cropping (frame size is already accounted for by the style itself).
-	w := clampMin(winW, 0)
-	h := clampMin(winH, 0)
-	return s.Width(w).Height(h).MaxWidth(w).MaxHeight(h)
-}
-
-func panelInnerSize(w, h int, panel lipgloss.Style) (int, int) {
-	if w <= 0 || h <= 0 {
-		return 0, 0
-	}
-	fw, fh := panel.GetFrameSize()
-	return clampMin(w-fw, 0), clampMin(h-fh, 0)
 }
 
 func (m *Model) setSecretTableColumns(innerW int) {
