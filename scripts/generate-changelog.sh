@@ -20,3 +20,12 @@ mkdir -p "$(dirname "${TARGET_FILE}")"
 cp "${SOURCE_FILE}" "${TARGET_FILE}"
 echo "Synced embedded changelog to ${TARGET_FILE}"
 
+echo "Contents of ${SOURCE_FILE}:"
+cat "${SOURCE_FILE}"
+echo
+
+echo "Contents of ${TARGET_FILE}:"
+cat "${TARGET_FILE}"
+echo
+
+echo "Changelog generation complete."
