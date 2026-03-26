@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Fetch latest version from git tags and strip the leading 'v' if present
-VERSION=$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//')
+VERSION=${VERSION:-$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//')}
 PKG_VERSION="{\"version\": \"${VERSION}\"}"
 SOURCE_FILE="CHANGELOG.md"
 TARGET_FILE="internal/changelog/changelog.md"

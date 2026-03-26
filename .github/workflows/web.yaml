@@ -43,9 +43,9 @@ jobs:
         uses: actions/cache@v5.0.4
         with:
           path: ~/.vite-plus
-          key: web-vite-plus-${{ hashFiles('**/pnpn-lock.yaml') }}
+          key: web-vite-plus-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            web-vite-plus-${{ hashFiles('**/pnpn-lock.yaml') }}
+            web-vite-plus-${{ hashFiles('**/pnpm-lock.yaml') }}
       - name: Install dependencies
         run: vp install
       - name: Add kuba.schema.json to website

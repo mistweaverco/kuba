@@ -21,9 +21,9 @@ jobs:
         uses: actions/cache@v5.0.4
         with:
           path: ~/.vite-plus
-          key: release-vite-plus-${{ hashFiles('**/pnpn-lock.yaml') }}
+          key: release-vite-plus-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            release-vite-plus-${{ hashFiles('**/pnpn-lock.yaml') }}
+            release-vite-plus-${{ hashFiles('**/pnpm-lock.yaml') }}
       - name: Install dependencies
         run: vp install
       - name: Set up env
