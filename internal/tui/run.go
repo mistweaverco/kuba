@@ -3,7 +3,7 @@ package tui
 import (
 	"context"
 
-	tea "github.com/charmbracelet/bubbletea"
+	tea "charm.land/bubbletea/v2"
 )
 
 func Run(ctx context.Context, configPath string) error {
@@ -12,6 +12,6 @@ func Run(ctx context.Context, configPath string) error {
 		return err
 	}
 
-	_, err = tea.NewProgram(m, tea.WithAltScreen()).Run()
+	_, err = tea.NewProgram(m).Run()
 	return err
 }

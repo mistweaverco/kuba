@@ -6,43 +6,23 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/charmbracelet/bubbles/list"
-	"github.com/charmbracelet/bubbles/table"
-	"github.com/charmbracelet/bubbles/textarea"
-	"github.com/charmbracelet/bubbles/textinput"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/bubbles/v2/list"
+	"charm.land/bubbles/v2/spinner"
+	"charm.land/bubbles/v2/table"
+	"charm.land/bubbles/v2/textinput"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/huh/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/mistweaverco/kuba/internal/config"
 	"github.com/mistweaverco/kuba/internal/lib/secrets"
 )
-
-type Screen int
-
-const (
-	screenEnvs Screen = iota
-	screenSecrets
-	screenView
-	screenEdit
-	screenCreate
-	screenPickGCPLocation
-	screenConfirmDelete
-)
-
-type secretRow struct {
-	envVar   string
-	value    string
-	item     config.EnvItem
-	provider string
-	project  string
-	refKind  string // secret-key | secret-path | value
-	ref      string // secret-key or secret-path
-}
 
 type Model struct {
 	ctx        context.Context
 	configPath string
 
-	cfg *config.KubaConfig
+	cfg       *config.KubaConfig
+	globalCfg *config.GlobalConfig
 
 	screen Screen
 	errMsg string
@@ -63,32 +43,46 @@ type Model struct {
 
 	viewValue string
 
-	editArea   textarea.Model
 	editTarget *secretRow
+	editForm   *huh.Form
+	editValue  string
+	editSave   bool
 
-	createEnvVar    textinput.Model
-	createSecretKey textinput.Model
-	createValue     textarea.Model
-	createDesc      textinput.Model
+	createForm        *huh.Form
+	createEnvVar      string
+	createSecretKey   string
+	createValue       string
+	createDesc        string
+	createReplication string // "global" | "user-managed"
+	createLocations   []string
+	createAction      string // "create" | "cancel"
+	createSummaryTick int
+	createSummaryKey  string
 
-	createGCPUseGlobal bool
-	createGCPLocations []string
-	gcpLocations       []string
-	gcpLocList         list.Model
+	gcpLocations []string
 
 	confirmText string
+	deleteForm  *huh.Form
+	deleteYes   bool
+
+	errorForm   *huh.Form
+	errorReturn Screen
+	errorTitle  string
+	errorText   string
+
+	busyText string
+	spinner  spinner.Model
 }
 
-type envItem struct{ name string }
-
-func (e envItem) Title() string       { return e.name }
-func (e envItem) Description() string { return "" }
-func (e envItem) FilterValue() string { return e.name }
-
-func New(ctx context.Context, configPath string) (Model, error) {
+func New(ctx context.Context, configPath string) (*Model, error) {
 	cfg, err := config.LoadKubaConfig(configPath)
 	if err != nil {
-		return Model{}, err
+		return nil, err
+	}
+
+	globalCfg, err := config.LoadGlobalConfig()
+	if err != nil {
+		return nil, err
 	}
 
 	envNames := make([]string, 0, len(cfg.Environments))
@@ -111,35 +105,6 @@ func New(ctx context.Context, configPath string) (Model, error) {
 	filter.CharLimit = 256
 	filter.Prompt = "/ "
 
-	editArea := textarea.New()
-	editArea.Placeholder = "Secret value"
-	editArea.ShowLineNumbers = false
-	editArea.CharLimit = 0
-
-	createEnvVar := textinput.New()
-	createEnvVar.Placeholder = "ENV_VAR_NAME"
-	createEnvVar.CharLimit = 256
-
-	createSecretKey := textinput.New()
-	createSecretKey.Placeholder = "provider secret key/id/path"
-	createSecretKey.CharLimit = 512
-
-	createValue := textarea.New()
-	createValue.Placeholder = "Secret value"
-	createValue.ShowLineNumbers = false
-	createValue.CharLimit = 0
-
-	createDesc := textinput.New()
-	createDesc.Placeholder = "(optional) description"
-	createDesc.CharLimit = 512
-
-	gcpLocList := list.New(nil, list.NewDefaultDelegate(), 0, 0)
-	gcpLocList.Title = "GCP Secret location"
-	gcpLocList.SetShowHelp(true)
-	gcpLocList.SetShowFilter(true)
-	gcpLocList.SetFilteringEnabled(true)
-	gcpLocList.SetShowStatusBar(true)
-
 	t := table.New(
 		table.WithColumns([]table.Column{
 			{Title: "Env Var", Width: 28},
@@ -151,34 +116,29 @@ func New(ctx context.Context, configPath string) (Model, error) {
 		table.WithFocused(true),
 	)
 
-	return Model{
-		ctx:                ctx,
-		configPath:         configPath,
-		cfg:                cfg,
-		screen:             screenEnvs,
-		envList:            l,
-		secretTable:        t,
-		maskValues:         true,
-		filter:             filter,
-		editArea:           editArea,
-		createEnvVar:       createEnvVar,
-		createSecretKey:    createSecretKey,
-		createValue:        createValue,
-		createDesc:         createDesc,
-		createGCPUseGlobal: true,
-		createGCPLocations: nil,
-		gcpLocations:       nil,
-		gcpLocList:         gcpLocList,
+	return &Model{
+		ctx:               ctx,
+		configPath:        configPath,
+		cfg:               cfg,
+		globalCfg:         globalCfg,
+		screen:            screenEnvs,
+		envList:           l,
+		secretTable:       t,
+		maskValues:        true,
+		filter:            filter,
+		createReplication: "global",
+		createAction:      "create",
+		spinner:           spinner.New(spinner.WithSpinner(spinner.Line)),
 	}, nil
 }
 
-func (m Model) Init() tea.Cmd {
+func (m *Model) Init() tea.Cmd {
 	// Ensure we get an initial WindowSizeMsg even on terminals/platforms where
 	// Bubble Tea may only deliver size updates after the first resize.
-	return tea.WindowSize()
+	return func() tea.Msg { return tea.RequestWindowSize() }
 }
 
-func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// Capture window size globally so we can size models
 	// even when switching screens (Bubble Tea only sends this on resize/start).
 	if ws, ok := msg.(tea.WindowSizeMsg); ok {
@@ -187,7 +147,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		innerW, innerH := panelInnerSize(ws.Width, ws.Height, panelStyle())
 		// Keep the various lists/tables sized to panel inner area.
 		m.envList.SetSize(innerW, innerH)
-		m.gcpLocList.SetSize(innerW, innerH)
 	}
 
 	switch m.screen {
@@ -201,99 +160,85 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.updateEdit(msg)
 	case screenCreate:
 		return m.updateCreate(msg)
-	case screenPickGCPLocation:
-		return m.updatePickGCPLocation(msg)
 	case screenConfirmDelete:
 		return m.updateConfirmDelete(msg)
+	case screenError:
+		return m.updateError(msg)
+	case screenBusy:
+		return m.updateBusy(msg)
 	default:
 		return m, nil
 	}
 }
 
-func (m Model) View() string {
+func (m *Model) View() tea.View {
 	// Render "best effort" at any size. We avoid forcing minimum dimensions and
 	// instead shrink content to whatever the terminal can actually show.
 	switch m.screen {
 	case screenEnvs:
 		box := fitPanelToWindow(panelStyle(), m.winW, m.winH)
-		return box.Render(m.envList.View())
+		v := tea.NewView(box.Render(m.envList.View()))
+		v.AltScreen = true
+		return v
 	case screenSecrets:
-		return m.viewSecrets()
+		v := tea.NewView(m.viewSecrets())
+		v.AltScreen = true
+		return v
 	case screenView:
-		return m.viewModal("View secret", m.viewValue+"\n\n(esc to go back)")
+		v := tea.NewView(m.viewModal("View secret", m.viewValue+"\n\n(esc to go back)"))
+		v.AltScreen = true
+		return v
 	case screenEdit:
-		return m.viewModal("Edit secret (ctrl+s to save)", m.editArea.View()+"\n\n(esc to cancel)")
+		if m.editForm == nil {
+			v := tea.NewView(m.viewModal("Edit secret", "Loading…"))
+			v.AltScreen = true
+			return v
+		}
+		v := tea.NewView(m.viewModal("Edit secret", m.editForm.View()))
+		v.AltScreen = true
+		return v
 	case screenCreate:
-		body := strings.Builder{}
-		body.WriteString("Env var:\n")
-		body.WriteString(m.createEnvVar.View())
-		body.WriteString("\n\nSecret key/id:\n")
-		body.WriteString(m.createSecretKey.View())
-		body.WriteString("\n\nValue:\n")
-		body.WriteString(m.createValue.View())
-		body.WriteString("\n\nDescription:\n")
-		body.WriteString(m.createDesc.View())
-
-		if m.selectedEnv != nil && m.selectedEnv.Provider == "gcp" {
-			body.WriteString("\n\nReplication:\n")
-			if m.createGCPUseGlobal {
-				body.WriteString("  (x) Global (automatic replication)\n  ( ) User-managed location\n")
-			} else {
-				body.WriteString("  ( ) Global (automatic replication)\n  (x) User-managed location\n")
-			}
-			loc := "(none selected)"
-			if len(m.createGCPLocations) == 1 {
-				loc = m.createGCPLocations[0]
-			} else if len(m.createGCPLocations) > 1 {
-				loc = strings.Join(m.createGCPLocations, ", ")
-			}
-			body.WriteString("\nLocations: " + loc + "\n")
-			body.WriteString("Tip: ctrl+g toggle global/user-managed, ctrl+l pick locations\n")
+		if m.createForm == nil {
+			v := tea.NewView(m.viewModal("Create secret & mapping", "Loading…"))
+			v.AltScreen = true
+			return v
 		}
-
-		body.WriteString("\n(ctrl+s to create, esc to cancel)")
-		return m.viewModal("Create secret & mapping", body.String())
-	case screenPickGCPLocation:
-		return m.gcpLocList.View()
+		v := tea.NewView(m.viewModal("Create secret & mapping", m.createForm.View()))
+		v.AltScreen = true
+		return v
 	case screenConfirmDelete:
-		return m.viewModal("Confirm delete", m.confirmText+"\n\n(y)es / (n)o")
-	default:
-		return ""
-	}
-}
-
-func (m Model) updateEnvs(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.WindowSizeMsg:
-		innerW, innerH := panelInnerSize(msg.Width, msg.Height, panelStyle())
-		m.envList.SetSize(innerW, innerH)
-		return m, nil
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "enter":
-			if it, ok := m.envList.SelectedItem().(envItem); ok {
-				m.selectedEnvName = it.name
-				env, err := m.cfg.GetEnvironment(it.name)
-				if err != nil {
-					m.errMsg = err.Error()
-					return m, nil
-				}
-				m.selectedEnv = env
-				if err := m.reloadSecrets(); err != nil {
-					m.errMsg = err.Error()
-					return m, nil
-				}
-				m.screen = screenSecrets
-				m.filter.SetValue("")
-				m.filter.Blur()
-				return m, nil
-			}
+		if m.deleteForm == nil {
+			v := tea.NewView(m.viewModal("Confirm delete", "Loading…"))
+			v.AltScreen = true
+			return v
 		}
+		v := tea.NewView(m.viewModal("Confirm delete", m.deleteForm.View()))
+		v.AltScreen = true
+		return v
+	case screenError:
+		if m.errorForm == nil {
+			v := tea.NewView(m.viewModal("Error", "Loading…"))
+			v.AltScreen = true
+			return v
+		}
+		title := m.errorTitle
+		if strings.TrimSpace(title) == "" {
+			title = "Error"
+		}
+		v := tea.NewView(m.viewModal(title, m.errorForm.View()))
+		v.AltScreen = true
+		return v
+	case screenBusy:
+		s := m.spinner.View()
+		body := strings.TrimSpace(s + " " + m.busyText)
+		v := tea.NewView(m.viewModal("Working…", body))
+		v.AltScreen = true
+		return v
+	default:
+		v := tea.NewView("")
+		v.AltScreen = true
+		return v
 	}
-
-	var cmd tea.Cmd
-	m.envList, cmd = m.envList.Update(msg)
-	return m, cmd
 }
 
 func (m *Model) reloadSecrets() error {
@@ -384,7 +329,7 @@ func mask(v string) string {
 	return strings.Repeat("•", 8)
 }
 
-func (m Model) viewSecrets() string {
+func (m *Model) viewSecrets() string {
 	header := lipgloss.NewStyle().Bold(true).Render(fmt.Sprintf("Environment: %s", m.selectedEnvName))
 	help := "enter:view  e:edit  n:new  d:delete  /:filter  m:mask  esc:back  q:quit"
 	if m.errMsg != "" {
@@ -413,14 +358,7 @@ func (m Model) viewSecrets() string {
 	return box.Render(content)
 }
 
-func (m Model) viewModal(title, body string) string {
-	box := fitPanelToWindow(panelStyle(), m.winW, m.winH)
-	return box.Render(lipgloss.NewStyle().Bold(true).Render(title) + "\n\n" + body)
-}
-
-func (m Model) updateSecrets(msg tea.Msg) (tea.Model, tea.Cmd) {
-	m.errMsg = ""
-
+func (m *Model) updateSecrets(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		innerW, innerH := panelInnerSize(msg.Width, msg.Height, panelStyle())
@@ -444,9 +382,13 @@ func (m Model) updateSecrets(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.secretTable.SetWidth(innerW)
 		m.setSecretTableColumns(innerW)
 		m.secretTable.SetHeight(clampMin(innerH-nonTableH, 1))
-		m.filter.Width = clamp(clampMin(innerW, 1), 1, 60)
+		m.filter.SetWidth(clamp(clampMin(innerW, 1), 1, 60))
 		return m, nil
 	case tea.KeyMsg:
+		// Clear any previous error once the user interacts.
+		if m.errMsg != "" {
+			m.errMsg = ""
+		}
 		if m.filter.Focused() {
 			var cmd tea.Cmd
 			switch msg.String() {
@@ -495,16 +437,11 @@ func (m Model) updateSecrets(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 			m.editTarget = &r
-			m.editArea.SetValue(r.value)
-			m.editArea.Focus()
+			m.editValue = r.value
+			m.editSave = false
+			m.editForm = m.newEditForm()
 			m.screen = screenEdit
-			// Ensure edit textarea is sized immediately (even if last resize happened
-			// on a different screen).
-			if m.winW > 0 && m.winH > 0 {
-				mm, cmd := m.updateEdit(tea.WindowSizeMsg{Width: m.winW, Height: m.winH})
-				return mm, cmd
-			}
-			return m, nil
+			return m, m.editForm.Init()
 		case "d":
 			r, ok := m.selectedRow()
 			if !ok {
@@ -514,29 +451,31 @@ func (m Model) updateSecrets(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.errMsg = "delete is only supported for secret-key mappings"
 				return m, nil
 			}
-			m.confirmText = fmt.Sprintf("Delete provider secret '%s'?\n\nEnv var: %s\nProvider: %s", r.ref, r.envVar, r.provider)
 			m.editTarget = &r
+			m.confirmText = fmt.Sprintf("Delete provider secret '%s'?\n\nEnv var: %s\nProvider: %s", r.ref, r.envVar, r.provider)
+			m.deleteYes = false
+			m.deleteForm = m.newDeleteForm()
 			m.screen = screenConfirmDelete
-			return m, nil
+			return m, m.deleteForm.Init()
 		case "n":
-			m.createEnvVar.SetValue("")
-			m.createSecretKey.SetValue("")
-			m.createValue.SetValue("")
-			m.createDesc.SetValue("")
-			m.createGCPUseGlobal = true
-			m.createGCPLocations = nil
-			m.createEnvVar.Focus()
-			m.createSecretKey.Blur()
-			m.createDesc.Blur()
-			m.createValue.Blur()
-			m.screen = screenCreate
-			// Ensure create textarea is sized immediately (even if last resize happened
-			// on a different screen).
-			if m.winW > 0 && m.winH > 0 {
-				mm, cmd := m.updateCreate(tea.WindowSizeMsg{Width: m.winW, Height: m.winH})
-				return mm, cmd
+			m.createEnvVar = ""
+			m.createSecretKey = ""
+			m.createValue = ""
+			m.createDesc = ""
+			m.createReplication = "global"
+			m.createLocations = nil
+			m.createAction = "create"
+			m.createSummaryTick = 0
+			m.createSummaryKey = ""
+			// Lazy-load GCP locations for region multiselect.
+			if err := m.ensureGCPLocationsLoaded(); err != nil {
+				m.errMsg = err.Error()
+				return m, nil
 			}
-			return m, nil
+			m.applyCreateDefaults()
+			m.createForm = m.newCreateForm()
+			m.screen = screenCreate
+			return m, m.createForm.Init()
 		}
 	}
 
@@ -545,7 +484,7 @@ func (m Model) updateSecrets(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-func (m Model) selectedRow() (secretRow, bool) {
+func (m *Model) selectedRow() (secretRow, bool) {
 	i := m.secretTable.Cursor()
 	if i < 0 || i >= len(m.secretTable.Rows()) {
 		return secretRow{}, false
@@ -559,7 +498,7 @@ func (m Model) selectedRow() (secretRow, bool) {
 	return secretRow{}, false
 }
 
-func (m Model) updateView(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *Model) updateView(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -571,46 +510,60 @@ func (m Model) updateView(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m Model) updateEdit(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.WindowSizeMsg:
-		innerW, innerH := panelInnerSize(msg.Width, msg.Height, panelStyle())
-		// Fit textarea to available modal space. `viewModal` renders:
-		// title + "\n\n" + (textarea + "\n\n(esc to cancel)")
-		title := lipgloss.NewStyle().Bold(true).Render("Edit secret (ctrl+s to save)")
-		titleH := lipgloss.Height(title) + 1 // +1 for the blank line in "\n\n"
-
-		footer := "\n\n(esc to cancel)"
-		footerH := lipgloss.Height(footer)
-
-		bodyH := clampMin(innerH-titleH, 0)
-		m.editArea.SetWidth(clampMin(min(90, innerW), 1))
-		m.editArea.SetHeight(clampMin(bodyH-footerH, 1))
-		return m, nil
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "esc":
+func (m *Model) updateEdit(msg tea.Msg) (tea.Model, tea.Cmd) {
+	if _, ok := msg.(tea.KeyMsg); ok {
+		km := msg.(tea.KeyMsg).String()
+		if km == "esc" {
 			m.screen = screenSecrets
 			m.editTarget = nil
+			m.editForm = nil
 			return m, nil
-		case "ctrl+s":
-			if m.editTarget == nil {
-				m.screen = screenSecrets
-				return m, nil
+		}
+		if (km == "alt+up" || km == "alt+down") && m.editForm != nil {
+			if km == "alt+up" {
+				return m, m.editForm.PrevField()
 			}
-			if err := m.saveEdit(*m.editTarget, m.editArea.Value()); err != nil {
-				m.errMsg = err.Error()
-				m.screen = screenSecrets
-				return m, nil
+			return m, m.editForm.NextField()
+		}
+		if (km == "up" || km == "down") && m.editForm != nil {
+			if cmd, ok := formArrowNavCmd(m.editForm, km); ok {
+				return m, cmd
 			}
-			_ = m.reloadSecrets()
-			m.screen = screenSecrets
-			return m, nil
 		}
 	}
 
+	if m.editForm == nil {
+		m.editForm = m.newEditForm()
+		return m, m.editForm.Init()
+	}
+
 	var cmd tea.Cmd
-	m.editArea, cmd = m.editArea.Update(msg)
+	var mdl huh.Model
+	mdl, cmd = m.editForm.Update(msg)
+	if f, ok := mdl.(*huh.Form); ok {
+		m.editForm = f
+	}
+
+	if m.editForm.State == huh.StateCompleted {
+		if m.editTarget != nil && m.editSave {
+			row := *m.editTarget
+			val := m.editValue
+			m.busyText = "Saving secret…"
+			m.screen = screenBusy
+			m.editForm = nil
+			m.editTarget = nil
+			return m, tea.Batch(
+				m.spinner.Tick,
+				func() tea.Msg {
+					return editDoneMsg{err: m.saveEdit(row, val)}
+				},
+			)
+		}
+		m.screen = screenSecrets
+		m.editForm = nil
+		m.editTarget = nil
+	}
+
 	return m, cmd
 }
 
@@ -630,360 +583,210 @@ func (m *Model) saveEdit(row secretRow, newValue string) error {
 	return mut.UpdateSecret(row.ref, newValue)
 }
 
-func (m Model) updateCreate(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.WindowSizeMsg:
-		innerW, innerH := panelInnerSize(msg.Width, msg.Height, panelStyle())
-
-		// Keep inputs sized to the modal's inner width.
-		fieldW := clampMin(min(80, innerW), 1)
-		m.createEnvVar.Width = fieldW
-		m.createSecretKey.Width = fieldW
-		m.createDesc.Width = fieldW
-		m.createValue.SetWidth(clampMin(min(90, innerW), 1))
-
-		// Compute remaining height for the textarea based on *rendered* non-textarea
-		// content. This matters because some lines can wrap after a resize.
-		title := lipgloss.NewStyle().Bold(true).Render("Create secret & mapping")
-		titleH := lipgloss.Height(title) + 1 // +1 for the blank line in "\n\n"
-
-		prefix, suffix := m.createModalBodyPrefixSuffix()
-		nonTextareaH := lipgloss.Height(prefix + suffix)
-
-		bodyH := clampMin(innerH-titleH, 0)
-		m.createValue.SetHeight(clampMin(bodyH-nonTextareaH, 1))
+func (m *Model) updateCreate(msg tea.Msg) (tea.Model, tea.Cmd) {
+	if ws, ok := msg.(tea.WindowSizeMsg); ok {
+		// Constrain the form to the modal body area so it can scroll internally
+		// and the action field remains reachable even on small terminals.
+		if m.createForm != nil {
+			innerW, innerH := panelInnerSize(ws.Width, ws.Height, panelStyle())
+			// viewModal renders: title + "\n\n" + body
+			bodyH := clampMin(innerH-2, 1)
+			m.createForm = m.createForm.WithWidth(innerW).WithHeight(bodyH)
+		}
 		return m, nil
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "esc":
+	}
+
+	if _, ok := msg.(tea.KeyMsg); ok {
+		km := msg.(tea.KeyMsg).String()
+		if km == "esc" {
 			m.screen = screenSecrets
+			m.createForm = nil
 			return m, nil
-		case "ctrl+g":
-			if m.selectedEnv != nil && m.selectedEnv.Provider == "gcp" {
-				m.createGCPUseGlobal = !m.createGCPUseGlobal
-				if m.createGCPUseGlobal {
-					m.createGCPLocations = nil
-				}
-				return m, nil
+		}
+		if (km == "alt+up" || km == "alt+down") && m.createForm != nil {
+			if km == "alt+up" {
+				return m, m.createForm.PrevField()
 			}
-		case "ctrl+l":
-			if m.selectedEnv != nil && m.selectedEnv.Provider == "gcp" && !m.createGCPUseGlobal {
-				if err := m.loadGCPLocationsForCreate(); err != nil {
-					m.errMsg = err.Error()
-					return m, nil
-				}
-				m.screen = screenPickGCPLocation
-				if m.winW > 0 && m.winH > 0 {
-					m.gcpLocList.SetSize(m.winW, m.winH)
-				}
-				return m, nil
-			}
-		case "ctrl+s":
-			if err := m.doCreate(); err != nil {
-				m.errMsg = err.Error()
-				m.screen = screenSecrets
-				return m, nil
-			}
-			// Reload config + secrets
-			cfg, err := config.LoadKubaConfig(m.configPath)
-			if err == nil {
-				m.cfg = cfg
-				env, _ := m.cfg.GetEnvironment(m.selectedEnvName)
-				m.selectedEnv = env
-			}
-			_ = m.reloadSecrets()
-			m.screen = screenSecrets
-			return m, nil
-		case "ctrl+k", "up":
-			// reverse focus (advance focus backwards)
-			if m.createDesc.Focused() {
-				m.createDesc.Blur()
-				m.createValue.Focus()
-				return m, nil
-			}
-			if m.createValue.Focused() {
-				m.createValue.Blur()
-				m.createSecretKey.Focus()
-				return m, nil
-			}
-			if m.createSecretKey.Focused() {
-				m.createSecretKey.Blur()
-				m.createEnvVar.Focus()
-				return m, nil
-			}
-		case "ctrl+j", "down":
-			// advance focus
-			if m.createEnvVar.Focused() {
-				m.createEnvVar.Blur()
-				m.createSecretKey.Focus()
-				return m, nil
-			}
-			if m.createSecretKey.Focused() {
-				m.createSecretKey.Blur()
-				m.createValue.Focus()
-				return m, nil
-			}
-			if m.createValue.Focused() {
-				m.createValue.Blur()
-				m.createDesc.Focus()
-				return m, nil
+			return m, m.createForm.NextField()
+		}
+		if (km == "up" || km == "down") && m.createForm != nil {
+			if cmd, ok := formArrowNavCmd(m.createForm, km); ok {
+				return m, cmd
 			}
 		}
+	}
+
+	// Ensure locations exist before rendering the form (so the multiselect has options).
+	if err := m.ensureGCPLocationsLoaded(); err != nil {
+		return m.openError(screenCreate, "Create failed", err.Error())
+	}
+
+	if m.createForm == nil {
+		m.createForm = m.newCreateForm()
+		if m.winW > 0 && m.winH > 0 {
+			innerW, innerH := panelInnerSize(m.winW, m.winH, panelStyle())
+			bodyH := clampMin(innerH-2, 1)
+			m.createForm = m.createForm.WithWidth(innerW).WithHeight(bodyH)
+		}
+		return m, m.createForm.Init()
 	}
 
 	var cmd tea.Cmd
-	switch {
-	case m.createEnvVar.Focused():
-		m.createEnvVar, cmd = m.createEnvVar.Update(msg)
-	case m.createSecretKey.Focused():
-		m.createSecretKey, cmd = m.createSecretKey.Update(msg)
-	case m.createValue.Focused():
-		m.createValue, cmd = m.createValue.Update(msg)
-	case m.createDesc.Focused():
-		m.createDesc, cmd = m.createDesc.Update(msg)
-	default:
-		m.createEnvVar.Focus()
+	var mdl huh.Model
+	mdl, cmd = m.createForm.Update(msg)
+	if f, ok := mdl.(*huh.Form); ok {
+		m.createForm = f
 	}
+	// Recompute the Summary note only when replication/locations change.
+	{
+		locs := append([]string(nil), m.createLocations...)
+		sort.Strings(locs)
+		key := m.createReplication + "|" + strings.Join(locs, ",")
+		if key != m.createSummaryKey {
+			m.createSummaryKey = key
+			m.createSummaryTick++
+		}
+	}
+
+	if m.createForm.State == huh.StateCompleted {
+		switch m.createAction {
+		case "create":
+			in := m.snapshotCreateInput()
+			m.busyText = "Creating secret…"
+			m.screen = screenBusy
+			m.createForm = nil
+			return m, tea.Batch(
+				m.spinner.Tick,
+				func() tea.Msg {
+					return createDoneMsg{err: m.doCreateFromForm(in)}
+				},
+			)
+		default:
+			// Explicit cancel: return to overview.
+			m.screen = screenSecrets
+			m.createForm = nil
+			return m, nil
+		}
+	}
+
 	return m, cmd
 }
 
-type locItem struct {
-	raw      string
-	selected bool
-}
-
-func (l locItem) Title() string {
-	if l.selected {
-		return "[x] " + l.raw
-	}
-	return "[ ] " + l.raw
-}
-func (l locItem) Description() string { return "" }
-func (l locItem) FilterValue() string { return l.raw }
-
-func (m *Model) loadGCPLocationsForCreate() error {
-	if m.selectedEnv == nil || m.selectedEnv.Provider != "gcp" {
-		return nil
-	}
-	if m.gcpLocations != nil && len(m.gcpLocations) > 0 {
-		return nil
-	}
-
-	factory := secrets.NewSecretManagerFactory()
-	sm, err := factory.CreateSecretManager(m.ctx, "gcp", m.selectedEnv.Project)
-	if err != nil {
-		return err
-	}
-	defer sm.Close()
-
-	gcpSM, ok := sm.(*secrets.GCPSecretManager)
-	if !ok {
-		return fmt.Errorf("unexpected gcp secret manager type")
-	}
-
-	locs, err := gcpSM.SupportedLocations(m.selectedEnv.Project)
-	if err != nil {
-		return err
-	}
-	m.gcpLocations = locs
-
-	items := make([]list.Item, 0, len(locs))
-	for _, l := range locs {
-		items = append(items, locItem{raw: l, selected: false})
-	}
-	m.gcpLocList.SetItems(items)
-	if m.winW > 0 && m.winH > 0 {
-		m.gcpLocList.SetSize(m.winW, m.winH)
-	}
-	_ = m.refreshGcpLocListTitles()
-	return nil
-}
-
-func (m Model) updatePickGCPLocation(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.WindowSizeMsg:
-		m.gcpLocList.SetSize(msg.Width, msg.Height)
-		return m, nil
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "esc":
-			// pass-through for filter input
-			if m.gcpLocList.FilterInput.Focused() {
-				var cmd tea.Cmd
-				m.gcpLocList, cmd = m.gcpLocList.Update(msg)
-				return m, cmd
-			}
-			m.screen = screenCreate
+func (m *Model) updateConfirmDelete(msg tea.Msg) (tea.Model, tea.Cmd) {
+	if _, ok := msg.(tea.KeyMsg); ok {
+		km := msg.(tea.KeyMsg).String()
+		if km == "esc" {
+			m.screen = screenSecrets
+			m.editTarget = nil
+			m.deleteForm = nil
 			return m, nil
-		case "ctrl+x":
-			if it, ok := m.gcpLocList.SelectedItem().(locItem); ok {
-				m.toggleGCPLocation(it.raw)
-				cmd := m.refreshGcpLocListTitles()
-				return m, cmd
-			}
-		case "enter":
-			m.screen = screenCreate
-			return m, nil
-		case "ctrl+a":
-			// pass-through for filter input
-			if m.gcpLocList.FilterInput.Focused() {
-				var cmd tea.Cmd
-				m.gcpLocList, cmd = m.gcpLocList.Update(msg)
-				return m, cmd
-			}
-			// select all
-			m.createGCPLocations = append([]string(nil), m.gcpLocations...)
-			cmd := m.refreshGcpLocListTitles()
-			return m, cmd
-		case "ctrl+c":
-			// pass-through for filter input
-			if m.gcpLocList.FilterInput.Focused() {
-				var cmd tea.Cmd
-				m.gcpLocList, cmd = m.gcpLocList.Update(msg)
-				return m, cmd
-			}
-			// clear
-			m.createGCPLocations = nil
-			cmd := m.refreshGcpLocListTitles()
-			return m, cmd
 		}
+		if (km == "alt+up" || km == "alt+down") && m.deleteForm != nil {
+			if km == "alt+up" {
+				return m, m.deleteForm.PrevField()
+			}
+			return m, m.deleteForm.NextField()
+		}
+		if (km == "up" || km == "down") && m.deleteForm != nil {
+			if cmd, ok := formArrowNavCmd(m.deleteForm, km); ok {
+				return m, cmd
+			}
+		}
+	}
+
+	if m.deleteForm == nil {
+		m.deleteForm = m.newDeleteForm()
+		return m, m.deleteForm.Init()
 	}
 
 	var cmd tea.Cmd
-	m.gcpLocList, cmd = m.gcpLocList.Update(msg)
+	var mdl huh.Model
+	mdl, cmd = m.deleteForm.Update(msg)
+	if f, ok := mdl.(*huh.Form); ok {
+		m.deleteForm = f
+	}
+
+	if m.deleteForm.State == huh.StateCompleted {
+		if m.editTarget != nil && m.deleteYes {
+			row := *m.editTarget
+			m.busyText = "Deleting secret…"
+			m.screen = screenBusy
+			m.deleteForm = nil
+			m.editTarget = nil
+			return m, tea.Batch(
+				m.spinner.Tick,
+				func() tea.Msg {
+					return deleteDoneMsg{err: m.doDelete(row)}
+				},
+			)
+		}
+		m.screen = screenSecrets
+		m.deleteForm = nil
+		m.editTarget = nil
+	}
+
 	return m, cmd
 }
 
-func (m *Model) toggleGCPLocation(loc string) {
-	for i, v := range m.createGCPLocations {
-		if v == loc {
-			m.createGCPLocations = append(m.createGCPLocations[:i], m.createGCPLocations[i+1:]...)
-			return
-		}
-	}
-	m.createGCPLocations = append(m.createGCPLocations, loc)
-	sort.Strings(m.createGCPLocations)
-}
-
-func (m *Model) refreshGcpLocListTitles() tea.Cmd {
-	// Preserve current filter text/state so toggling doesn't wipe it.
-	filterText := m.gcpLocList.FilterInput.Value()
-
-	// Update list items so titles show selection state.
-	items := make([]list.Item, 0, len(m.gcpLocations))
-	selected := make(map[string]bool, len(m.createGCPLocations))
-	for _, l := range m.createGCPLocations {
-		selected[l] = true
-	}
-	for _, l := range m.gcpLocations {
-		items = append(items, locItem{raw: l, selected: selected[l]})
-	}
-	cmd := m.gcpLocList.SetItems(items)
-
-	// Restore filter text (SetItems can cause internal filter recalcs).
-	m.gcpLocList.SetFilterText(filterText)
-	if strings.TrimSpace(filterText) == "" {
-		m.gcpLocList.SetFilterState(list.Unfiltered)
-	} else {
-		m.gcpLocList.SetFilterState(list.FilterApplied)
-	}
-
-	// If filtering is active, clamp cursor against visible (filtered) items.
-	// Otherwise clamp against full list.
-	visible := m.gcpLocList.VisibleItems()
-	if len(visible) > 0 {
-		cursor := m.gcpLocList.Cursor()
-		if cursor < 0 {
-			cursor = 0
-		}
-		if cursor >= len(visible) {
-			cursor = len(visible) - 1
-		}
-		m.gcpLocList.Select(cursor)
-	} else {
-		m.gcpLocList.ResetSelected()
-	}
-
-	if m.winW > 0 && m.winH > 0 {
-		m.gcpLocList.SetSize(m.winW, m.winH)
-	}
-	// Keep cursor stable-ish (Bubble list will clamp).
-	m.gcpLocList.Title = fmt.Sprintf("GCP Secret locations (%d selected) — toggle: ctrl+x, done: enter, all: ctrl+a, clear: ctrl+c", len(m.createGCPLocations))
-
-	return cmd
-}
-
-func (m *Model) doCreate() error {
-	envVar := strings.TrimSpace(m.createEnvVar.Value())
-	secretKey := strings.TrimSpace(m.createSecretKey.Value())
-	val := m.createValue.Value()
-	desc := strings.TrimSpace(m.createDesc.Value())
-
-	if envVar == "" || secretKey == "" {
-		return fmt.Errorf("env var and secret key are required")
-	}
-
-	// Create secret in provider for this environment.
-	provider := m.selectedEnv.Provider
-	project := m.selectedEnv.Project
-
-	factory := secrets.NewSecretManagerFactory()
-	sm, err := factory.CreateSecretManager(m.ctx, provider, project)
-	if err != nil {
-		return err
-	}
-	defer sm.Close()
-
-	mut, err := secrets.AsMutator(sm)
-	if err != nil {
-		return err
-	}
-
-	// If GCP, optionally set per-create locations for replication on the manager instance.
-	if provider == "gcp" {
-		if gcpSM, ok := sm.(*secrets.GCPSecretManager); ok {
-			if !m.createGCPUseGlobal && len(m.createGCPLocations) > 0 {
-				gcpSM.SetCreateLocations(m.createGCPLocations)
-			} else {
-				gcpSM.SetCreateLocations(nil)
-			}
-		}
-	}
-
-	if err := mut.CreateSecret(secretKey, val, desc); err != nil {
-		return err
-	}
-
-	// Add mapping to kuba.yaml.
-	if err := config.AddOrUpdateEnvSecretKeyMapping(m.configPath, m.selectedEnvName, envVar, secretKey); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m Model) updateConfirmDelete(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "n", "esc":
-			m.screen = screenSecrets
-			m.editTarget = nil
-			return m, nil
-		case "y":
-			if m.editTarget != nil {
-				if err := m.doDelete(*m.editTarget); err != nil {
-					m.errMsg = err.Error()
-				} else {
-					_ = m.reloadSecrets()
+func (m *Model) updateError(msg tea.Msg) (tea.Model, tea.Cmd) {
+	if _, ok := msg.(tea.KeyMsg); ok {
+		if km := msg.(tea.KeyMsg).String(); km == "esc" {
+			m.screen = m.errorReturn
+			m.errorForm = nil
+			m.errorTitle = ""
+			m.errorText = ""
+			switch m.screen {
+			case screenCreate:
+				if m.createForm != nil {
+					return m, m.createForm.Init()
+				}
+			case screenEdit:
+				if m.editForm != nil {
+					return m, m.editForm.Init()
+				}
+			case screenConfirmDelete:
+				if m.deleteForm != nil {
+					return m, m.deleteForm.Init()
 				}
 			}
-			m.screen = screenSecrets
-			m.editTarget = nil
 			return m, nil
 		}
 	}
-	return m, nil
+
+	if m.errorForm == nil {
+		m.errorForm = m.newErrorForm(m.errorTitle, m.errorText)
+		return m, m.errorForm.Init()
+	}
+
+	var cmd tea.Cmd
+	var mdl huh.Model
+	mdl, cmd = m.errorForm.Update(msg)
+	if f, ok := mdl.(*huh.Form); ok {
+		m.errorForm = f
+	}
+
+	if m.errorForm.State == huh.StateCompleted {
+		m.screen = m.errorReturn
+		m.errorForm = nil
+		m.errorTitle = ""
+		m.errorText = ""
+		switch m.screen {
+		case screenCreate:
+			if m.createForm != nil {
+				return m, m.createForm.Init()
+			}
+		case screenEdit:
+			if m.editForm != nil {
+				return m, m.editForm.Init()
+			}
+		case screenConfirmDelete:
+			if m.deleteForm != nil {
+				return m, m.deleteForm.Init()
+			}
+		}
+	}
+
+	return m, cmd
 }
 
 func (m *Model) doDelete(row secretRow) error {
@@ -1019,96 +822,13 @@ func (m *Model) doDelete(row secretRow) error {
 	return nil
 }
 
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
-
-func clampMin(v, minV int) int {
-	if v < minV {
-		return minV
-	}
-	return v
-}
-
-func clamp(v, minV, maxV int) int {
-	if v < minV {
-		return minV
-	}
-	if v > maxV {
-		return maxV
-	}
-	return v
-}
-
-func panelStyle() lipgloss.Style {
-	return lipgloss.NewStyle().
-		Border(lipgloss.NormalBorder()).
-		Padding(1, 2)
-}
-
-func fitPanelToWindow(s lipgloss.Style, winW, winH int) lipgloss.Style {
-	if winW <= 0 || winH <= 0 {
-		return s
-	}
-	fw, fh := s.GetFrameSize()
-	contentW := clampMin(winW-fw, 0)
-	contentH := clampMin(winH-fh, 0)
-	// Setting both width and height prevents lipgloss from rendering content
-	// that spills outside the available area in AltScreen mode.
-	return s.Width(contentW).Height(contentH)
-}
-
-func panelInnerSize(w, h int, panel lipgloss.Style) (int, int) {
-	if w <= 0 || h <= 0 {
-		return 0, 0
-	}
-	fw, fh := panel.GetFrameSize()
-	return clampMin(w-fw, 0), clampMin(h-fh, 0)
-}
-
-func (m Model) createModalBodyPrefixSuffix() (string, string) {
-	// Mirrors `screenCreate`'s body in View(), but split around the textarea so we can
-	// compute non-textarea height precisely (including wrapping).
-	var prefix strings.Builder
-	prefix.WriteString("Env var:\n")
-	prefix.WriteString(m.createEnvVar.View())
-	prefix.WriteString("\n\nSecret key/id:\n")
-	prefix.WriteString(m.createSecretKey.View())
-	prefix.WriteString("\n\nValue:\n")
-
-	var suffix strings.Builder
-	suffix.WriteString("\n\nDescription:\n")
-	suffix.WriteString(m.createDesc.View())
-
-	if m.selectedEnv != nil && m.selectedEnv.Provider == "gcp" {
-		suffix.WriteString("\n\nReplication:\n")
-		if m.createGCPUseGlobal {
-			suffix.WriteString("  (x) Global (automatic replication)\n  ( ) User-managed location\n")
-		} else {
-			suffix.WriteString("  ( ) Global (automatic replication)\n  (x) User-managed location\n")
-		}
-		loc := "(none selected)"
-		if len(m.createGCPLocations) == 1 {
-			loc = m.createGCPLocations[0]
-		} else if len(m.createGCPLocations) > 1 {
-			loc = strings.Join(m.createGCPLocations, ", ")
-		}
-		suffix.WriteString("\nLocations: " + loc + "\n")
-		suffix.WriteString("Tip: ctrl+g toggle global/user-managed, ctrl+l pick locations\n")
-	}
-
-	suffix.WriteString("\n(ctrl+s to create, esc to cancel)")
-	return prefix.String(), suffix.String()
+func (m *Model) openError(returnTo Screen, title, text string) (tea.Model, tea.Cmd) {
+	m.errorReturn = returnTo
+	m.errorTitle = title
+	m.errorText = text
+	m.errorForm = m.newErrorForm(title, text)
+	m.screen = screenError
+	return m, m.errorForm.Init()
 }
 
 func (m *Model) setSecretTableColumns(innerW int) {

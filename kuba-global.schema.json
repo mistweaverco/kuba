@@ -25,6 +25,28 @@
           "additionalProperties": false
         }
       ]
+    },
+    "defaults": {
+      "description": "Optional defaults used to pre-fill CLI/TUI prompts.",
+      "type": "object",
+      "properties": {
+        "providers": {
+          "description": "Provider-specific default settings. Keys must match provider names used in kuba.yaml providers section (e.g. aws, azure, gcp).",
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "regions": {
+                "description": "Default regions/locations for this provider.",
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false

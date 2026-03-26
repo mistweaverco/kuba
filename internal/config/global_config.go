@@ -13,14 +13,24 @@ import (
 
 // GlobalConfig represents the global kuba configuration
 type GlobalConfig struct {
-	Cache cache.CacheConfig `yaml:"cache"`
+	Cache    cache.CacheConfig `yaml:"cache"`
+	Defaults *DefaultsConfig   `yaml:"defaults,omitempty"`
+}
+
+type DefaultsConfig struct {
+	Providers map[string]ProviderDefaults `yaml:"providers,omitempty"`
+}
+
+type ProviderDefaults struct {
+	Regions []string `yaml:"regions,omitempty"`
 }
 
 // UnmarshalYAML implements custom YAML unmarshaling for GlobalConfig
 func (g *GlobalConfig) UnmarshalYAML(value *yaml.Node) error {
 	// First, try to decode as a normal struct
 	type rawGlobalConfig struct {
-		Cache interface{} `yaml:"cache"`
+		Cache    interface{}     `yaml:"cache"`
+		Defaults *DefaultsConfig `yaml:"defaults"`
 	}
 
 	var raw rawGlobalConfig
@@ -54,6 +64,8 @@ func (g *GlobalConfig) UnmarshalYAML(value *yaml.Node) error {
 			g.Cache.TTL = duration
 		}
 	}
+
+	g.Defaults = raw.Defaults
 
 	return nil
 }
