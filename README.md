@@ -214,6 +214,7 @@ Kuba provides several commands to help you manage your configuration:
 - `create`: Create kuba resources such as templates
   - `template <template_name>`: Create/edit a template in the user templates directory
 - `convert`: Converts existing configuration sources (e.g. **dotenv** (`.env*`), **Knative Service** manifests) to `kuba.yaml` format
+- `changelog [latest|version]`: Shows the contents of `CHANGELOG.md` (during build-time) in the terminal
 - `help`: Displays help information for Kuba and its commands
 - `init [template]`: Initializes a new `kuba.yaml` using a template
 - `run`: Runs an application with environment variables fetched from secrets
@@ -240,6 +241,15 @@ kuba test --env <environment>
 
 # Show version information
 kuba version
+
+# Show changelog (contents at built-time)
+kuba changelog
+
+# Show latest release notes only
+kuba changelog latest
+
+# Show a specific version section only
+kuba changelog v1.7.0
 
 # Get help
 kuba --help

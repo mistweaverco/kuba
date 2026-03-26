@@ -12,3 +12,4 @@ for fn in $unformatted; do
 done
 
 exit 1
+vp staged
