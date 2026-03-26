@@ -172,7 +172,11 @@ func New(ctx context.Context, configPath string) (Model, error) {
 	}, nil
 }
 
-func (m Model) Init() tea.Cmd { return nil }
+func (m Model) Init() tea.Cmd {
+	// Ensure we get an initial WindowSizeMsg even on terminals/platforms where
+	// Bubble Tea may only deliver size updates after the first resize.
+	return tea.WindowSize()
+}
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// Capture window size globally so we can size models
@@ -180,7 +184,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if ws, ok := msg.(tea.WindowSizeMsg); ok {
 		m.winW = ws.Width
 		m.winH = ws.Height
-		innerW, innerH := panelInnerSize(ws.Width, ws.Height)
+		innerW, innerH := panelInnerSize(ws.Width, ws.Height, panelStyle())
 		// Keep the various lists/tables sized to panel inner area.
 		m.envList.SetSize(innerW, innerH)
 		m.gcpLocList.SetSize(innerW, innerH)
@@ -207,14 +211,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) View() string {
+	// Render "best effort" at any size. We avoid forcing minimum dimensions and
+	// instead shrink content to whatever the terminal can actually show.
 	switch m.screen {
 	case screenEnvs:
-		box := lipgloss.NewStyle().
-			Border(lipgloss.NormalBorder()).
-			Padding(1, 2)
-		if m.winW > 0 {
-			box = box.Width(max(20, m.winW-4))
-		}
+		box := fitPanelToWindow(panelStyle(), m.winW, m.winH)
 		return box.Render(m.envList.View())
 	case screenSecrets:
 		return m.viewSecrets()
@@ -264,7 +265,7 @@ func (m Model) View() string {
 func (m Model) updateEnvs(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		innerW, innerH := panelInnerSize(msg.Width, msg.Height)
+		innerW, innerH := panelInnerSize(msg.Width, msg.Height, panelStyle())
 		m.envList.SetSize(innerW, innerH)
 		return m, nil
 	case tea.KeyMsg:
@@ -408,28 +409,12 @@ func (m Model) viewSecrets() string {
 	parts = append(parts, m.secretTable.View(), help)
 	content := strings.Join(parts, "\n\n")
 
-	box := lipgloss.NewStyle().
-		Border(lipgloss.NormalBorder()).
-		Padding(1, 2)
-	if m.winW > 0 {
-		box = box.Width(max(20, m.winW-4))
-	}
+	box := fitPanelToWindow(panelStyle(), m.winW, m.winH)
 	return box.Render(content)
 }
 
 func (m Model) viewModal(title, body string) string {
-	box := lipgloss.NewStyle().
-		Border(lipgloss.NormalBorder()).
-		Padding(1, 2)
-
-	if m.winW > 0 {
-		// Leave a small gutter so borders don't clip.
-		box = box.Width(max(20, m.winW-4))
-	}
-	if m.winH > 0 {
-		// Use most of the available height (best-effort; content may still scroll).
-		box = box.Height(max(8, m.winH-4))
-	}
+	box := fitPanelToWindow(panelStyle(), m.winW, m.winH)
 	return box.Render(lipgloss.NewStyle().Bold(true).Render(title) + "\n\n" + body)
 }
 
@@ -438,15 +423,28 @@ func (m Model) updateSecrets(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		// reserve space for header/help
-		innerW, innerH := panelInnerSize(msg.Width, msg.Height)
+		innerW, innerH := panelInnerSize(msg.Width, msg.Height, panelStyle())
+
+		// Size the table to exactly fill available inner height.
+		// viewSecrets uses blocks separated by "\n\n", which contributes one empty
+		// line between blocks. So total height is:
+		// sum(blockHeights) + (numBlocks-1).
+		headerH := lipgloss.Height(lipgloss.NewStyle().Bold(true).Render("Environment: X"))
+		helpH := lipgloss.Height("enter:view  e:edit  n:new  d:delete  /:filter  m:mask  esc:back  q:quit")
+		filterVisible := m.filter.Focused() || strings.TrimSpace(m.filter.Value()) != ""
+		filterH := 0
+		if filterVisible {
+			filterH = 1 // single-line text input / display
+		}
+		numBlocks := 3
+		if filterVisible {
+			numBlocks = 4
+		}
+		nonTableH := headerH + filterH + helpH + (numBlocks - 1)
 		m.secretTable.SetWidth(innerW)
-		m.secretTable.SetHeight(max(4, innerH-6))
-		m.filter.Width = min(60, msg.Width-6)
-		m.editArea.SetWidth(min(90, msg.Width-10))
-		m.editArea.SetHeight(max(6, msg.Height-12))
-		m.createValue.SetWidth(min(90, msg.Width-10))
-		m.createValue.SetHeight(max(6, msg.Height-16))
+		m.setSecretTableColumns(innerW)
+		m.secretTable.SetHeight(clampMin(innerH-nonTableH, 1))
+		m.filter.Width = clamp(clampMin(innerW, 1), 1, 60)
 		return m, nil
 	case tea.KeyMsg:
 		if m.filter.Focused() {
@@ -500,6 +498,12 @@ func (m Model) updateSecrets(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.editArea.SetValue(r.value)
 			m.editArea.Focus()
 			m.screen = screenEdit
+			// Ensure edit textarea is sized immediately (even if last resize happened
+			// on a different screen).
+			if m.winW > 0 && m.winH > 0 {
+				mm, cmd := m.updateEdit(tea.WindowSizeMsg{Width: m.winW, Height: m.winH})
+				return mm, cmd
+			}
 			return m, nil
 		case "d":
 			r, ok := m.selectedRow()
@@ -526,6 +530,12 @@ func (m Model) updateSecrets(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.createDesc.Blur()
 			m.createValue.Blur()
 			m.screen = screenCreate
+			// Ensure create textarea is sized immediately (even if last resize happened
+			// on a different screen).
+			if m.winW > 0 && m.winH > 0 {
+				mm, cmd := m.updateCreate(tea.WindowSizeMsg{Width: m.winW, Height: m.winH})
+				return mm, cmd
+			}
 			return m, nil
 		}
 	}
@@ -563,6 +573,20 @@ func (m Model) updateView(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m Model) updateEdit(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		innerW, innerH := panelInnerSize(msg.Width, msg.Height, panelStyle())
+		// Fit textarea to available modal space. `viewModal` renders:
+		// title + "\n\n" + (textarea + "\n\n(esc to cancel)")
+		title := lipgloss.NewStyle().Bold(true).Render("Edit secret (ctrl+s to save)")
+		titleH := lipgloss.Height(title) + 1 // +1 for the blank line in "\n\n"
+
+		footer := "\n\n(esc to cancel)"
+		footerH := lipgloss.Height(footer)
+
+		bodyH := clampMin(innerH-titleH, 0)
+		m.editArea.SetWidth(clampMin(min(90, innerW), 1))
+		m.editArea.SetHeight(clampMin(bodyH-footerH, 1))
+		return m, nil
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "esc":
@@ -609,11 +633,25 @@ func (m *Model) saveEdit(row secretRow, newValue string) error {
 func (m Model) updateCreate(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		m.createEnvVar.Width = min(80, msg.Width-10)
-		m.createSecretKey.Width = min(80, msg.Width-10)
-		m.createDesc.Width = min(80, msg.Width-10)
-		m.createValue.SetWidth(min(90, msg.Width-10))
-		m.createValue.SetHeight(max(6, msg.Height-16))
+		innerW, innerH := panelInnerSize(msg.Width, msg.Height, panelStyle())
+
+		// Keep inputs sized to the modal's inner width.
+		fieldW := clampMin(min(80, innerW), 1)
+		m.createEnvVar.Width = fieldW
+		m.createSecretKey.Width = fieldW
+		m.createDesc.Width = fieldW
+		m.createValue.SetWidth(clampMin(min(90, innerW), 1))
+
+		// Compute remaining height for the textarea based on *rendered* non-textarea
+		// content. This matters because some lines can wrap after a resize.
+		title := lipgloss.NewStyle().Bold(true).Render("Create secret & mapping")
+		titleH := lipgloss.Height(title) + 1 // +1 for the blank line in "\n\n"
+
+		prefix, suffix := m.createModalBodyPrefixSuffix()
+		nonTextareaH := lipgloss.Height(prefix + suffix)
+
+		bodyH := clampMin(innerH-titleH, 0)
+		m.createValue.SetHeight(clampMin(bodyH-nonTextareaH, 1))
 		return m, nil
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -995,15 +1033,147 @@ func max(a, b int) int {
 	return b
 }
 
-func panelInnerSize(w, h int) (int, int) {
-	// Border takes 2 cols/rows, padding(1,2) takes 4 cols and 2 rows.
-	innerW := w - 8
-	innerH := h - 4
-	if innerW < 10 {
-		innerW = 10
+func clampMin(v, minV int) int {
+	if v < minV {
+		return minV
 	}
-	if innerH < 4 {
-		innerH = 4
+	return v
+}
+
+func clamp(v, minV, maxV int) int {
+	if v < minV {
+		return minV
 	}
-	return innerW, innerH
+	if v > maxV {
+		return maxV
+	}
+	return v
+}
+
+func panelStyle() lipgloss.Style {
+	return lipgloss.NewStyle().
+		Border(lipgloss.NormalBorder()).
+		Padding(1, 2)
+}
+
+func fitPanelToWindow(s lipgloss.Style, winW, winH int) lipgloss.Style {
+	if winW <= 0 || winH <= 0 {
+		return s
+	}
+	fw, fh := s.GetFrameSize()
+	contentW := clampMin(winW-fw, 0)
+	contentH := clampMin(winH-fh, 0)
+	// Setting both width and height prevents lipgloss from rendering content
+	// that spills outside the available area in AltScreen mode.
+	return s.Width(contentW).Height(contentH)
+}
+
+func panelInnerSize(w, h int, panel lipgloss.Style) (int, int) {
+	if w <= 0 || h <= 0 {
+		return 0, 0
+	}
+	fw, fh := panel.GetFrameSize()
+	return clampMin(w-fw, 0), clampMin(h-fh, 0)
+}
+
+func (m Model) createModalBodyPrefixSuffix() (string, string) {
+	// Mirrors `screenCreate`'s body in View(), but split around the textarea so we can
+	// compute non-textarea height precisely (including wrapping).
+	var prefix strings.Builder
+	prefix.WriteString("Env var:\n")
+	prefix.WriteString(m.createEnvVar.View())
+	prefix.WriteString("\n\nSecret key/id:\n")
+	prefix.WriteString(m.createSecretKey.View())
+	prefix.WriteString("\n\nValue:\n")
+
+	var suffix strings.Builder
+	suffix.WriteString("\n\nDescription:\n")
+	suffix.WriteString(m.createDesc.View())
+
+	if m.selectedEnv != nil && m.selectedEnv.Provider == "gcp" {
+		suffix.WriteString("\n\nReplication:\n")
+		if m.createGCPUseGlobal {
+			suffix.WriteString("  (x) Global (automatic replication)\n  ( ) User-managed location\n")
+		} else {
+			suffix.WriteString("  ( ) Global (automatic replication)\n  (x) User-managed location\n")
+		}
+		loc := "(none selected)"
+		if len(m.createGCPLocations) == 1 {
+			loc = m.createGCPLocations[0]
+		} else if len(m.createGCPLocations) > 1 {
+			loc = strings.Join(m.createGCPLocations, ", ")
+		}
+		suffix.WriteString("\nLocations: " + loc + "\n")
+		suffix.WriteString("Tip: ctrl+g toggle global/user-managed, ctrl+l pick locations\n")
+	}
+
+	suffix.WriteString("\n(ctrl+s to create, esc to cancel)")
+	return prefix.String(), suffix.String()
+}
+
+func (m *Model) setSecretTableColumns(innerW int) {
+	// bubbles/table does not automatically reflow column widths when SetWidth is
+	// called, so we recompute widths to avoid horizontal overflow on small terminals.
+	//
+	// Note: bubbles/table renders each cell with padding and inserts spacing between
+	// columns. Column.Width applies to the cell content area, but the final rendered
+	// width includes extra "chrome". We therefore reserve a conservative overhead
+	// budget so the table never exceeds innerW.
+	const cols = 4
+	// Default table styles include left+right cell padding (commonly 1 each),
+	// plus at least 1 char gap between columns.
+	cellPaddingLR := 2 // 1 left + 1 right (conservative)
+	colGaps := cols - 1
+	overhead := cols*cellPaddingLR + colGaps
+	avail := innerW - overhead
+	if avail < cols { // at least 1 char per column
+		avail = cols
+	}
+
+	// Minimums for usability.
+	minEnv, minVal, minProv, minRef := 8, 10, 8, 10
+	minTotal := minEnv + minVal + minProv + minRef
+	if avail < minTotal {
+		// If extremely narrow, shrink everything but keep provider readable-ish.
+		minEnv, minVal, minRef = 6, 6, 6
+		minTotal = minEnv + minVal + minProv + minRef
+	}
+
+	envW, valW, provW, refW := minEnv, minVal, minProv, minRef
+	remaining := avail - (envW + valW + provW + refW)
+	if remaining < 0 {
+		remaining = 0
+	}
+
+	// Distribute extra width with a bias towards Value and Ref.
+	// Order: Value, Ref, Env Var, Provider.
+	add := func(w *int, n int) {
+		if n <= 0 {
+			return
+		}
+		*w += n
+		remaining -= n
+	}
+	for remaining > 0 {
+		add(&valW, min(remaining, 2))
+		if remaining == 0 {
+			break
+		}
+		add(&refW, min(remaining, 2))
+		if remaining == 0 {
+			break
+		}
+		add(&envW, 1)
+		if remaining == 0 {
+			break
+		}
+		add(&provW, 1)
+	}
+
+	m.secretTable.SetColumns([]table.Column{
+		{Title: "Env Var", Width: envW},
+		{Title: "Value", Width: valW},
+		{Title: "Provider", Width: provW},
+		{Title: "Ref", Width: refW},
+	})
 }
