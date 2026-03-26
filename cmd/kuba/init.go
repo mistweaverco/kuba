@@ -1,26 +1,61 @@
 package kuba
 
 import (
+	"fmt"
+	"os"
+	"strings"
+
 	"github.com/mistweaverco/kuba/internal/lib/fileutils"
 	"github.com/mistweaverco/kuba/internal/lib/log"
+	"github.com/mistweaverco/kuba/internal/templates"
 	"github.com/spf13/cobra"
 )
 
 var initCmd = &cobra.Command{
-	Use:   "init",
+	Use:   "init [template]",
 	Short: "Create a default configuration file",
-	Long:  "This command initializes a default configuration file for kuba, if it does not already exist.",
-	Run: func(cmd *cobra.Command, files []string) {
+	Long:  "This command initializes a kuba.yaml configuration file, optionally using a named template.",
+	Args:  cobra.MaximumNArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
 		logger := log.NewLogger()
-		logger.Debug("Initializing default kuba configuration")
+		logger.Debug("Initializing kuba configuration")
 
-		created := fileutils.GenerateDefaultKubaConfig()
-		if created {
-			logger.Debug("Default configuration file created successfully")
-		} else {
+		target := "kuba.yaml"
+		if fileutils.FileExists(target) {
 			logger.Debug("Configuration file already exists, no action taken")
+			return nil
 		}
+
+		if _, err := templates.EnsureTemplatesDir(); err != nil {
+			return err
+		}
+
+		requestedTemplate := ""
+		if len(args) == 1 {
+			requestedTemplate = args[0]
+		}
+		body, source, err := templates.ResolveInitTemplate(requestedTemplate)
+		if err != nil {
+			available, listErr := templates.ListTemplateNames()
+			if listErr != nil {
+				return fmt.Errorf("%w (failed to list templates: %v)", err, listErr)
+			}
+			return fmt.Errorf("%w\navailable templates: %s", err, stringsOrNone(available))
+		}
+
+		if err := os.WriteFile(target, body, 0644); err != nil {
+			return fmt.Errorf("failed to write %s: %w", target, err)
+		}
+		logger.Debug("Configuration file created successfully", "source", source)
+		return nil
 	},
+}
+
+func stringsOrNone(items []string) string {
+	if len(items) == 0 {
+		return "(none)"
+	}
+	return strings.Join(items, ", ")
 }
 
 func init() {

@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://kuba.mwco.app/kuba.schema.json
+---
+default:
+  provider: insert_provider_here
+  project: insert_project_id_here
+  env:
+    YOUR_ENV_VARIABLE:
+      value: "insert_value_here"
+    YOUR_SECRET_ENV_VARIABLE:
+      secret-key: "insert_secret_key_here"
+
