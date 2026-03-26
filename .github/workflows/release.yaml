@@ -6,6 +6,31 @@ on:
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+'
 jobs:
+  generate-changelog:
+    name: Generate Changelog
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.2
+        with:
+          fetch-depth: 0
+      - uses: voidzero-dev/setup-vp@v1
+        with:
+          node-version: 24
+      - name: Install dependencies
+        run: vp install
+      - name: Set up env
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+      - name: Generate changelog
+        run: vp run changelog
+      - name: Upload changelog artifact
+        uses: actions/upload-artifact@v7.0.0
+        with:
+          name: changelog
+          path: internal/changelog/changelog.md
+          if-no-files-found: error
   build-linux:
     name: Build for Linux
     runs-on: ubuntu-latest
@@ -25,6 +50,11 @@ jobs:
           go-version: 1.25
       - name: Install C toolchain
         run: sudo apt-get update && sudo apt-get install -y build-essential
+      - name: Download changelog artifact
+        uses: actions/download-artifact@v8.0.1
+        with:
+          name: changelog
+          path: internal/changelog/changelog.md
       - name: Build for Linux
         env:
           CGO_ENABLED: 1
@@ -55,6 +85,11 @@ jobs:
         uses: actions/setup-go@v6.3.0
         with:
           go-version: 1.25
+      - name: Download changelog artifact
+        uses: actions/download-artifact@v8.0.1
+        with:
+          name: changelog
+          path: internal/changelog/changelog.md
       - name: Build for macOS
         env:
           CGO_ENABLED: 1
@@ -156,6 +191,11 @@ jobs:
         run: |
           "CC=gcc" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "CGO_ENABLED=1" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Download changelog artifact
+        uses: actions/download-artifact@v8.0.1
+        with:
+          name: changelog
+          path: internal/changelog/changelog.md
       - name: Build for Windows
         shell: bash
         run: ./scripts/build.sh
