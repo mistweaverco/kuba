@@ -4,14 +4,21 @@
   "scripts": {
     "changelog": "./scripts/generate-changelog.sh",
     "preview:docs": "mdts .",
-    "preview:web": "mdts ."
+    "preview:web": "mdts .",
+    "prepare": "vp config"
   },
   "devDependencies": {
     "@types/bun": "1.3.11",
     "conventional-changelog": "7.2.0",
-    "mdts": "0.17.0"
+    "mdts": "0.17.0",
+    "vite-plus": "0.1.14"
   },
   "peerDependencies": {
-    "typescript": "6.0.2"
+    "typescript": "5.9.2"
+  },
+  "packageManager": "pnpm@10.33.0",
+  "overrides": {
+    "vite": "npm:@voidzero-dev/vite-plus-core@0.1.14",
+    "vitest": "npm:@voidzero-dev/vite-plus-test@0.1.14"
   }
 }
