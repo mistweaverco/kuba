@@ -9,7 +9,7 @@ TARGET_FILE="internal/changelog/changelog.md"
 echo "Generating changelog for version: ${VERSION}"
 echo "Using PKG_VERSION: ${PKG_VERSION}"
 
-./node_modules/.bin/conventional-changelog -k <(echo "${PKG_VERSION}") -i ${SOURCE_FILE} -s -r 0
+./node_modules/.bin/conventional-changelog -k <(echo "${PKG_VERSION}") -i ${SOURCE_FILE} -s -r 0 --tag-prefix v
 
 if [[ ! -f "${SOURCE_FILE}" ]]; then
   echo "ERROR: ${SOURCE_FILE} not found"
