@@ -210,9 +210,12 @@ Kuba provides several commands to help you manage your configuration:
 - `completion`: Generates shell completion scripts for Kuba
 - `config`: Manages global Kuba configuration options such as:
   - `cache`: Enable or disable local caching of secrets
+  - `defaults`: Manage provider defaults (e.g. default regions)
+- `create`: Create kuba resources such as templates
+  - `template <template_name>`: Create/edit a template in the user templates directory
 - `convert`: Converts existing configuration sources (e.g. **dotenv** (`.env*`), **Knative Service** manifests) to `kuba.yaml` format
 - `help`: Displays help information for Kuba and its commands
-- `init`: Initializes a new `kuba.yaml` configuration file in the current directory
+- `init [template]`: Initializes a new `kuba.yaml` using a template
 - `run`: Runs an application with environment variables fetched from secrets
 - `show`: Displays the effective environment variables for a given configuration
 - `test`: Tests the configuration and secret retrieval without running an application
@@ -222,6 +225,12 @@ Kuba provides several commands to help you manage your configuration:
 ```sh
 # Initialize a new configuration file
 kuba init
+
+# Initialize using a named template from ~/.config/kuba/templates
+kuba init my-template
+
+# Create or edit a template in ~/.config/kuba/templates
+kuba create template my-template
 
 # Run a command with secrets
 kuba run -- <application> [args...]

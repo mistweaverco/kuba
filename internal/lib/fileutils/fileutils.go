@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/mistweaverco/kuba/internal/templates"
 	"github.com/spf13/afero"
 )
 
@@ -102,27 +103,13 @@ func GenerateDefaultKubaConfig() bool {
 		return false // File already exists, no need to create it
 	}
 
-	contents := `# yaml-language-server: $schema=https://kuba.mwco.app/kuba.schema.json
----
-# Top-level sections for different environments.
-default:
-  provider: gcp
-  project: 1337
-
-  # Mapping of cloud projects to environment variables and secret keys.
-  env:
-    GCP_PROJECT_ID:
-      secret-key: "gcp_project_secret"
-    AWS_PROJECT_ID:
-      secret-key: "aws_project_secret"
-      provider: aws
-    SOME_HARD_CODED_ENV:
-      value: "hard-coded-value"
-    AZURE_PROJECT_ID:
-      secret-key: "azure_project_secret"
-      provider: azure
-      project: "my-azure-project-default"
-`
+	// Use the same template resolution logic as `kuba init`.
+	b, _, err := templates.ResolveInitTemplate("")
+	if err != nil {
+		fmt.Println("Error loading default kuba template:", err)
+		return false
+	}
+	contents := string(b)
 
 	file, err := fileSystem.Create(fp)
 	if err != nil {
