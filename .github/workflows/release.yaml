@@ -39,6 +39,8 @@ jobs:
           path: internal/changelog/changelog.md
           if-no-files-found: error
   build-linux:
+    needs:
+      - generate-changelog
     name: Build for Linux
     runs-on: ubuntu-latest
     steps:
@@ -76,6 +78,8 @@ jobs:
           path: dist/kuba-linux-amd64
           if-no-files-found: error
   build-macos:
+    needs:
+      - generate-changelog
     name: Build for macOS
     runs-on: macos-latest
     steps:
@@ -174,6 +178,8 @@ jobs:
           path: dist/kuba-darwin-arm64
           if-no-files-found: error
   build-windows:
+    needs:
+      - generate-changelog
     name: Build for Windows
     runs-on: windows-latest
     steps:
