@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"charm.land/bubbles/v2/list"
+	"charm.land/bubbles/v2/spinner"
 	"charm.land/bubbles/v2/table"
 	"charm.land/bubbles/v2/textinput"
 	tea "charm.land/bubbletea/v2"
@@ -26,6 +27,7 @@ const (
 	screenCreate
 	screenConfirmDelete
 	screenError
+	screenBusy
 )
 
 type secretRow struct {
@@ -89,7 +91,14 @@ type Model struct {
 	errorReturn Screen
 	errorTitle  string
 	errorText   string
+
+	busyText string
+	spinner  spinner.Model
 }
+
+type createDoneMsg struct{ err error }
+type editDoneMsg struct{ err error }
+type deleteDoneMsg struct{ err error }
 
 type envItem struct{ name string }
 
@@ -145,6 +154,7 @@ func New(ctx context.Context, configPath string) (*Model, error) {
 		filter:            filter,
 		createReplication: "global",
 		createAction:      "create",
+		spinner:           spinner.New(spinner.WithSpinner(spinner.Line)),
 	}, nil
 }
 
@@ -180,6 +190,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.updateConfirmDelete(msg)
 	case screenError:
 		return m.updateError(msg)
+	case screenBusy:
+		return m.updateBusy(msg)
 	default:
 		return m, nil
 	}
@@ -240,6 +252,12 @@ func (m *Model) View() tea.View {
 			title = "Error"
 		}
 		v := tea.NewView(m.viewModal(title, m.errorForm.View()))
+		v.AltScreen = true
+		return v
+	case screenBusy:
+		s := m.spinner.View()
+		body := strings.TrimSpace(s + " " + m.busyText)
+		v := tea.NewView(m.viewModal("Working…", body))
 		v.AltScreen = true
 		return v
 	default:
@@ -596,16 +614,22 @@ func (m *Model) updateEdit(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	if m.editForm.State == huh.StateCompleted {
+		if m.editTarget != nil && m.editSave {
+			row := *m.editTarget
+			val := m.editValue
+			m.busyText = "Saving secret…"
+			m.screen = screenBusy
+			m.editForm = nil
+			m.editTarget = nil
+			return m, tea.Batch(
+				m.spinner.Tick,
+				func() tea.Msg {
+					return editDoneMsg{err: m.saveEdit(row, val)}
+				},
+			)
+		}
 		m.screen = screenSecrets
 		m.editForm = nil
-		if m.editTarget != nil && m.editSave {
-			if err := m.saveEdit(*m.editTarget, m.editValue); err != nil {
-				m.errMsg = err.Error()
-				m.editTarget = nil
-				return m, nil
-			}
-			_ = m.reloadSecrets()
-		}
 		m.editTarget = nil
 	}
 
@@ -626,6 +650,34 @@ func (m *Model) saveEdit(row secretRow, newValue string) error {
 	}
 
 	return mut.UpdateSecret(row.ref, newValue)
+}
+
+type createInput struct {
+	envVar      string
+	secretKey   string
+	value       string
+	desc        string
+	replication string
+	locations   []string
+	provider    string
+	project     string
+	envName     string
+	configPath  string
+}
+
+func (m *Model) snapshotCreateInput() createInput {
+	return createInput{
+		envVar:      strings.TrimSpace(m.createEnvVar),
+		secretKey:   strings.TrimSpace(m.createSecretKey),
+		value:       m.createValue,
+		desc:        strings.TrimSpace(m.createDesc),
+		replication: m.createReplication,
+		locations:   append([]string(nil), m.createLocations...),
+		provider:    m.selectedEnv.Provider,
+		project:     m.selectedEnv.Project,
+		envName:     m.selectedEnvName,
+		configPath:  m.configPath,
+	}
 }
 
 func (m *Model) updateCreate(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -696,23 +748,16 @@ func (m *Model) updateCreate(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if m.createForm.State == huh.StateCompleted {
 		switch m.createAction {
 		case "create":
-			if err := m.doCreateFromForm(); err != nil {
-				// Keep current field values, but reset form state so it's usable after closing the error.
-				m.createForm = m.newCreateForm()
-				m.screen = screenCreate
-				return m.openError(screenCreate, "Create failed", err.Error())
-			}
-			// Reload config + secrets, then return to overview.
-			if cfg, err := config.LoadKubaConfig(m.configPath); err == nil {
-				m.cfg = cfg
-				if env, err := m.cfg.GetEnvironment(m.selectedEnvName); err == nil {
-					m.selectedEnv = env
-				}
-			}
-			_ = m.reloadSecrets()
-			m.screen = screenSecrets
+			in := m.snapshotCreateInput()
+			m.busyText = "Creating secret…"
+			m.screen = screenBusy
 			m.createForm = nil
-			return m, nil
+			return m, tea.Batch(
+				m.spinner.Tick,
+				func() tea.Msg {
+					return createDoneMsg{err: m.doCreateFromForm(in)}
+				},
+			)
 		default:
 			// Explicit cancel: return to overview.
 			m.screen = screenSecrets
@@ -752,19 +797,19 @@ func (m *Model) ensureGCPLocationsLoaded() error {
 	return nil
 }
 
-func (m *Model) doCreateFromForm() error {
-	envVar := strings.TrimSpace(m.createEnvVar)
-	secretKey := strings.TrimSpace(m.createSecretKey)
-	val := m.createValue
-	desc := strings.TrimSpace(m.createDesc)
+func (m *Model) doCreateFromForm(in createInput) error {
+	envVar := strings.TrimSpace(in.envVar)
+	secretKey := strings.TrimSpace(in.secretKey)
+	val := in.value
+	desc := strings.TrimSpace(in.desc)
 
 	if envVar == "" || secretKey == "" {
 		return fmt.Errorf("env var and secret key are required")
 	}
 
 	// Create secret in provider for this environment.
-	provider := m.selectedEnv.Provider
-	project := m.selectedEnv.Project
+	provider := in.provider
+	project := in.project
 
 	factory := secrets.NewSecretManagerFactory()
 	sm, err := factory.CreateSecretManager(m.ctx, provider, project)
@@ -781,8 +826,8 @@ func (m *Model) doCreateFromForm() error {
 	// If GCP, optionally set per-create locations for replication on the manager instance.
 	if provider == "gcp" {
 		if gcpSM, ok := sm.(*secrets.GCPSecretManager); ok {
-			if m.createReplication == "user-managed" && len(m.createLocations) > 0 {
-				gcpSM.SetCreateLocations(m.createLocations)
+			if in.replication == "user-managed" && len(in.locations) > 0 {
+				gcpSM.SetCreateLocations(in.locations)
 			} else {
 				gcpSM.SetCreateLocations(nil)
 			}
@@ -794,7 +839,7 @@ func (m *Model) doCreateFromForm() error {
 	}
 
 	// Add mapping to kuba.yaml.
-	if err := config.AddOrUpdateEnvSecretKeyMapping(m.configPath, m.selectedEnvName, envVar, secretKey); err != nil {
+	if err := config.AddOrUpdateEnvSecretKeyMapping(in.configPath, in.envName, envVar, secretKey); err != nil {
 		return err
 	}
 
@@ -836,15 +881,21 @@ func (m *Model) updateConfirmDelete(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	if m.deleteForm.State == huh.StateCompleted {
+		if m.editTarget != nil && m.deleteYes {
+			row := *m.editTarget
+			m.busyText = "Deleting secret…"
+			m.screen = screenBusy
+			m.deleteForm = nil
+			m.editTarget = nil
+			return m, tea.Batch(
+				m.spinner.Tick,
+				func() tea.Msg {
+					return deleteDoneMsg{err: m.doDelete(row)}
+				},
+			)
+		}
 		m.screen = screenSecrets
 		m.deleteForm = nil
-		if m.editTarget != nil && m.deleteYes {
-			if err := m.doDelete(*m.editTarget); err != nil {
-				m.errMsg = err.Error()
-			} else {
-				_ = m.reloadSecrets()
-			}
-		}
 		m.editTarget = nil
 	}
 
@@ -910,6 +961,59 @@ func (m *Model) updateError(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	return m, cmd
+}
+
+func (m *Model) updateBusy(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case spinner.TickMsg:
+		var cmd tea.Cmd
+		m.spinner, cmd = m.spinner.Update(msg)
+		return m, cmd
+	case createDoneMsg:
+		m.busyText = ""
+		m.screen = screenSecrets
+		if msg.err != nil {
+			// Re-open create form with current values intact.
+			m.createForm = m.newCreateForm()
+			m.screen = screenCreate
+			return m.openError(screenCreate, "Create failed", msg.err.Error())
+		}
+		// Reload config + secrets
+		if cfg, err := config.LoadKubaConfig(m.configPath); err == nil {
+			m.cfg = cfg
+			if env, err := m.cfg.GetEnvironment(m.selectedEnvName); err == nil {
+				m.selectedEnv = env
+			}
+		}
+		_ = m.reloadSecrets()
+		return m, nil
+	case editDoneMsg:
+		m.busyText = ""
+		m.screen = screenSecrets
+		if msg.err != nil {
+			// Return to edit
+			m.editForm = m.newEditForm()
+			m.screen = screenEdit
+			return m.openError(screenEdit, "Save failed", msg.err.Error())
+		}
+		_ = m.reloadSecrets()
+		return m, nil
+	case deleteDoneMsg:
+		m.busyText = ""
+		m.screen = screenSecrets
+		if msg.err != nil {
+			return m.openError(screenSecrets, "Delete failed", msg.err.Error())
+		}
+		_ = m.reloadSecrets()
+		return m, nil
+	case tea.KeyMsg:
+		// Prevent accidental interaction while busy.
+		if msg.String() == "ctrl+c" {
+			return m, tea.Quit
+		}
+		return m, nil
+	}
+	return m, nil
 }
 
 func (m *Model) doDelete(row secretRow) error {
