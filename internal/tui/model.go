@@ -21,7 +21,8 @@ type Model struct {
 	ctx        context.Context
 	configPath string
 
-	cfg *config.KubaConfig
+	cfg       *config.KubaConfig
+	globalCfg *config.GlobalConfig
 
 	screen Screen
 	errMsg string
@@ -79,6 +80,11 @@ func New(ctx context.Context, configPath string) (*Model, error) {
 		return nil, err
 	}
 
+	globalCfg, err := config.LoadGlobalConfig()
+	if err != nil {
+		return nil, err
+	}
+
 	envNames := make([]string, 0, len(cfg.Environments))
 	for name := range cfg.Environments {
 		envNames = append(envNames, name)
@@ -114,6 +120,7 @@ func New(ctx context.Context, configPath string) (*Model, error) {
 		ctx:               ctx,
 		configPath:        configPath,
 		cfg:               cfg,
+		globalCfg:         globalCfg,
 		screen:            screenEnvs,
 		envList:           l,
 		secretTable:       t,
@@ -465,6 +472,7 @@ func (m *Model) updateSecrets(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.errMsg = err.Error()
 				return m, nil
 			}
+			m.applyCreateDefaults()
 			m.createForm = m.newCreateForm()
 			m.screen = screenCreate
 			return m, m.createForm.Init()
