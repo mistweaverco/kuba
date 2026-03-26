@@ -1,17 +1,4 @@
 
-## 1.8.0 (2026-03-26)
-
-* fix(ci): remove changelog gen step from build script ([39f3d82](https://github.com/mistweaverco/kuba/commit/39f3d82))
-* fix(ci): web ([9fd6808](https://github.com/mistweaverco/kuba/commit/9fd6808))
-* fix(gitignore): Update .gitignore to exclude build artifacts ([bfeeb8c](https://github.com/mistweaverco/kuba/commit/bfeeb8c))
-* fix(tui): overflows (#68) ([32292f5](https://github.com/mistweaverco/kuba/commit/32292f5)), closes [#68](https://github.com/mistweaverco/kuba/issues/68)
-* feat(cli): add kuba changelog command (#71) ([27b823a](https://github.com/mistweaverco/kuba/commit/27b823a)), closes [#71](https://github.com/mistweaverco/kuba/issues/71)
-* feat(cli): add new `create template` command (#70) ([0089566](https://github.com/mistweaverco/kuba/commit/0089566)), closes [#70](https://github.com/mistweaverco/kuba/issues/70)
-* feat(tui): change keybinds (#67) ([1d13bda](https://github.com/mistweaverco/kuba/commit/1d13bda)), closes [#67](https://github.com/mistweaverco/kuba/issues/67)
-* Feat/tui overhaul (#69) ([21d4367](https://github.com/mistweaverco/kuba/commit/21d4367)), closes [#69](https://github.com/mistweaverco/kuba/issues/69)
-* chore(ci): update actions in ci to latest (#66) ([e95cbd2](https://github.com/mistweaverco/kuba/commit/e95cbd2)), closes [#66](https://github.com/mistweaverco/kuba/issues/66)
-* chore(docs): update CHANGELOG ([65bb06e](https://github.com/mistweaverco/kuba/commit/65bb06e))
-
 ## 1.7.0 (2026-03-25)
 
 * fix(ci): update go to 1.25 (#65) ([397b9c6](https://github.com/mistweaverco/kuba/commit/397b9c6)), closes [#65](https://github.com/mistweaverco/kuba/issues/65)
