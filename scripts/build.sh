@@ -1,22 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-prepare_changelog() {
-  if ! command -v vp >/dev/null 2>&1; then
-    echo "Error: vite-plus CLI 'vp' not found in PATH."
-    echo "Install dependencies and ensure 'vp' is available before building."
-    exit 1
-  fi
-
-  echo "Generating latest changelog via vite-plus..."
-  vp run changelog
-
-  echo "Syncing embedded changelog..."
-  ./scripts/sync-embedded-changelog.sh
-}
-
-prepare_changelog
-
 build_wrapper() {
   echo "Building for $1 $2"
   local windows_file_extension=""
