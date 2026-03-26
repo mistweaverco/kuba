@@ -449,6 +449,19 @@ func (m Model) updateSecrets(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.createValue.SetHeight(max(6, msg.Height-16))
 		return m, nil
 	case tea.KeyMsg:
+		if m.filter.Focused() {
+			var cmd tea.Cmd
+			switch msg.String() {
+			case "ctrl+c":
+				return m, tea.Quit
+			case "esc", "enter":
+				m.filter.Blur()
+				return m, nil
+			}
+			m.filter, cmd = m.filter.Update(msg)
+			m.applyFilterToTable()
+			return m, cmd
+		}
 		switch msg.String() {
 		case "q", "ctrl+c":
 			return m, tea.Quit
@@ -515,13 +528,6 @@ func (m Model) updateSecrets(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.screen = screenCreate
 			return m, nil
 		}
-	}
-
-	if m.filter.Focused() {
-		var cmd tea.Cmd
-		m.filter, cmd = m.filter.Update(msg)
-		m.applyFilterToTable()
-		return m, cmd
 	}
 
 	var cmd tea.Cmd
@@ -650,7 +656,24 @@ func (m Model) updateCreate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			_ = m.reloadSecrets()
 			m.screen = screenSecrets
 			return m, nil
-		case "enter":
+		case "ctrl+k", "up":
+			// reverse focus (advance focus backwards)
+			if m.createDesc.Focused() {
+				m.createDesc.Blur()
+				m.createValue.Focus()
+				return m, nil
+			}
+			if m.createValue.Focused() {
+				m.createValue.Blur()
+				m.createSecretKey.Focus()
+				return m, nil
+			}
+			if m.createSecretKey.Focused() {
+				m.createSecretKey.Blur()
+				m.createEnvVar.Focus()
+				return m, nil
+			}
+		case "ctrl+j", "down":
 			// advance focus
 			if m.createEnvVar.Focused() {
 				m.createEnvVar.Blur()
