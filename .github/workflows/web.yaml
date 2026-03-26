@@ -36,23 +36,26 @@ jobs:
         uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 0
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v2.2.0
-      - name: Cache Bun
+      - uses: voidzero-dev/setup-vp@v1
+        with:
+          node-version: 24
+      - name: Cache Vite-Plus dependencies
         uses: actions/cache@v5.0.4
         with:
-          path: ~/.bun/install/cache
-          key: linux-bun-${{ hashFiles('**/bun.lock') }}
+          path: ~/.vite-plus
+          key: web-vite-plus-${{ hashFiles('**/pnpn-lock.yaml') }}
           restore-keys: |
-            linux-bun-${{ hashFiles('**/bun.lock') }}
+            web-vite-plus-${{ hashFiles('**/pnpn-lock.yaml') }}
+      - name: Install dependencies
+        run: vp install
       - name: Add kuba.schema.json to website
         run: cp kuba.schema.json web/static/kuba.schema.json
       - name: Add kuba-global.schema.json to website
         run: cp kuba-global.schema.json web/static/kuba-global.schema.json
       - name: Install dependencies
-        run: cd web && bun install --frozen-lockfile
+        run: cd web && vp install
       - name: Create Website
-        run: cd web && bun run build
+        run: cd web && vp run build
       - name: Setup Pages
         uses: actions/configure-pages@v5.0.0
       - name: Upload artifact
