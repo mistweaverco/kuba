@@ -24,7 +24,6 @@ if [[ -n "$CI" ]]; then
 fi
 
 ./node_modules/.bin/conventional-changelog \
-  -p angular \
   -i "$SOURCE_FILE" \
   -s \
   -r 0 \
