@@ -4,12 +4,6 @@
 VERSION=${VERSION:-$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//')}
 CHANGELOG_SOURCE_FILE=${SOURCE_FILE:-"CHANGELOG.md"}
 
-# NOTE:
-# CHANGELOG.md headings are generated like:
-#   ## [1.8.3](...) (YYYY-MM-DD)
-#   #  [1.8.0](...) (YYYY-MM-DD)
-
-
 if [[ -f "$CHANGELOG_SOURCE_FILE" ]]; then
   if [[ -z "$VERSION" ]]; then
     echo "Error: could not determine VERSION from git tags." >&2
@@ -22,11 +16,13 @@ if [[ -f "$CHANGELOG_SOURCE_FILE" ]]; then
     local v="$1"
     awk -v version="$v" '
     BEGIN { in_section = 0; printed = 0 }
-    /^[#][#]? \[[0-9]+\.[0-9]+\.[0-9]+\]/ {
+    # Match headings like:
+    #   ## 1.10.0 (YYYY-MM-DD)
+    #   ## <small>1.8.3 (YYYY-MM-DD)</small>
+    #   ## [1.8.3](...) (YYYY-MM-DD)
+    /^##[[:space:]]/ && match($0, /[0-9]+\.[0-9]+\.[0-9]+/) {
       current = ""
-      if (match($0, /\[[0-9]+\.[0-9]+\.[0-9]+\]/)) {
-        current = substr($0, RSTART + 1, RLENGTH - 2)
-      }
+      current = substr($0, RSTART, RLENGTH)
       if (in_section) exit
       if (current == version) {
         in_section = 1
@@ -54,11 +50,9 @@ if [[ -f "$CHANGELOG_SOURCE_FILE" ]]; then
     # to the newest version present in the changelog.
     latest_in_changelog=$(
       awk '
-        /^[#][#]? \[[0-9]+\.[0-9]+\.[0-9]+\]/ {
-          if (match($0, /\[[0-9]+\.[0-9]+\.[0-9]+\]/)) {
-            print substr($0, RSTART + 1, RLENGTH - 2)
-            exit
-          }
+        /^##[[:space:]]/ && match($0, /[0-9]+\.[0-9]+\.[0-9]+/) {
+          print substr($0, RSTART, RLENGTH)
+          exit
         }
       ' "$CHANGELOG_SOURCE_FILE"
     )
