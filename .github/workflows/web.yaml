@@ -43,11 +43,11 @@ jobs:
               - 'web/**'
               - 'kuba.schema.json'
               - 'kuba-global.schema.json'
-      - if: steps.changes.outputs.web == 'true'
+      - if: steps.changes.outputs.web == 'true' || github.event_name == 'workflow_dispatch'
         uses: voidzero-dev/setup-vp@v1
         with:
           node-version: 24
-      - if: steps.changes.outputs.web == 'true'
+      - if: steps.changes.outputs.web == 'true' || github.event_name == 'workflow_dispatch'
         name: Cache Vite-Plus dependencies
         uses: actions/cache@v5.0.4
         with:
@@ -55,30 +55,30 @@ jobs:
           key: web-vite-plus-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             web-vite-plus-${{ hashFiles('**/pnpm-lock.yaml') }}
-      - if: steps.changes.outputs.web == 'true'
+      - if: steps.changes.outputs.web == 'true' || github.event_name == 'workflow_dispatch'
         name: Install dependencies
         run: vp install
-      - if: steps.changes.outputs.web == 'true'
+      - if: steps.changes.outputs.web == 'true' || github.event_name == 'workflow_dispatch'
         name: Add kuba.schema.json to website
         run: cp kuba.schema.json web/static/kuba.schema.json
-      - if: steps.changes.outputs.web == 'true'
+      - if: steps.changes.outputs.web == 'true' || github.event_name == 'workflow_dispatch'
         name: Add kuba-global.schema.json to website
         run: cp kuba-global.schema.json web/static/kuba-global.schema.json
-      - if: steps.changes.outputs.web == 'true'
+      - if: steps.changes.outputs.web == 'true' || github.event_name == 'workflow_dispatch'
         name: Install dependencies
         run: cd web && vp install
-      - if: steps.changes.outputs.web == 'true'
+      - if: steps.changes.outputs.web == 'true' || github.event_name == 'workflow_dispatch'
         name: Create Website
         run: cd web && vp run build
-      - if: steps.changes.outputs.web == 'true'
+      - if: steps.changes.outputs.web == 'true' || github.event_name == 'workflow_dispatch'
         name: Setup Pages
         uses: actions/configure-pages@v6.0.0
-      - if: steps.changes.outputs.web == 'true'
+      - if: steps.changes.outputs.web == 'true' || github.event_name == 'workflow_dispatch'
         name: Upload artifact
         uses: actions/upload-pages-artifact@v4.0.0
         with:
           path: 'web/build'
-      - if: steps.changes.outputs.web == 'true'
+      - if: steps.changes.outputs.web == 'true' || github.event_name == 'workflow_dispatch'
         name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5.0.0
