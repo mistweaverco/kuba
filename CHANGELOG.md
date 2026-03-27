@@ -3,6 +3,7 @@
 
 ### Bug Fixes
 
+* **ci:** fix changelog generation in detached CI state ([6b08084](https://github.com/mistweaverco/kuba/commit/6b08084f5373d1e750f54c80dc638414e9ff5a20))
 * **ci:** update changelog generation script ([4477e66](https://github.com/mistweaverco/kuba/commit/4477e66c9b52dd20f4a1d23b1f4c1077c063fdd3))
 
 ## [1.8.2](https://github.com/mistweaverco/kuba/compare/v1.8.1...v1.8.2) (2026-03-26)
