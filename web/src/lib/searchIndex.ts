@@ -125,6 +125,12 @@ export const SEARCH_INDEX: SearchEntry[] = [
 		excerpt: 'Example .gitlab-ci.yml using kuba to inject secrets into a CI job.'
 	},
 	{
+		title: 'Node.js examples',
+		href: '/examples#nodejs-express-application',
+		keywords: ['examples', 'nodejs', 'express', 'node', 'typescript'],
+		excerpt: 'Example kuba.yaml for running a Node.js Express application with secrets injected.'
+	},
+	{
 		title: 'Python examples',
 		href: '/examples#python-flask-application',
 		keywords: ['examples', 'python'],
