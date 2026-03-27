@@ -288,6 +288,8 @@ jobs:
         run: |
           {
             echo "RECENT_CHANGES<<EOF"
+            echo ""
+            echo ""
             ./scripts/extract-latest-changes-from-changelog.sh
             echo EOF
           } >> "$GITHUB_ENV"
