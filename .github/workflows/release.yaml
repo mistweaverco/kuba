@@ -279,7 +279,8 @@ jobs:
           path: internal/changelog/changelog.md
       - name: Update Version in PKGBUILD
         run: |
-          VERSION=${{ github.ref_name#v }}
+          VERSION=${GITHUB_REF_NAME#v}
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
           sed -i "s/pkgver=.*/pkgver=$VERSION/" ./scripts/PKGBUILD
       - name: Extract recent changes from changelog
         env:
