@@ -272,18 +272,35 @@ jobs:
       - name: Install dependencies
         run: pacman -Syu --noconfirm pacman-contrib git openssh
       - uses: actions/checkout@v6.0.2
+      - name: Download changelog artifact
+        uses: actions/download-artifact@v8.0.1
+        with:
+          name: changelog
+          path: internal/changelog/changelog.md
       - name: Update Version in PKGBUILD
         run: |
-          VERSION=${{ github.ref_name }}
-          VERSION_NO_V=${VERSION#v}
-          sed -i "s/pkgver=.*/pkgver=$VERSION_NO_V/" ./scripts/PKGBUILD
+          VERSION=${{ github.ref_name#v }}
+          sed -i "s/pkgver=.*/pkgver=$VERSION/" ./scripts/PKGBUILD
+      - name: Extract recent changes from changelog
+        env:
+          CHANGELOG_SOURCE_FILE: internal/changelog/changelog.md
+        run: |
+          {
+            echo "RECENT_CHANGES<<'EOF'"
+            echo ""
+            echo ""
+            ./scripts/extract-latest-changes-from-changelog.sh
+            echo "EOF"
+          } >> "$GITHUB_ENV"
       - name: Publish to AUR
         uses: KSXGitHub/github-actions-deploy-aur@v4.1.1
+        env:
+          CHANGELOG_SOURCE_FILE: internal/changelog/changelog.md
         with:
           pkgname: kuba-bin
           pkgbuild: ./scripts/PKGBUILD
           commit_username: ${{ secrets.AUR_USERNAME }}
           commit_email: ${{ secrets.AUR_EMAIL }}
           ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
-          commit_message: "Update to v${{ env.CLEAN_VERSION }}"
+          commit_message: "v${{ env.VERSION }}${{ env.RECENT_CHANGES }}"
           updpkgsums: true
