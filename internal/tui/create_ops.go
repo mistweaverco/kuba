@@ -40,7 +40,7 @@ func (m *Model) ensureGCPLocationsLoaded() error {
 	if m.selectedEnv == nil || m.selectedEnv.Provider != "gcp" {
 		return nil
 	}
-	if len(m.gcpLocations) > 0 {
+	if len(m.gcpLocationsAll) > 0 {
 		return nil
 	}
 
@@ -60,7 +60,9 @@ func (m *Model) ensureGCPLocationsLoaded() error {
 	if err != nil {
 		return err
 	}
-	m.gcpLocations = locs
+	m.gcpLocationsAll = locs
+	// By default, show all locations (unless defaults later narrow it).
+	m.gcpLocations = append([]string(nil), locs...)
 	return nil
 }
 

@@ -59,7 +59,11 @@ type Model struct {
 	createSummaryTick int
 	createSummaryKey  string
 
-	gcpLocations []string
+	// For GCP Secret Manager, "regions" are called "locations".
+	// gcpLocationsAll is the full supported set (loaded from API).
+	// gcpLocations is what we currently show in the create form (may be filtered by defaults).
+	gcpLocationsAll []string
+	gcpLocations    []string
 
 	confirmText string
 	deleteForm  *huh.Form
