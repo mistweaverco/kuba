@@ -1,10 +1,23 @@
+## Unreleased (2026-03-27)
+
+* fix(ci): enable force deploy in web workflow ([ce3cbd1](https://github.com/mistweaverco/kuba/commit/ce3cbd1))
+* fix(ci): update aur commit format ([c262196](https://github.com/mistweaverco/kuba/commit/c262196))
+
+## <small>1.10.1 (2026-03-27)</small>
+
+* fix(ci): change detection in web workflow ([abfd465](https://github.com/mistweaverco/kuba/commit/abfd465))
+* fix(ci): extract-latest-changes-from-changelog script ([c1465b5](https://github.com/mistweaverco/kuba/commit/c1465b5))
+* fix(ci): fix release to aur workflow step ([2cb50aa](https://github.com/mistweaverco/kuba/commit/2cb50aa))
+
 ## 1.10.0 (2026-03-27)
 
-* feat(release): add changelog to archlinux aur release ([58e6ed4](https://github.com/mistweaverco/kuba/commit/58e6ed4))
-* feat(web): overhaul website ([442e9b1](https://github.com/mistweaverco/kuba/commit/442e9b1))
 * fix(changelog): revert changelog generation script ([7fb1b0a](https://github.com/mistweaverco/kuba/commit/7fb1b0a))
+* fix(ci): Unexpected symbol: 'ref_name#v' ([d8276df](https://github.com/mistweaverco/kuba/commit/d8276df))
 * fix(ci): web workflow - skip steps if no changes ([3c0f5a7](https://github.com/mistweaverco/kuba/commit/3c0f5a7))
 * chore(ci): update upload-pages-artifact action in web ([fb20414](https://github.com/mistweaverco/kuba/commit/fb20414))
+* chore(docs): update changelog ([16cdf0c](https://github.com/mistweaverco/kuba/commit/16cdf0c))
+* feat(release): add changelog to archlinux aur release ([58e6ed4](https://github.com/mistweaverco/kuba/commit/58e6ed4))
+* feat(web): overhaul website ([442e9b1](https://github.com/mistweaverco/kuba/commit/442e9b1))
 
 ## 1.9.0 (2026-03-27)
 
