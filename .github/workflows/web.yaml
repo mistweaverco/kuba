@@ -39,36 +39,43 @@ jobs:
               - 'web/**'
               - 'kuba.schema.json'
               - 'kuba-global.schema.json'
-      - if: steps.changes.outputs.web == 'false'
-        name: "Skip deployment"
-        run: echo "No changes in web, skipping deployment." && exit 0
-      - uses: voidzero-dev/setup-vp@v1
+      - if: steps.changes.outputs.web == 'true'
+        uses: voidzero-dev/setup-vp@v1
         with:
           node-version: 24
-      - name: Cache Vite-Plus dependencies
+      - if: steps.changes.outputs.web == 'true'
+        name: Cache Vite-Plus dependencies
         uses: actions/cache@v5.0.4
         with:
           path: ~/.vite-plus
           key: web-vite-plus-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             web-vite-plus-${{ hashFiles('**/pnpm-lock.yaml') }}
-      - name: Install dependencies
+      - if: steps.changes.outputs.web == 'true'
+        name: Install dependencies
         run: vp install
-      - name: Add kuba.schema.json to website
+      - if: steps.changes.outputs.web == 'true'
+        name: Add kuba.schema.json to website
         run: cp kuba.schema.json web/static/kuba.schema.json
-      - name: Add kuba-global.schema.json to website
+      - if: steps.changes.outputs.web == 'true'
+        name: Add kuba-global.schema.json to website
         run: cp kuba-global.schema.json web/static/kuba-global.schema.json
-      - name: Install dependencies
+      - if: steps.changes.outputs.web == 'true'
+        name: Install dependencies
         run: cd web && vp install
-      - name: Create Website
+      - if: steps.changes.outputs.web == 'true'
+        name: Create Website
         run: cd web && vp run build
-      - name: Setup Pages
+      - if: steps.changes.outputs.web == 'true'
+        name: Setup Pages
         uses: actions/configure-pages@v5.0.0
-      - name: Upload artifact
+      - if: steps.changes.outputs.web == 'true'
+        name: Upload artifact
         uses: actions/upload-pages-artifact@v4.0.0
         with:
           path: 'web/build'
-      - name: Deploy to GitHub Pages
+      - if: steps.changes.outputs.web == 'true'
+        name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5.0.0
         env:
