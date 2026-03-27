@@ -1,6 +1,7 @@
 ## 1.10.0 (2026-03-27)
 
 * feat(release): add changelog to archlinux aur release ([58e6ed4](https://github.com/mistweaverco/kuba/commit/58e6ed4))
+* feat(web): overhaul website ([442e9b1](https://github.com/mistweaverco/kuba/commit/442e9b1))
 * fix(changelog): revert changelog generation script ([7fb1b0a](https://github.com/mistweaverco/kuba/commit/7fb1b0a))
 * fix(ci): web workflow - skip steps if no changes ([3c0f5a7](https://github.com/mistweaverco/kuba/commit/3c0f5a7))
 * chore(ci): update upload-pages-artifact action in web ([fb20414](https://github.com/mistweaverco/kuba/commit/fb20414))
