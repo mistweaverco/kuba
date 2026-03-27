@@ -1,31 +1,7 @@
 <script lang="ts">
 	import HeadComponent from '$lib/HeadComponent.svelte';
 	import ClickableHeadline from '$lib/ClickableHeadline.svelte';
-	import Prism from 'prismjs';
-	import 'prismjs/plugins/toolbar/prism-toolbar';
-	import 'prismjs/plugins/copy-to-clipboard/prism-copy-to-clipboard';
-	import 'prismjs/components/prism-yaml';
-	import 'prismjs/components/prism-bash';
 	import 'dracula-prism/dist/css/dracula-prism.css';
-	import { onMount } from 'svelte';
-
-	onMount(() => {
-		Prism.plugins.toolbar.registerButton(
-			'fullscreen-code',
-			function (env: { element: HTMLElement }) {
-				const button = document.createElement('button');
-				button.innerHTML = '🔍';
-				button.addEventListener('click', function () {
-					const parent = env.element.parentNode as HTMLElement;
-					parent.requestFullscreen();
-				});
-
-				return button;
-			}
-		);
-
-		Prism.highlightAll();
-	});
 </script>
 
 <HeadComponent
@@ -69,6 +45,15 @@
 							This will generate a default <code>kuba.yaml</code> file that you can customize for your
 							needs.
 						</p>
+						<div class="alert alert-info mt-6">
+							<i class="fa-solid fa-info-circle mr-2"></i>
+							<span>
+								<strong>Tip:</strong> You can create your own templates (including one named
+								<code>default</code>). When you run <code>kuba init</code> without a template name,
+								Kuba will use the <code>default</code> template automatically. See
+								<a class="link" href="/usage#create-template">Create Template</a>.
+							</span>
+						</div>
 					</div>
 				</div>
 
@@ -111,6 +96,64 @@
 								data-prismjs-copy="📋"
 								>kuba convert --from ksvc --infile service.yaml --env production</code
 							></pre>
+						<p class="mt-4">
+							You can also import a deployed service directly from your cloud provider (no
+							<code>--infile</code> required). This is useful when you want to bootstrap a
+							<code>kuba.yaml</code> from an existing service definition.
+						</p>
+						<div class="grid md:grid-cols-1 gap-6 mt-4">
+							<div class="card bg-base-300">
+								<div class="card-body">
+									<h4 class="font-bold mb-2">GCP (Cloud Run)</h4>
+									<pre><code
+											class="language-bash"
+											data-toolbar-order="copy-to-clipboard"
+											data-prismjs-copy="📋"
+											>kuba convert --from ksvc \
+  --provider gcp \
+  --project 1337 \
+  --name my-service \
+  --env production</code
+										></pre>
+								</div>
+							</div>
+							<div class="card bg-base-300">
+								<div class="card-body">
+									<h4 class="font-bold mb-2">AWS (App Runner)</h4>
+									<p class="text-sm mb-2">
+										For AWS, <code>--name</code> expects <code>service.region</code>.
+									</p>
+									<pre><code
+											class="language-bash"
+											data-toolbar-order="copy-to-clipboard"
+											data-prismjs-copy="📋"
+											>kuba convert --from ksvc \
+  --provider aws \
+  --project 123456789012 \
+  --name my-service.us-east-1 \
+  --env production</code
+										></pre>
+								</div>
+							</div>
+							<div class="card bg-base-300">
+								<div class="card-body">
+									<h4 class="font-bold mb-2">Azure (Container Apps)</h4>
+									<p class="text-sm mb-2">
+										For Azure, <code>--name</code> expects <code>app.resource-group</code>.
+									</p>
+									<pre><code
+											class="language-bash"
+											data-toolbar-order="copy-to-clipboard"
+											data-prismjs-copy="📋"
+											>kuba convert --from ksvc \
+  --provider azure \
+  --project 00000000-0000-0000-0000-000000000000 \
+  --name my-app.my-resource-group \
+  --env production</code
+										></pre>
+								</div>
+							</div>
+						</div>
 						<p class="mt-4">
 							For Knative Services running on GCP, the environment will default to provider
 							<code>gcp</code> and use the Service's <code>metadata.namespace</code> as the

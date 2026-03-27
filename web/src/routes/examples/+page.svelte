@@ -1,33 +1,7 @@
 <script lang="ts">
 	import HeadComponent from '$lib/HeadComponent.svelte';
 	import ClickableHeadline from '$lib/ClickableHeadline.svelte';
-	import Prism from 'prismjs';
-	import 'prismjs/plugins/toolbar/prism-toolbar';
-	import 'prismjs/plugins/copy-to-clipboard/prism-copy-to-clipboard';
-	import 'prismjs/components/prism-yaml';
-	import 'prismjs/components/prism-bash';
-	import 'prismjs/components/prism-javascript';
-	import 'prismjs/components/prism-python';
 	import 'dracula-prism/dist/css/dracula-prism.css';
-	import { onMount } from 'svelte';
-
-	onMount(() => {
-		Prism.plugins.toolbar.registerButton(
-			'fullscreen-code',
-			function (env: { element: HTMLElement }) {
-				const button = document.createElement('button');
-				button.innerHTML = '🔍';
-				button.addEventListener('click', function () {
-					const parent = env.element.parentNode as HTMLElement;
-					parent.requestFullscreen();
-				});
-
-				return button;
-			}
-		);
-
-		Prism.highlightAll();
-	});
 </script>
 
 <HeadComponent
@@ -68,6 +42,7 @@
 							</p>
 							<pre><code
 									class="language-bash"
+									data-language="bash"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋">kuba run --env production -- node app.js</code
 								></pre>
@@ -80,6 +55,7 @@
 							>
 							<pre><code
 									class="language-yaml"
+									data-language="yaml"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
 									>production:
@@ -103,6 +79,7 @@
 							>
 							<pre><code
 									class="language-javascript"
+									data-language="js"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
 									>const express = require('express');
@@ -126,12 +103,15 @@ app.listen(3000, () => &lbrace;
 
 					<div class="card bg-base-200">
 						<div class="card-body">
-							<h3 class="card-title">Python Flask Application</h3>
+							<ClickableHeadline level={3} id="python-flask-application" className="card-title"
+								>Python Flask Application</ClickableHeadline
+							>
 							<p class="mb-4">
 								Run a Python Flask application with environment-specific configurations:
 							</p>
 							<pre><code
 									class="language-bash"
+									data-language="bash"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋">kuba run --env development -- python app.py</code
 								></pre>
@@ -144,6 +124,7 @@ app.listen(3000, () => &lbrace;
 							>
 							<pre><code
 									class="language-yaml"
+									data-language="yaml"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
 									>development:
@@ -166,6 +147,7 @@ app.listen(3000, () => &lbrace;
 							>
 							<pre><code
 									class="language-python"
+									data-language="python"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
 									>from flask import Flask
@@ -205,6 +187,7 @@ if __name__ == '__main__':
 							<p class="mb-4">Run database migrations with production credentials:</p>
 							<pre><code
 									class="language-bash"
+									data-language="bash"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
 									># Run migrations with production database credentials
@@ -222,6 +205,7 @@ kuba run --env development -- npm run seed</code
 							>
 							<pre><code
 									class="language-yaml"
+									data-language="yaml"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
 									>production:
@@ -252,6 +236,7 @@ development:
 							<p class="mb-4">Connect to external APIs with secure keys:</p>
 							<pre><code
 									class="language-bash"
+									data-language="bash"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋">kuba run --env staging -- python api_client.py</code
 								></pre>
@@ -264,6 +249,7 @@ development:
 							>
 							<pre><code
 									class="language-yaml"
+									data-language="yaml"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
 									>staging:
@@ -286,6 +272,7 @@ development:
 							>
 							<pre><code
 									class="language-python"
+									data-language="python"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
 									>import os
@@ -328,6 +315,7 @@ print("Twilio credentials configured:", bool(os.environ.get('TWILIO_ACCOUNT_SID'
 							<p class="mb-4">Run Docker containers with environment variables from Kuba:</p>
 							<pre><code
 									class="language-bash"
+									data-language="bash"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
 									># Build image with secrets available during build
@@ -355,7 +343,8 @@ docker run --env-file=&lt;(kuba run --env production -- env) myapp
 								>Dockerfile:</ClickableHeadline
 							>
 							<pre><code
-									class="language-dockerfile"
+									class="language-docker"
+									data-language="docker"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
 									>FROM node:18-alpine
@@ -390,6 +379,7 @@ CMD ["npm", "start"]</code
 							<p class="mb-4">Use Kuba with Docker Compose for multi-service applications:</p>
 							<pre><code
 									class="language-bash"
+									data-language="bash"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
 									># Start all services with production secrets
@@ -406,6 +396,7 @@ kuba run --env development -- docker-compose up web</code
 							>
 							<pre><code
 									class="language-yaml"
+									data-language="yaml"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
 									>version: '3.8'
@@ -460,6 +451,7 @@ volumes:
 							<p class="mb-4">Integrate Kuba into GitHub Actions workflows:</p>
 							<pre><code
 									class="language-yaml"
+									data-language="yaml"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
 									>name: Deploy to Production
@@ -506,6 +498,7 @@ jobs:
 							<p class="mb-4">Use Kuba in GitLab CI/CD pipelines:</p>
 							<pre><code
 									class="language-yaml"
+									data-language="yaml"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
 									>stages:
@@ -558,6 +551,7 @@ deploy:
 							</p>
 							<pre><code
 									class="language-bash"
+									data-language="bash"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
 									># Start development server
@@ -581,6 +575,7 @@ kuba run --env development -- npm run start:services</code
 							>
 							<pre><code
 									class="language-yaml"
+									data-language="yaml"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
 									>development:
@@ -618,6 +613,7 @@ testing:
 							<p class="mb-4">Share configuration templates with your team:</p>
 							<pre><code
 									class="language-yaml"
+									data-language="yaml"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
 									># kuba.yaml (commit this to version control)
@@ -671,6 +667,7 @@ development:
 							<p class="mb-4">Use secret paths to bulk-load related secrets:</p>
 							<pre><code
 									class="language-yaml"
+									data-language="yaml"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
 									>production:
@@ -717,6 +714,7 @@ development:
 							<p class="mb-4">Use different cloud providers for different types of secrets:</p>
 							<pre><code
 									class="language-yaml"
+									data-language="yaml"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
 									>production:

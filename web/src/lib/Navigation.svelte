@@ -1,7 +1,44 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
+	import { SEARCH_INDEX } from '$lib/searchIndex';
 
 	$: currentPath = $page.url.pathname;
+
+	let searchQuery = '';
+	let searchOpen = false;
+	let selectedIndex = -1;
+	$: normalizedQuery = searchQuery.trim().toLowerCase();
+	$: searchResults =
+		normalizedQuery.length < 2
+			? []
+			: SEARCH_INDEX.filter((e) => {
+					const haystack =
+						`${e.title} ${e.href} ${e.excerpt ?? ''} ${e.keywords.join(' ')}`.toLowerCase();
+					return haystack.includes(normalizedQuery);
+				}).slice(0, 8);
+	$: selectedIndex =
+		searchResults.length === 0
+			? -1
+			: Math.min(Math.max(selectedIndex, 0), searchResults.length - 1);
+	$: if (searchOpen && searchResults.length > 0 && selectedIndex === -1) {
+		selectedIndex = 0;
+	}
+
+	function closeSearch() {
+		searchOpen = false;
+		selectedIndex = -1;
+	}
+
+	function openSelected() {
+		if (searchResults.length === 0) return;
+		const idx = selectedIndex >= 0 ? selectedIndex : 0;
+		if (idx >= searchResults.length) return;
+		const href = searchResults[idx].href;
+		searchQuery = '';
+		closeSearch();
+		goto(href);
+	}
 
 	const navItems = [
 		{ href: '/', label: 'Home' },
@@ -46,6 +83,86 @@
 		</ul>
 	</div>
 	<div class="navbar-end">
+		<div class="hidden md:flex items-center mr-2 relative">
+			<input
+				class="input input-bordered input-sm w-56"
+				type="search"
+				placeholder="Search docs…"
+				bind:value={searchQuery}
+				on:focus={() => (searchOpen = true)}
+				on:keydown={(e) => {
+					if (e.key === 'Escape') return closeSearch();
+					if (!searchOpen) return;
+
+					if (e.key === 'ArrowDown') {
+						e.preventDefault();
+						if (searchResults.length === 0) return;
+						selectedIndex = selectedIndex < 0 ? 0 : (selectedIndex + 1) % searchResults.length;
+						return;
+					}
+					if (e.key === 'ArrowUp') {
+						e.preventDefault();
+						if (searchResults.length === 0) return;
+						selectedIndex =
+							selectedIndex < 0
+								? searchResults.length - 1
+								: (selectedIndex - 1 + searchResults.length) % searchResults.length;
+						return;
+					}
+					if (e.key === 'Enter') {
+						e.preventDefault();
+						openSelected();
+						return;
+					}
+				}}
+				on:blur={() => {
+					// Allow clicks on results before closing.
+					setTimeout(() => {
+						closeSearch();
+					}, 100);
+				}}
+				aria-label="Search documentation"
+				aria-expanded={searchOpen && searchResults.length > 0}
+				aria-controls="doc-search-results"
+				aria-activedescendant={selectedIndex >= 0
+					? `doc-search-option-${selectedIndex}`
+					: undefined}
+				role="combobox"
+			/>
+			{#if searchOpen && searchResults.length > 0}
+				<div
+					class="absolute right-0 top-10 z-[20] w-80 rounded-box bg-base-100 shadow p-2 border border-base-300"
+				>
+					<ul id="doc-search-results" class="menu" role="listbox">
+						{#each searchResults as r, idx}
+							<li>
+								<a
+									id={`doc-search-option-${idx}`}
+									href={r.href}
+									class={idx === selectedIndex ? 'bg-primary text-primary-content active' : ''}
+									on:click={() => {
+										searchQuery = '';
+										closeSearch();
+									}}
+									on:mouseenter={() => {
+										selectedIndex = idx;
+									}}
+									role="option"
+									aria-selected={idx === selectedIndex}
+								>
+									<div class="flex flex-col">
+										<span class="font-semibold">{r.title}</span>
+										{#if r.excerpt}
+											<span class="text-xs opacity-70">{r.excerpt}</span>
+										{/if}
+									</div>
+								</a>
+							</li>
+						{/each}
+					</ul>
+				</div>
+			{/if}
+		</div>
 		<a
 			href="https://github.com/mistweaverco/kuba"
 			class="btn btn-ghost btn-circle"

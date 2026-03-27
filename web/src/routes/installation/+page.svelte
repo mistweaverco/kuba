@@ -1,13 +1,6 @@
 <script lang="ts">
 	import HeadComponent from '$lib/HeadComponent.svelte';
 	import ClickableHeadline from '$lib/ClickableHeadline.svelte';
-	import Prism from 'prismjs';
-	import 'prismjs/plugins/toolbar/prism-toolbar';
-	import 'prismjs/plugins/copy-to-clipboard/prism-copy-to-clipboard';
-	import 'prismjs/components/prism-bash';
-	import 'prismjs/components/prism-powershell';
-	import 'dracula-prism/dist/css/dracula-prism.css';
-	import { onMount } from 'svelte';
 
 	let installUsing = 'manual';
 
@@ -15,24 +8,6 @@
 		const select = evt.currentTarget as HTMLSelectElement;
 		installUsing = select.value;
 	};
-
-	onMount(() => {
-		Prism.plugins.toolbar.registerButton(
-			'fullscreen-code',
-			function (env: { element: HTMLElement }) {
-				const button = document.createElement('button');
-				button.innerHTML = '🔍';
-				button.addEventListener('click', function () {
-					const parent = env.element.parentNode as HTMLElement;
-					parent.requestFullscreen();
-				});
-
-				return button;
-			}
-		);
-
-		Prism.highlightAll();
-	});
 </script>
 
 <HeadComponent
@@ -74,6 +49,8 @@
 						<option value="curl-bash">curl & bash (Linux/macOS)</option>
 						<option value="wget-zsh">wget & zsh (Linux/macOS)</option>
 						<option value="wget-bash">wget & bash (Linux/macOS)</option>
+						<option value="arch-aur">Arch Linux (AUR)</option>
+						<option value="arch-pkgbuild">Arch Linux (PKGBUILD)</option>
 						<option value="pwsh">PowerShell (Windows)</option>
 					</select>
 				</div>
@@ -84,6 +61,7 @@
 							<h3 class="card-title">curl & zsh (Linux/macOS)</h3>
 							<pre><code
 									class="language-bash"
+									data-language="bash"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋">curl -sSL https://kuba.mwco.app/install.sh | zsh</code
 								></pre>
@@ -94,6 +72,7 @@
 							<h3 class="card-title">curl & bash (Linux/macOS)</h3>
 							<pre><code
 									class="language-bash"
+									data-language="bash"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋">curl -sSL https://kuba.mwco.app/install.sh | bash</code
 								></pre>
@@ -104,6 +83,7 @@
 							<h3 class="card-title">wget & zsh (Linux/macOS)</h3>
 							<pre><code
 									class="language-bash"
+									data-language="bash"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋">wget -qO- https://kuba.mwco.app/install.sh | zsh</code
 								></pre>
@@ -114,9 +94,60 @@
 							<h3 class="card-title">wget & bash (Linux/macOS)</h3>
 							<pre><code
 									class="language-bash"
+									data-language="bash"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋">wget -qO- https://kuba.mwco.app/install.sh | bash</code
 								></pre>
+						</div>
+					</div>
+					<div class="card bg-base-200 {installUsing === 'arch-aur' ? '' : 'hidden'}">
+						<div class="card-body">
+							<h3 class="card-title">Arch Linux (AUR)</h3>
+							<p class="mb-4">
+								Kuba is available in the AUR as <a
+									href="https://aur.archlinux.org/packages/kuba-bin"
+									class="link link-primary">kuba-bin</a
+								>.
+							</p>
+							<pre><code
+									class="language-bash"
+									data-language="bash"
+									data-toolbar-order="copy-to-clipboard"
+									data-prismjs-copy="📋">paru -S kuba-bin</code
+								></pre>
+						</div>
+					</div>
+					<div class="card bg-base-200 {installUsing === 'arch-pkgbuild' ? '' : 'hidden'}">
+						<div class="card-body">
+							<h3 class="card-title">Arch Linux (PKGBUILD)</h3>
+							<p class="mb-4">
+								Kuba ships a <code>PKGBUILD</code> you can use to build and install a
+								<code>kuba-bin</code>
+								package from GitHub release binaries.
+							</p>
+							<pre><code
+									class="language-bash"
+									data-language="bash"
+									data-toolbar-order="copy-to-clipboard"
+									data-prismjs-copy="📋"
+									># One-time setup (build tools)
+sudo pacman -S --needed base-devel git
+
+# Build from the PKGBUILD in the repo
+git clone https://github.com/mistweaverco/kuba.git
+cd kuba/scripts
+
+# Build & install the package
+makepkg -si</code
+								></pre>
+							<div class="alert alert-info mt-4">
+								<i class="fa-solid fa-info-circle mr-2"></i>
+								<span>
+									The package name is <code>kuba-bin</code> and installs the binary as
+									<code>kuba</code>. If you maintain a custom repo / AUR workflow, you can adapt the
+									PKGBUILD.
+								</span>
+							</div>
 						</div>
 					</div>
 					<div class="card bg-base-200 {installUsing === 'pwsh' ? '' : 'hidden'}">
@@ -124,6 +155,7 @@
 							<h3 class="card-title">PowerShell (Windows)</h3>
 							<pre><code
 									class="language-powershell"
+									data-language="powershell"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋">iwr https://kuba.mwco.app/install.ps1 -useb | iex</code
 								></pre>
@@ -192,6 +224,7 @@
 					<p class="mb-4">After installation, verify that Kuba is working correctly:</p>
 					<pre><code
 							class="language-bash"
+							data-language="bash"
 							data-toolbar-order="copy-to-clipboard"
 							data-prismjs-copy="📋">kuba --version</code
 						></pre>

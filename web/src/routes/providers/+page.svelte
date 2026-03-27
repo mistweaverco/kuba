@@ -1,31 +1,7 @@
 <script lang="ts">
 	import HeadComponent from '$lib/HeadComponent.svelte';
 	import ClickableHeadline from '$lib/ClickableHeadline.svelte';
-	import Prism from 'prismjs';
-	import 'prismjs/plugins/toolbar/prism-toolbar';
-	import 'prismjs/plugins/copy-to-clipboard/prism-copy-to-clipboard';
-	import 'prismjs/components/prism-bash';
-	import 'prismjs/components/prism-yaml';
-	import 'prismjs/components/prism-json';
 	import 'dracula-prism/dist/css/dracula-prism.css';
-	import { onMount } from 'svelte';
-
-	onMount(() => {
-		Prism.plugins.toolbar.registerButton(
-			'fullscreen-code',
-			function (env: { element: HTMLElement }) {
-				const button = document.createElement('button');
-				button.innerHTML = '🔍';
-				button.addEventListener('click', function () {
-					const parent = env.element.parentNode as HTMLElement;
-					parent.requestFullscreen();
-				});
-				return button;
-			}
-		);
-
-		Prism.highlightAll();
-	});
 </script>
 
 <HeadComponent
@@ -134,6 +110,7 @@
 							</p>
 							<pre><code
 									class="language-bash"
+									data-language="bash"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
 									>export BITWARDEN_ACCESS_TOKEN="your-access-token"    # or ACCESS_TOKEN
@@ -157,6 +134,7 @@ export BITWARDEN_ORGANIZATION_ID="your-organization-id"</code
 							</p>
 							<pre><code
 									class="language-bash"
+									data-language="bash"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
 									>export BITWARDEN_API_URL="https://your-bitwarden.example.com/api"
@@ -169,6 +147,7 @@ export BITWARDEN_IDENTITY_URL="https://your-bitwarden.example.com/identity"</cod
 							</p>
 							<pre><code
 									class="language-bash"
+									data-language="bash"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
 									>export BITWARDEN_STATE_FILE="$HOME/.local/share/kuba/bitwarden_state.json"</code
@@ -191,6 +170,7 @@ export BITWARDEN_IDENTITY_URL="https://your-bitwarden.example.com/identity"</cod
 							</p>
 							<pre><code
 									class="language-yaml"
+									data-language="yaml"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
 									>default:
@@ -232,6 +212,7 @@ export BITWARDEN_IDENTITY_URL="https://your-bitwarden.example.com/identity"</cod
 									<p class="mb-2">Use gcloud for local development:</p>
 									<pre><code
 											class="language-bash"
+											data-language="bash"
 											data-toolbar-order="copy-to-clipboard"
 											data-prismjs-copy="📋">gcloud auth application-default login</code
 										></pre>
@@ -244,6 +225,7 @@ export BITWARDEN_IDENTITY_URL="https://your-bitwarden.example.com/identity"</cod
 									</p>
 									<pre><code
 											class="language-bash"
+											data-language="bash"
 											data-toolbar-order="copy-to-clipboard"
 											data-prismjs-copy="📋"
 											>export GOOGLE_APPLICATION_CREDENTIALS="/path/to/service-account-key.json"</code
@@ -271,6 +253,7 @@ export BITWARDEN_IDENTITY_URL="https://your-bitwarden.example.com/identity"</cod
 								<p class="mb-4">Make sure the Secret Manager API is enabled in your GCP project:</p>
 								<pre><code
 										class="language-bash"
+										data-language="bash"
 										data-toolbar-order="copy-to-clipboard"
 										data-prismjs-copy="📋">gcloud services enable secretmanager.googleapis.com</code
 									></pre>
@@ -285,6 +268,7 @@ export BITWARDEN_IDENTITY_URL="https://your-bitwarden.example.com/identity"</cod
 								</p>
 								<pre><code
 										class="language-bash"
+										data-language="bash"
 										data-toolbar-order="copy-to-clipboard"
 										data-prismjs-copy="📋"
 										>gcloud projects add-iam-policy-binding PROJECT_ID \
@@ -298,6 +282,7 @@ export BITWARDEN_IDENTITY_URL="https://your-bitwarden.example.com/identity"</cod
 								<h3 class="card-title">4. Configuration Example</h3>
 								<pre><code
 										class="language-yaml"
+										data-language="yaml"
 										data-toolbar-order="copy-to-clipboard"
 										data-prismjs-copy="📋"
 										>default:
@@ -331,6 +316,7 @@ export BITWARDEN_IDENTITY_URL="https://your-bitwarden.example.com/identity"</cod
 									<p class="mb-2">Set AWS credentials:</p>
 									<pre><code
 											class="language-bash"
+											data-language="bash"
 											data-toolbar-order="copy-to-clipboard"
 											data-prismjs-copy="📋"
 											>export AWS_ACCESS_KEY_ID="your-access-key"
@@ -344,6 +330,7 @@ export AWS_REGION="us-east-1"</code
 									<p class="mb-2">Use a specific profile from your AWS credentials file:</p>
 									<pre><code
 											class="language-bash"
+											data-language="bash"
 											data-toolbar-order="copy-to-clipboard"
 											data-prismjs-copy="📋"
 											>export AWS_PROFILE="my-profile"
@@ -372,6 +359,7 @@ export AWS_REGION="us-east-1"</code
 							</p>
 							<pre><code
 									class="language-json"
+									data-language="json"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
 									>&lbrace;
@@ -393,6 +381,7 @@ export AWS_REGION="us-east-1"</code
 							<h3 class="card-title">3. Configuration Example</h3>
 							<pre><code
 									class="language-yaml"
+									data-language="yaml"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
 									>default:
@@ -425,6 +414,7 @@ export AWS_REGION="us-east-1"</code
 									<p class="mb-2">Set the following environment variables:</p>
 									<pre><code
 											class="language-bash"
+											data-language="bash"
 											data-toolbar-order="copy-to-clipboard"
 											data-prismjs-copy="📋"
 											>export AZURE_KEY_VAULT_URL="https://yourvault.vault.azure.net/"
@@ -462,6 +452,7 @@ export AZURE_CLIENT_SECRET="your-client-secret"</code
 							<h3 class="card-title">3. Configuration Example</h3>
 							<pre><code
 									class="language-yaml"
+									data-language="yaml"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
 									>default:
@@ -500,6 +491,7 @@ export AZURE_CLIENT_SECRET="your-client-secret"</code
 							<p class="mb-4">Set up authentication using environment variables:</p>
 							<pre><code
 									class="language-bash"
+									data-language="bash"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
 									>export OPENBAO_ADDR="http://localhost:8200"  # Required: OpenBao server address
@@ -523,6 +515,7 @@ export OPENBAO_NAMESPACE="your-namespace"     # Optional: Namespace (if using en
 							<h3 class="card-title">4. Configuration Example</h3>
 							<pre><code
 									class="language-yaml"
+									data-language="yaml"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
 									>default:
@@ -560,6 +553,7 @@ export OPENBAO_NAMESPACE="your-namespace"     # Optional: Namespace (if using en
 							<h3 class="card-title">2. Configuration Example</h3>
 							<pre><code
 									class="language-yaml"
+									data-language="yaml"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
 									>default:
@@ -584,6 +578,7 @@ export OPENBAO_NAMESPACE="your-namespace"     # Optional: Namespace (if using en
 						<p class="mb-4">You can use different cloud providers in the same configuration:</p>
 						<pre><code
 								class="language-yaml"
+								data-language="yaml"
 								data-toolbar-order="copy-to-clipboard"
 								data-prismjs-copy="📋"
 								>default:
@@ -707,6 +702,7 @@ export OPENBAO_NAMESPACE="your-namespace"     # Optional: Namespace (if using en
 							</p>
 							<pre><code
 									class="language-bash"
+									data-language="bash"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋">kuba run --debug -- echo "Testing connection"</code
 								></pre>

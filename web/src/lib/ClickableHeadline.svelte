@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
+	import { onMount } from 'svelte';
 
 	export let level: 1 | 2 | 3 | 4 | 5 | 6 = 2;
 	export let id: string;
@@ -19,13 +19,13 @@
 				}, 100);
 			}
 		}
-	});
 
-	onDestroy(() => {
-		// Clean up timeout when component is destroyed
-		if (toastTimeout) {
-			clearTimeout(toastTimeout);
-		}
+		return () => {
+			// Clean up timeout when component is destroyed
+			if (toastTimeout) {
+				clearTimeout(toastTimeout);
+			}
+		};
 	});
 
 	function showToastNotification() {
@@ -50,16 +50,19 @@
 		element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
 		// Copy link to clipboard
-		const url = `${window.location.origin}${window.location.pathname}#${id}`;
-		navigator.clipboard
-			.writeText(url)
-			.then(() => {
-				// Show toast notification
-				showToastNotification();
-			})
-			.catch((err) => {
-				console.error('Failed to copy link:', err);
-			});
+		if (typeof window !== 'undefined') {
+			const url = `${window.location.origin}${window.location.pathname}#${id}`;
+			if (navigator?.clipboard?.writeText) {
+				navigator.clipboard
+					.writeText(url)
+					.then(() => {
+						showToastNotification();
+					})
+					.catch((err) => {
+						console.error('Failed to copy link:', err);
+					});
+			}
+		}
 	}
 </script>
 

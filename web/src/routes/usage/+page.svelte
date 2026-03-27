@@ -1,31 +1,7 @@
 <script lang="ts">
 	import HeadComponent from '$lib/HeadComponent.svelte';
 	import ClickableHeadline from '$lib/ClickableHeadline.svelte';
-	import Prism from 'prismjs';
-	import 'prismjs/plugins/toolbar/prism-toolbar';
-	import 'prismjs/plugins/copy-to-clipboard/prism-copy-to-clipboard';
-	import 'prismjs/components/prism-bash';
-	import 'prismjs/components/prism-yaml';
 	import 'dracula-prism/dist/css/dracula-prism.css';
-	import { onMount } from 'svelte';
-
-	onMount(() => {
-		Prism.plugins.toolbar.registerButton(
-			'fullscreen-code',
-			function (env: { element: HTMLElement }) {
-				const button = document.createElement('button');
-				button.innerHTML = '🔍';
-				button.addEventListener('click', function () {
-					const parent = env.element.parentNode as HTMLElement;
-					parent.requestFullscreen();
-				});
-
-				return button;
-			}
-		);
-
-		Prism.highlightAll();
-	});
 </script>
 
 <HeadComponent
@@ -62,6 +38,7 @@
 						<p class="mb-4">The basic syntax for using Kuba is:</p>
 						<pre><code
 								class="language-bash"
+								data-language="bash"
 								data-toolbar-order="copy-to-clipboard"
 								data-prismjs-copy="📋">kuba run -- &lt;your-application&gt;</code
 							></pre>
@@ -81,6 +58,7 @@
 						<p class="mb-4">The basic syntax for running a one-of command with Kuba is:</p>
 						<pre><code
 								class="language-bash"
+								data-language="bash"
 								data-toolbar-order="copy-to-clipboard"
 								data-prismjs-copy="📋">kuba run --command "echo \$SOME_SECRET"</code
 							></pre>
@@ -123,6 +101,7 @@
 						</p>
 						<pre><code
 								class="language-bash"
+								data-language="bash"
 								data-toolbar-order="copy-to-clipboard"
 								data-prismjs-copy="📋"
 								># Only use environment variables from kuba.yaml
@@ -140,6 +119,7 @@ docker run --env-file=&lt;(kuba run --contain -- env) myapp</code
 							<h3 class="card-title">Node.js Application</h3>
 							<pre><code
 									class="language-bash"
+									data-language="bash"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋">kuba run -- node dist/server.js</code
 								></pre>
@@ -151,6 +131,7 @@ docker run --env-file=&lt;(kuba run --contain -- env) myapp</code
 							<h3 class="card-title">Python Application</h3>
 							<pre><code
 									class="language-bash"
+									data-language="bash"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋">kuba run -- python app.py</code
 								></pre>
@@ -162,6 +143,7 @@ docker run --env-file=&lt;(kuba run --contain -- env) myapp</code
 							<h3 class="card-title">Docker Container</h3>
 							<pre><code
 									class="language-bash"
+									data-language="bash"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
 									>docker run --env-file=&lt;(kuba run --contain -- env) myapp</code
@@ -174,6 +156,7 @@ docker run --env-file=&lt;(kuba run --contain -- env) myapp</code
 							<h3 class="card-title">Shell Script</h3>
 							<pre><code
 									class="language-bash"
+									data-language="bash"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋">kuba run -- ./deploy.sh</code
 								></pre>
@@ -196,6 +179,7 @@ docker run --env-file=&lt;(kuba run --contain -- env) myapp</code
 						</p>
 						<pre><code
 								class="language-bash"
+								data-language="bash"
 								data-toolbar-order="copy-to-clipboard"
 								data-prismjs-copy="📋"
 								># Use default environment
@@ -231,16 +215,19 @@ kuba test --config ./config/kuba.yaml --env production</code
 						</p>
 						<pre><code
 								class="language-bash"
+								data-language="bash"
 								data-toolbar-order="copy-to-clipboard"
 								data-prismjs-copy="📋">kuba run --env development -- node app.js</code
 							></pre>
 						<pre><code
 								class="language-bash"
+								data-language="bash"
 								data-toolbar-order="copy-to-clipboard"
 								data-prismjs-copy="📋">kuba run --env staging -- python app.py</code
 							></pre>
 						<pre><code
 								class="language-bash"
+								data-language="bash"
 								data-toolbar-order="copy-to-clipboard"
 								data-prismjs-copy="📋"
 								>docker run --env-file=&lt;(kuba run --env production --contain -- env) myapp</code
@@ -275,6 +262,7 @@ kuba test --config ./config/kuba.yaml --env production</code
 							</p>
 							<pre><code
 									class="language-bash"
+									data-language="bash"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
 									># Start development server with secrets
@@ -297,6 +285,7 @@ kuba run --env development -- npm run migrate</code
 							<p class="mb-4">Integrate Kuba into your CI/CD pipelines:</p>
 							<pre><code
 									class="language-bash"
+									data-language="bash"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
 									># Build and test with staging secrets
@@ -318,6 +307,7 @@ kuba run --env production -- docker push myapp</code
 							<p class="mb-4">Use Kuba with Docker containers:</p>
 							<pre><code
 									class="language-bash"
+									data-language="bash"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋"
 									># Run container with secrets as environment variables
@@ -349,6 +339,7 @@ docker run --env-file=&lt;(kuba run --contain -- env) myapp</code
 							</p>
 							<pre><code
 									class="language-bash"
+									data-language="bash"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋">kuba show</code
 								></pre>
@@ -361,6 +352,7 @@ docker run --env-file=&lt;(kuba run --contain -- env) myapp</code
 							</p>
 							<pre><code
 									class="language-bash"
+									data-language="bash"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋">kuba show --env prod "DATABASE_URL" "LOG_*"</code
 								></pre>
@@ -371,6 +363,7 @@ docker run --env-file=&lt;(kuba run --contain -- env) myapp</code
 							</p>
 							<pre><code
 									class="language-bash"
+									data-language="bash"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋">kuba show --sensitive --env prod "LOG_*"</code
 								></pre>
@@ -393,6 +386,7 @@ docker run --env-file=&lt;(kuba run --contain -- env) myapp</code
 							</p>
 							<pre><code
 									class="language-bash"
+									data-language="bash"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋">kuba update</code
 								></pre>
@@ -400,6 +394,110 @@ docker run --env-file=&lt;(kuba run --contain -- env) myapp</code
 								This command checks for the latest version of Kuba and replaces the current binary
 								with the updated one. It also creates a backup of the existing binary.
 							</p>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section>
+				<ClickableHeadline level={2} id="tui" className="text-3xl font-bold mb-6"
+					>TUI</ClickableHeadline
+				>
+				<div class="space-y-6">
+					<div class="card bg-base-200">
+						<div class="card-body">
+							<h3 class="card-title">Interactive TUI for environments and secrets</h3>
+							<p class="mb-4">
+								Kuba includes an interactive terminal UI for viewing, editing, and adding secrets.
+							</p>
+							<pre><code
+									class="language-bash"
+									data-language="bash"
+									data-toolbar-order="copy-to-clipboard"
+									data-prismjs-copy="📋"
+									># Uses ./kuba.yaml if present, otherwise searches parent directories
+kuba tui
+
+# Or point to a specific file
+kuba tui --config ./config/kuba.yaml</code
+								></pre>
+							<div class="alert alert-info mt-4">
+								<i class="fa-solid fa-info-circle mr-2"></i>
+								<span>
+									The TUI reads your configured providers from <code>kuba.yaml</code>. Make sure
+									you’ve set up auth for your provider(s) first (see
+									<a class="link" href="/providers">Providers</a>).
+								</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section>
+				<ClickableHeadline level={2} id="changelog" className="text-3xl font-bold mb-6"
+					>Changelog</ClickableHeadline
+				>
+				<div class="space-y-6">
+					<div class="card bg-base-200">
+						<div class="card-body">
+							<h3 class="card-title">Show the baked-in changelog</h3>
+							<p class="mb-4">
+								You can view Kuba’s changelog directly in your terminal (rendered as formatted
+								markdown):
+							</p>
+							<pre><code
+									class="language-bash"
+									data-language="bash"
+									data-toolbar-order="copy-to-clipboard"
+									data-prismjs-copy="📋"
+									># Latest section
+kuba changelog latest
+
+# Or a specific version
+kuba changelog 1.8.0</code
+								></pre>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section>
+				<ClickableHeadline level={2} id="create-template" className="text-3xl font-bold mb-6"
+					>Create Template</ClickableHeadline
+				>
+				<div class="space-y-6">
+					<div class="card bg-base-200">
+						<div class="card-body">
+							<h3 class="card-title">Create or edit a user template</h3>
+							<p class="mb-4">
+								Kuba can open a user template in your editor (uses <code>$VISUAL</code> or
+								<code>$EDITOR</code>).
+							</p>
+							<pre><code
+									class="language-bash"
+									data-language="bash"
+									data-toolbar-order="copy-to-clipboard"
+									data-prismjs-copy="📋">kuba create template my-template</code
+								></pre>
+							<div class="alert alert-info mt-4">
+								<i class="fa-solid fa-info-circle mr-2"></i>
+								<span>
+									<strong>Tip:</strong> You can create a template named <code>default</code>. When
+									you run
+									<code>kuba init</code> without a template name, Kuba will use that
+									<code>default</code>
+									template automatically.
+								</span>
+							</div>
+							<div class="alert alert-warning mt-4">
+								<i class="fa-solid fa-triangle-exclamation mr-2"></i>
+								<span>
+									If you see “no default editor is set”, set <code>VISUAL</code> or
+									<code>EDITOR</code>
+									in your shell.
+								</span>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -460,6 +558,7 @@ docker run --env-file=&lt;(kuba run --contain -- env) myapp</code
 							</p>
 							<pre><code
 									class="language-bash"
+									data-language="bash"
 									data-toolbar-order="copy-to-clipboard"
 									data-prismjs-copy="📋">kuba run --debug -- node app.js</code
 								></pre>
