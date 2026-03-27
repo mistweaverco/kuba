@@ -276,7 +276,7 @@ jobs:
         uses: actions/download-artifact@v8.0.1
         with:
           name: changelog
-          path: internal/changelog/changelog.md
+          path: internal/changelog
       - name: Update Version in PKGBUILD
         run: |
           VERSION=${GITHUB_REF_NAME#v}
@@ -287,11 +287,9 @@ jobs:
           CHANGELOG_SOURCE_FILE: internal/changelog/changelog.md
         run: |
           {
-            echo "RECENT_CHANGES<<'EOF'"
-            echo ""
-            echo ""
+            echo "RECENT_CHANGES<<EOF"
             ./scripts/extract-latest-changes-from-changelog.sh
-            echo "EOF"
+            echo EOF
           } >> "$GITHUB_ENV"
       - name: Publish to AUR
         uses: KSXGitHub/github-actions-deploy-aur@v4.1.1
