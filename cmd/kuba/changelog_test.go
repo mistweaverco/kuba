@@ -14,4 +14,3 @@ func TestChangelogCommandRegistered(t *testing.T) {
 		t.Fatalf("expected changelog command to be registered")
 	}
 }
-
