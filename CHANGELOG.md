@@ -1,5 +1,8 @@
-## Unreleased (2026-03-27)
+## 1.11.0 (2026-03-31)
 
+* feat(tui): make tui match vhs-era theme (#72) ([1c91920](https://github.com/mistweaverco/kuba/commit/1c91920)), closes [#72](https://github.com/mistweaverco/kuba/issues/72)
+* feat(web): add nodejs to searchIndex ([7d0acdb](https://github.com/mistweaverco/kuba/commit/7d0acdb))
+* chore(docs): update changelog ([530ad54](https://github.com/mistweaverco/kuba/commit/530ad54))
 * fix(ci): enable force deploy in web workflow ([ce3cbd1](https://github.com/mistweaverco/kuba/commit/ce3cbd1))
 * fix(ci): update aur commit format ([c262196](https://github.com/mistweaverco/kuba/commit/c262196))
 
