@@ -78,6 +78,19 @@ type Model struct {
 	spinner  spinner.Model
 }
 
+func (m *Model) sizeFormToModalBody(f *huh.Form) *huh.Form {
+	if f == nil {
+		return nil
+	}
+	if m.winW <= 0 || m.winH <= 0 {
+		return f
+	}
+	innerW, innerH := panelInnerSize(m.winW, m.winH, panelStyle())
+	// viewModal renders: title + "\n\n" + body
+	bodyH := clampMin(innerH-2, 1)
+	return f.WithWidth(innerW).WithHeight(bodyH)
+}
+
 func New(ctx context.Context, configPath string) (*Model, error) {
 	cfg, err := config.LoadKubaConfig(configPath)
 	if err != nil {
@@ -100,14 +113,17 @@ func New(ctx context.Context, configPath string) (*Model, error) {
 		items = append(items, envItem{name: n})
 	}
 
-	l := list.New(items, list.NewDefaultDelegate(), 0, 0)
+	delegate := vhsEnvDelegate()
+	l := list.New(items, delegate, 0, 0)
 	l.Title = "Environments"
 	l.SetShowHelp(true)
+	l.Styles = vhsListStyles()
 
 	filter := textinput.New()
 	filter.Placeholder = "Filter secrets…"
 	filter.CharLimit = 256
 	filter.Prompt = "/ "
+	filter.SetStyles(vhsSecretsFilterStyles())
 
 	t := table.New(
 		table.WithColumns([]table.Column{
@@ -118,6 +134,7 @@ func New(ctx context.Context, configPath string) (*Model, error) {
 		}),
 		table.WithRows(nil),
 		table.WithFocused(true),
+		table.WithStyles(secretsTableStyles()),
 	)
 
 	return &Model{
@@ -334,10 +351,10 @@ func mask(v string) string {
 }
 
 func (m *Model) viewSecrets() string {
-	header := lipgloss.NewStyle().Bold(true).Render(fmt.Sprintf("Environment: %s", m.selectedEnvName))
-	help := "enter:view  e:edit  n:new  d:delete  /:filter  m:mask  esc:back  q:quit"
+	header := sectionHeaderStyle().Render(fmt.Sprintf("Environment: %s", m.selectedEnvName))
+	help := helpStyle().Render("enter:view  e:edit  n:new  d:delete  /:filter  m:mask  esc:back  q:quit")
 	if m.errMsg != "" {
-		help = "Error: " + m.errMsg + "\n" + help
+		help = errorStyle().Render("Error: "+m.errMsg) + "\n" + help
 	}
 
 	filterLine := ""
@@ -371,8 +388,8 @@ func (m *Model) updateSecrets(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// viewSecrets uses blocks separated by "\n\n", which contributes one empty
 		// line between blocks. So total height is:
 		// sum(blockHeights) + (numBlocks-1).
-		headerH := lipgloss.Height(lipgloss.NewStyle().Bold(true).Render("Environment: X"))
-		helpH := lipgloss.Height("enter:view  e:edit  n:new  d:delete  /:filter  m:mask  esc:back  q:quit")
+		headerH := lipgloss.Height(sectionHeaderStyle().Render("Environment: X"))
+		helpH := lipgloss.Height(helpStyle().Render("enter:view  e:edit  n:new  d:delete  /:filter  m:mask  esc:back  q:quit"))
 		filterVisible := m.filter.Focused() || strings.TrimSpace(m.filter.Value()) != ""
 		filterH := 0
 		if filterVisible {
@@ -444,6 +461,7 @@ func (m *Model) updateSecrets(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.editValue = r.value
 			m.editSave = false
 			m.editForm = m.newEditForm()
+			m.editForm = m.sizeFormToModalBody(m.editForm)
 			m.screen = screenEdit
 			return m, m.editForm.Init()
 		case "d":
@@ -459,6 +477,7 @@ func (m *Model) updateSecrets(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.confirmText = fmt.Sprintf("Delete provider secret '%s'?\n\nEnv var: %s\nProvider: %s", r.ref, r.envVar, r.provider)
 			m.deleteYes = false
 			m.deleteForm = m.newDeleteForm()
+			m.deleteForm = m.sizeFormToModalBody(m.deleteForm)
 			m.screen = screenConfirmDelete
 			return m, m.deleteForm.Init()
 		case "n":
@@ -478,6 +497,7 @@ func (m *Model) updateSecrets(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			m.applyCreateDefaults()
 			m.createForm = m.newCreateForm()
+			m.createForm = m.sizeFormToModalBody(m.createForm)
 			m.screen = screenCreate
 			return m, m.createForm.Init()
 		}
@@ -538,6 +558,7 @@ func (m *Model) updateEdit(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	if m.editForm == nil {
 		m.editForm = m.newEditForm()
+		m.editForm = m.sizeFormToModalBody(m.editForm)
 		return m, m.editForm.Init()
 	}
 
@@ -627,11 +648,7 @@ func (m *Model) updateCreate(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	if m.createForm == nil {
 		m.createForm = m.newCreateForm()
-		if m.winW > 0 && m.winH > 0 {
-			innerW, innerH := panelInnerSize(m.winW, m.winH, panelStyle())
-			bodyH := clampMin(innerH-2, 1)
-			m.createForm = m.createForm.WithWidth(innerW).WithHeight(bodyH)
-		}
+		m.createForm = m.sizeFormToModalBody(m.createForm)
 		return m, m.createForm.Init()
 	}
 
@@ -700,6 +717,7 @@ func (m *Model) updateConfirmDelete(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	if m.deleteForm == nil {
 		m.deleteForm = m.newDeleteForm()
+		m.deleteForm = m.sizeFormToModalBody(m.deleteForm)
 		return m, m.deleteForm.Init()
 	}
 

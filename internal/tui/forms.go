@@ -20,7 +20,7 @@ func (m *Model) newEditForm() *huh.Form {
 				Negative("Cancel").
 				Value(&m.editSave),
 		),
-	)
+	).WithTheme(huh.ThemeFunc(themeVHSEra))
 }
 
 func (m *Model) newDeleteForm() *huh.Form {
@@ -35,7 +35,7 @@ func (m *Model) newDeleteForm() *huh.Form {
 				Negative("Cancel").
 				Value(&m.deleteYes),
 		),
-	)
+	).WithTheme(huh.ThemeFunc(themeVHSEra))
 }
 
 func (m *Model) newErrorForm(title, text string) *huh.Form {
@@ -56,7 +56,7 @@ func (m *Model) newErrorForm(title, text string) *huh.Form {
 				Options(huh.NewOption("Back", "back")).
 				Value(&back),
 		),
-	)
+	).WithTheme(huh.ThemeFunc(themeVHSEra))
 }
 
 func (m *Model) newCreateForm() *huh.Form {
@@ -185,5 +185,5 @@ func (m *Model) newCreateForm() *huh.Form {
 			Value(&m.createAction),
 	)
 
-	return huh.NewForm(huh.NewGroup(mainFields...))
+	return huh.NewForm(huh.NewGroup(mainFields...)).WithTheme(huh.ThemeFunc(themeVHSEra))
 }

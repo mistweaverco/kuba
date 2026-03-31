@@ -34,8 +34,10 @@ func clamp(v, minV, maxV int) int {
 }
 
 func panelStyle() lipgloss.Style {
+	t := vhsEraTheme()
 	return lipgloss.NewStyle().
 		Border(lipgloss.NormalBorder()).
+		BorderForeground(t.BorderActive).
 		Padding(1, 2)
 }
 
