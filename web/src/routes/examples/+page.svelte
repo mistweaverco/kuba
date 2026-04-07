@@ -353,7 +353,7 @@ kuba run --env development -- docker-compose up web`}
 							>
 							<CodeBlock
 								lang="yaml"
-								meta="path=kuba.yaml"
+								meta="path=docker-compose.yml"
 								code={`version: '3.8'
 services:
   web:
