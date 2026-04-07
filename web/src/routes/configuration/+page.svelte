@@ -1,7 +1,7 @@
 <script lang="ts">
 	import HeadComponent from '$lib/HeadComponent.svelte';
 	import ClickableHeadline from '$lib/ClickableHeadline.svelte';
-	import 'dracula-prism/dist/css/dracula-prism.css';
+	import CodeBlock from '$lib/CodeBlock.svelte';
 </script>
 
 <HeadComponent
@@ -36,11 +36,7 @@
 						<p class="mb-4">
 							Start by creating a configuration file using the <code>kuba init</code> command:
 						</p>
-						<pre><code
-								class="language-bash"
-								data-toolbar-order="copy-to-clipboard"
-								data-prismjs-copy="📋">kuba init</code
-							></pre>
+						<CodeBlock lang="bash" code={`kuba init`} />
 						<p class="mt-4">
 							This will generate a default <code>kuba.yaml</code> file that you can customize for your
 							needs.
@@ -66,11 +62,7 @@
 							You can also create a configuration file by importing existing environment variables
 							from a <code>.env</code> file using the following command:
 						</p>
-						<pre><code
-								class="language-bash"
-								data-toolbar-order="copy-to-clipboard"
-								data-prismjs-copy="📋">kuba convert --from dotenv --infile .env</code
-							></pre>
+						<CodeBlock lang="bash" code={`kuba convert --from dotenv --infile .env`} />
 						<p class="mt-4">
 							See <code>kuba convert --help</code> for more options on importing from different formats.
 						</p>
@@ -90,12 +82,10 @@
 							<code>env</code> entries, convert hard-coded values to <code>value</code> mappings and
 							<code>valueFrom.secretKeyRef</code> entries to <code>secret-key</code> mappings.
 						</p>
-						<pre><code
-								class="language-bash"
-								data-toolbar-order="copy-to-clipboard"
-								data-prismjs-copy="📋"
-								>kuba convert --from ksvc --infile service.yaml --env production</code
-							></pre>
+						<CodeBlock
+							lang="bash"
+							code={`kuba convert --from ksvc --infile service.yaml --env production`}
+						/>
 						<p class="mt-4">
 							You can also import a deployed service directly from your cloud provider (no
 							<code>--infile</code> required). This is useful when you want to bootstrap a
@@ -105,16 +95,14 @@
 							<div class="card bg-base-300">
 								<div class="card-body">
 									<h4 class="font-bold mb-2">GCP (Cloud Run)</h4>
-									<pre><code
-											class="language-bash"
-											data-toolbar-order="copy-to-clipboard"
-											data-prismjs-copy="📋"
-											>kuba convert --from ksvc \
-  --provider gcp \
-  --project 1337 \
-  --name my-service \
-  --env production</code
-										></pre>
+									<CodeBlock
+										lang="bash"
+										code={`kuba convert --from ksvc \\
+  --provider gcp \\
+  --project 1337 \\
+  --name my-service \\
+  --env production`}
+									/>
 								</div>
 							</div>
 							<div class="card bg-base-300">
@@ -123,16 +111,14 @@
 									<p class="text-sm mb-2">
 										For AWS, <code>--name</code> expects <code>service.region</code>.
 									</p>
-									<pre><code
-											class="language-bash"
-											data-toolbar-order="copy-to-clipboard"
-											data-prismjs-copy="📋"
-											>kuba convert --from ksvc \
-  --provider aws \
-  --project 123456789012 \
-  --name my-service.us-east-1 \
-  --env production</code
-										></pre>
+									<CodeBlock
+										lang="bash"
+										code={`kuba convert --from ksvc \\
+  --provider aws \\
+  --project 123456789012 \\
+  --name my-service.us-east-1 \\
+  --env production`}
+									/>
 								</div>
 							</div>
 							<div class="card bg-base-300">
@@ -141,16 +127,14 @@
 									<p class="text-sm mb-2">
 										For Azure, <code>--name</code> expects <code>app.resource-group</code>.
 									</p>
-									<pre><code
-											class="language-bash"
-											data-toolbar-order="copy-to-clipboard"
-											data-prismjs-copy="📋"
-											>kuba convert --from ksvc \
-  --provider azure \
-  --project 00000000-0000-0000-0000-000000000000 \
-  --name my-app.my-resource-group \
-  --env production</code
-										></pre>
+									<CodeBlock
+										lang="bash"
+										code={`kuba convert --from ksvc \\
+  --provider azure \\
+  --project 00000000-0000-0000-0000-000000000000 \\
+  --name my-app.my-resource-group \\
+  --env production`}
+									/>
 								</div>
 							</div>
 						</div>
@@ -177,11 +161,10 @@
 							The <code>kuba.yaml</code> file is organized into environment sections, each with its own
 							provider and env:
 						</p>
-						<pre><code
-								class="language-yaml"
-								data-toolbar-order="copy-to-clipboard"
-								data-prismjs-copy="📋"
-								># yaml-language-server: $schema=https://kuba.mwco.app/kuba.schema.json
+						<CodeBlock
+							lang="yaml"
+							meta="path=kuba.yaml"
+							code={`# yaml-language-server: $schema=https://kuba.mwco.app/kuba.schema.json
 ---
 default:
   provider: gcp
@@ -204,8 +187,8 @@ production:
   project: 1337
   env:
     PROD_DATABASE_URL:
-      secret-key: "prod-database-connection-string"</code
-							></pre>
+      secret-key: "prod-database-connection-string"`}
+						/>
 					</div>
 				</div>
 
@@ -261,16 +244,15 @@ production:
 						<div class="card-body">
 							<h3 class="card-title">Individual Secrets (secret-key)</h3>
 							<p class="mb-4">Fetch a single secret from your cloud provider:</p>
-							<pre><code
-									class="language-yaml"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋"
-									>env:
+							<CodeBlock
+								lang="yaml"
+								meta="path=kuba.yaml"
+								code={`env:
   DATABASE_URL:
     secret-key: "database-connection-string"
   API_KEY:
-    secret-key: "external-api-key"</code
-								></pre>
+    secret-key: "external-api-key"`}
+							/>
 						</div>
 					</div>
 
@@ -278,16 +260,15 @@ production:
 						<div class="card-body">
 							<h3 class="card-title">Secret Paths (secret-path)</h3>
 							<p class="mb-4">Fetch all secrets under a specific path prefix:</p>
-							<pre><code
-									class="language-yaml"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋"
-									>env:
+							<CodeBlock
+								lang="yaml"
+								meta="path=kuba.yaml"
+								code={`env:
   DB:
     secret-path: "database"
   API:
-    secret-path: "external-apis"</code
-								></pre>
+    secret-path: "external-apis"`}
+							/>
 							<p class="mt-4 text-sm">
 								This will create environment variables like <code>DB_CONNECTION_STRING</code>,
 								<code>DB_USERNAME</code>, <code>API_STRIPE_KEY</code>, etc.
@@ -299,16 +280,15 @@ production:
 						<div class="card-body">
 							<h3 class="card-title">Hard-coded Values (value)</h3>
 							<p class="mb-4">Set static environment variables:</p>
-							<pre><code
-									class="language-yaml"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋"
-									>env:
+							<CodeBlock
+								lang="yaml"
+								meta="path=kuba.yaml"
+								code={`env:
   APP_ENV:
     value: "production"
   DEBUG:
-    value: "false"</code
-								></pre>
+    value: "false"`}
+							/>
 						</div>
 					</div>
 				</div>
@@ -329,18 +309,17 @@ production:
 								>$&lbrace;VAR_NAME&rbrace;</code
 							> syntax:
 						</p>
-						<pre><code
-								class="language-yaml"
-								data-toolbar-order="copy-to-clipboard"
-								data-prismjs-copy="📋"
-								>env:
+						<CodeBlock
+							lang="yaml"
+							meta="path=kuba.yaml"
+							code={`env:
   DB_PASSWORD:
     secret-key: "db-password"
   DB_HOST:
     value: "mydbhost"
   DB_CONNECTION_STRING:
-    value: "postgresql://user:$&lbrace;DB_PASSWORD&rbrace;@$&lbrace;DB_HOST&rbrace;:5432/mydb"</code
-							></pre>
+    value: "postgresql://user:\${DB_PASSWORD}@\${DB_HOST}:5432/mydb"`}
+						/>
 					</div>
 				</div>
 
@@ -349,13 +328,12 @@ production:
 						<div class="card-body">
 							<h3 class="card-title">System Environment Variables</h3>
 							<p>Reference system environment variables:</p>
-							<pre><code
-									class="language-yaml"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋"
-									>API_URL:
-  value: "https://api.$&lbrace;DOMAIN&rbrace;/v1"</code
-								></pre>
+							<CodeBlock
+								lang="yaml"
+								meta="path=kuba.yaml"
+								code={`API_URL:
+  value: "https://api.\${DOMAIN}/v1"`}
+							/>
 						</div>
 					</div>
 
@@ -363,13 +341,12 @@ production:
 						<div class="card-body">
 							<h3 class="card-title">Default Values</h3>
 							<p>Provide fallback values with <code>$&lbrace;VAR:-default&rbrace;</code> syntax:</p>
-							<pre><code
-									class="language-yaml"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋"
-									>REDIS_URL:
-  value: "redis://$&lbrace;REDIS_HOST:-localhost&rbrace;:$&lbrace;REDIS_PORT:-6379&rbrace;/0"</code
-								></pre>
+							<CodeBlock
+								lang="yaml"
+								meta="path=kuba.yaml"
+								code={`REDIS_URL:
+  value: "redis://\${REDIS_HOST:-localhost}:\${REDIS_PORT:-6379}/0"`}
+							/>
 						</div>
 					</div>
 				</div>
@@ -396,11 +373,10 @@ production:
 						<p class="mb-4">
 							You can fetch secrets from different cloud providers in the same configuration:
 						</p>
-						<pre><code
-								class="language-yaml"
-								data-toolbar-order="copy-to-clipboard"
-								data-prismjs-copy="📋"
-								>default:
+						<CodeBlock
+							lang="yaml"
+							meta="path=kuba.yaml"
+							code={`default:
   provider: gcp
   project: 1337
   env:
@@ -412,8 +388,8 @@ production:
     AZURE_PROJECT_ID:
       secret-key: "azure_project_secret"
       provider: azure
-      project: "my-azure-project"</code
-							></pre>
+      project: "my-azure-project"`}
+						/>
 					</div>
 				</div>
 			</section>
@@ -427,11 +403,10 @@ production:
 					<div class="card-body">
 						<h3 class="card-title">Full Configuration Example</h3>
 						<p class="mb-4">Here's a comprehensive example showing all features:</p>
-						<pre><code
-								class="language-yaml"
-								data-toolbar-order="copy-to-clipboard"
-								data-prismjs-copy="📋"
-								># yaml-language-server: $schema=https://kuba.mwco.app/kuba.schema.json
+						<CodeBlock
+							lang="yaml"
+							meta="path=kuba.yaml"
+							code={`# yaml-language-server: $schema=https://kuba.mwco.app/kuba.schema.json
 ---
 default:
   provider: gcp
@@ -457,9 +432,9 @@ default:
 
     # Interpolated values
     REDIS_URL:
-      value: "redis://$&lbrace;REDIS_HOST:-localhost$&rbrace;:$&lbrace;REDIS_PORT:-6379&rbrace;/0"
+      value: "redis://\${REDIS_HOST:-localhost$}:\${REDIS_PORT:-6379}/0"
     LOG_LEVEL:
-      value: "$&lbrace;LOG_LEVEL:-info&rbrace;"
+      value: "\${LOG_LEVEL:-info}"
 
 development:
   provider: gcp
@@ -490,8 +465,8 @@ production:
     APP_ENV:
       value: "production"
     DEBUG:
-      value: "false"</code
-							></pre>
+      value: "false"`}
+						/>
 					</div>
 				</div>
 			</section>
@@ -514,12 +489,11 @@ production:
 						<p class="mb-4">
 							Caching is off by default. To enable caching, run the following command:
 						</p>
-						<pre><code
-								class="language-bash"
-								data-toolbar-order="copy-to-clipboard"
-								data-prismjs-copy="📋"
-								>kuba config cache --enable --ttl 14d
-</code></pre>
+						<CodeBlock
+							lang="bash"
+							code={`kuba config cache --enable --ttl 14d
+`}
+						/>
 						<p class="mb-4">
 							This will enable caching of secrets locally, with a time-to-live (TTL) of 14 days. You
 							can adjust the TTL as needed.

@@ -1,6 +1,7 @@
 {
   "name": "kuba",
   "private": true,
+	"type": "module",
   "scripts": {
     "changelog": "./scripts/generate-changelog.sh",
     "preview:docs": "mdts .",

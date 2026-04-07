@@ -4,15 +4,24 @@ This is the source code for [kuba.mwco.app](https://kuba.mwco.app).
 
 ## Developing
 
+Requirements:
+
+- [Node.js](https://nodejs.org/)
+- [Vite+](https://viteplus.dev/)
+
 Once you've cloned the project and
-installed dependencies with `bun install --frozen-lockfile`,
+installed dependencies with `vp install`,
 start a development server:
 
 ```sh
-bun run dev
+vp run dev --open
+```
 
-# or start the server and open the app in a new browser tab
-bun run dev -- --open
+Lintintg and formatting can be done with:
+
+```sh
+vp lint
+vp fmt
 ```
 
 ## Building
@@ -20,7 +29,7 @@ bun run dev -- --open
 To create a production version of this app:
 
 ```sh
-bun run build
+vp run build
 ```
 
-You can preview the production build with `bun run preview`.
+You can preview the production build with `vp run preview`.
