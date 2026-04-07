@@ -1,6 +1,7 @@
 <script lang="ts">
 	import HeadComponent from '$lib/HeadComponent.svelte';
 	import ClickableHeadline from '$lib/ClickableHeadline.svelte';
+	import CodeBlock from '$lib/CodeBlock.svelte';
 
 	let installUsing = 'manual';
 
@@ -59,45 +60,25 @@
 					<div class="card bg-base-200 {installUsing === 'curl-zsh' ? '' : 'hidden'}">
 						<div class="card-body">
 							<h3 class="card-title">curl & zsh (Linux/macOS)</h3>
-							<pre><code
-									class="language-bash"
-									data-language="bash"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋">curl -sSL https://kuba.mwco.app/install.sh | zsh</code
-								></pre>
+							<CodeBlock lang="bash" code={`curl -sSL https://kuba.mwco.app/install.sh | zsh`} />
 						</div>
 					</div>
 					<div class="card bg-base-200 {installUsing === 'curl-bash' ? '' : 'hidden'}">
 						<div class="card-body">
 							<h3 class="card-title">curl & bash (Linux/macOS)</h3>
-							<pre><code
-									class="language-bash"
-									data-language="bash"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋">curl -sSL https://kuba.mwco.app/install.sh | bash</code
-								></pre>
+							<CodeBlock lang="bash" code={`curl -sSL https://kuba.mwco.app/install.sh | bash`} />
 						</div>
 					</div>
 					<div class="card bg-base-200 {installUsing === 'wget-zsh' ? '' : 'hidden'}">
 						<div class="card-body">
 							<h3 class="card-title">wget & zsh (Linux/macOS)</h3>
-							<pre><code
-									class="language-bash"
-									data-language="bash"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋">wget -qO- https://kuba.mwco.app/install.sh | zsh</code
-								></pre>
+							<CodeBlock lang="bash" code={`wget -qO- https://kuba.mwco.app/install.sh | zsh`} />
 						</div>
 					</div>
 					<div class="card bg-base-200 {installUsing === 'wget-bash' ? '' : 'hidden'}">
 						<div class="card-body">
 							<h3 class="card-title">wget & bash (Linux/macOS)</h3>
-							<pre><code
-									class="language-bash"
-									data-language="bash"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋">wget -qO- https://kuba.mwco.app/install.sh | bash</code
-								></pre>
+							<CodeBlock lang="bash" code={`wget -qO- https://kuba.mwco.app/install.sh | bash`} />
 						</div>
 					</div>
 					<div class="card bg-base-200 {installUsing === 'arch-aur' ? '' : 'hidden'}">
@@ -109,12 +90,7 @@
 									class="link link-primary">kuba-bin</a
 								>.
 							</p>
-							<pre><code
-									class="language-bash"
-									data-language="bash"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋">paru -S kuba-bin</code
-								></pre>
+							<CodeBlock lang="bash" code={`paru -S kuba-bin`} />
 						</div>
 					</div>
 					<div class="card bg-base-200 {installUsing === 'arch-pkgbuild' ? '' : 'hidden'}">
@@ -125,12 +101,9 @@
 								<code>kuba-bin</code>
 								package from GitHub release binaries.
 							</p>
-							<pre><code
-									class="language-bash"
-									data-language="bash"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋"
-									># One-time setup (build tools)
+							<CodeBlock
+								lang="bash"
+								code={`# One-time setup (build tools)
 sudo pacman -S --needed base-devel git
 
 # Build from the PKGBUILD in the repo
@@ -138,8 +111,8 @@ git clone https://github.com/mistweaverco/kuba.git
 cd kuba/scripts
 
 # Build & install the package
-makepkg -si</code
-								></pre>
+makepkg -si`}
+							/>
 							<div class="alert alert-info mt-4">
 								<i class="fa-solid fa-info-circle mr-2"></i>
 								<span>
@@ -153,12 +126,10 @@ makepkg -si</code
 					<div class="card bg-base-200 {installUsing === 'pwsh' ? '' : 'hidden'}">
 						<div class="card-body">
 							<h3 class="card-title">PowerShell (Windows)</h3>
-							<pre><code
-									class="language-powershell"
-									data-language="powershell"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋">iwr https://kuba.mwco.app/install.ps1 -useb | iex</code
-								></pre>
+							<CodeBlock
+								lang="powershell"
+								code={`iwr https://kuba.mwco.app/install.ps1 -useb | iex`}
+							/>
 						</div>
 					</div>
 					<div class="card bg-base-200 {installUsing === 'manual' ? '' : 'hidden'}">
@@ -222,12 +193,7 @@ makepkg -si</code
 			<div class="card bg-base-200">
 				<div class="card-body">
 					<p class="mb-4">After installation, verify that Kuba is working correctly:</p>
-					<pre><code
-							class="language-bash"
-							data-language="bash"
-							data-toolbar-order="copy-to-clipboard"
-							data-prismjs-copy="📋">kuba --version</code
-						></pre>
+					<CodeBlock lang="bash" code={`kuba --version`} />
 					<p class="mt-4 text-sm text-base-content/70">
 						You should see the current version of Kuba displayed.
 					</p>

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import HeadComponent from '$lib/HeadComponent.svelte';
 	import ClickableHeadline from '$lib/ClickableHeadline.svelte';
-	import 'dracula-prism/dist/css/dracula-prism.css';
+	import CodeBlock from '$lib/CodeBlock.svelte';
 </script>
 
 <HeadComponent
@@ -40,12 +40,7 @@
 							<p class="mb-4">
 								Run a Node.js Express application with database credentials and API keys:
 							</p>
-							<pre><code
-									class="language-bash"
-									data-language="bash"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋">kuba run --env production -- node app.js</code
-								></pre>
+							<CodeBlock lang="bash" code={`kuba run --env production -- node app.js`} />
 
 							<ClickableHeadline
 								level={4}
@@ -53,12 +48,10 @@
 								className="font-bold mt-4 mb-2 text-left"
 								>Configuration (kuba.yaml):</ClickableHeadline
 							>
-							<pre><code
-									class="language-yaml"
-									data-language="yaml"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋"
-									>production:
+							<CodeBlock
+								lang="yaml"
+								meta="path=kuba.yaml"
+								code={`production:
   provider: gcp
   project: 1337
   env:
@@ -69,20 +62,17 @@
     STRIPE_SECRET_KEY:
       secret-key: "stripe-secret-key"
     REDIS_URL:
-      value: "redis://$&lbrace;REDIS_HOST:-localhost&rbrace;:6379"</code
-								></pre>
+      value: "redis://\${REDIS_HOST:-localhost}:6379"`}
+							/>
 
 							<ClickableHeadline
 								level={4}
 								id="nodejs-application-code"
 								className="font-bold mt-4 mb-2 text-left">Application Code:</ClickableHeadline
 							>
-							<pre><code
-									class="language-javascript"
-									data-language="js"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋"
-									>const express = require('express');
+							<CodeBlock
+								lang="javascript"
+								code={`const express = require('express');
 const app = express();
 
 // Environment variables are automatically available
@@ -94,10 +84,10 @@ const redisUrl = process.env.REDIS_URL;
 console.log('Database URL:', dbUrl);
 console.log('Redis URL:', redisUrl);
 
-app.listen(3000, () => &lbrace;
+app.listen(3000, () => {
   console.log('Server running on port 3000');
-&rbrace;);</code
-								></pre>
+});`}
+							/>
 						</div>
 					</div>
 
@@ -109,12 +99,7 @@ app.listen(3000, () => &lbrace;
 							<p class="mb-4">
 								Run a Python Flask application with environment-specific configurations:
 							</p>
-							<pre><code
-									class="language-bash"
-									data-language="bash"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋">kuba run --env development -- python app.py</code
-								></pre>
+							<CodeBlock lang="bash" code={`kuba run --env development -- python app.py`} />
 
 							<ClickableHeadline
 								level={4}
@@ -122,12 +107,10 @@ app.listen(3000, () => &lbrace;
 								className="font-bold mt-4 mb-2 text-left"
 								>Configuration (kuba.yaml):</ClickableHeadline
 							>
-							<pre><code
-									class="language-yaml"
-									data-language="yaml"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋"
-									>development:
+							<CodeBlock
+								lang="yaml"
+								meta="path=kuba.yaml"
+								code={`development:
   provider: aws
   env:
     FLASK_ENV:
@@ -137,20 +120,17 @@ app.listen(3000, () => &lbrace;
     SECRET_KEY:
       secret-key: "flask-secret-key"
     DEBUG:
-      value: "true"</code
-								></pre>
+      value: "true"`}
+							/>
 
 							<ClickableHeadline
 								level={4}
 								id="python-application-code"
 								className="font-bold mt-4 mb-2 text-left">Application Code:</ClickableHeadline
 							>
-							<pre><code
-									class="language-python"
-									data-language="python"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋"
-									>from flask import Flask
+							<CodeBlock
+								lang="python"
+								code={`from flask import Flask
 import os
 
 app = Flask(__name__)
@@ -160,12 +140,12 @@ app.config['DATABASE_URL'] = os.environ.get('DATABASE_URL')
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 app.config['DEBUG'] = os.environ.get('DEBUG', 'false').lower() == 'true'
 
-print(f"Database URL: &lbrace;app.config['DATABASE_URL']&rbrace;")
-print(f"Debug mode: &lbrace;app.config['DEBUG']&rbrace;")
+print(f"Database URL: {app.config['DATABASE_URL']}")
+print(f"Debug mode: {app.config['DEBUG']}")
 
 if __name__ == '__main__':
-    app.run(debug=app.config['DEBUG'])</code
-								></pre>
+    app.run(debug=app.config['DEBUG'])`}
+							/>
 						</div>
 					</div>
 				</div>
@@ -185,17 +165,14 @@ if __name__ == '__main__':
 								>Database Migrations</ClickableHeadline
 							>
 							<p class="mb-4">Run database migrations with production credentials:</p>
-							<pre><code
-									class="language-bash"
-									data-language="bash"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋"
-									># Run migrations with production database credentials
+							<CodeBlock
+								lang="bash"
+								code={`# Run migrations with production database credentials
 kuba run --env production -- npm run migrate
 
 # Run seed data with development database
-kuba run --env development -- npm run seed</code
-								></pre>
+kuba run --env development -- npm run seed`}
+							/>
 
 							<ClickableHeadline
 								level={4}
@@ -203,12 +180,10 @@ kuba run --env development -- npm run seed</code
 								className="font-bold mt-4 mb-2 text-left"
 								>Configuration (kuba.yaml):</ClickableHeadline
 							>
-							<pre><code
-									class="language-yaml"
-									data-language="yaml"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋"
-									>production:
+							<CodeBlock
+								lang="yaml"
+								meta="path=kuba.yaml"
+								code={`production:
   provider: gcp
   project: 1337
   env:
@@ -223,8 +198,8 @@ development:
     DATABASE_URL:
       secret-key: "dev-postgres-url"
     DB_PASSWORD:
-      secret-key: "dev-db-password"</code
-								></pre>
+      secret-key: "dev-db-password"`}
+							/>
 						</div>
 					</div>
 
@@ -234,12 +209,7 @@ development:
 								>External API Integration</ClickableHeadline
 							>
 							<p class="mb-4">Connect to external APIs with secure keys:</p>
-							<pre><code
-									class="language-bash"
-									data-language="bash"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋">kuba run --env staging -- python api_client.py</code
-								></pre>
+							<CodeBlock lang="bash" code={`kuba run --env staging -- python api_client.py`} />
 
 							<ClickableHeadline
 								level={4}
@@ -247,12 +217,10 @@ development:
 								className="font-bold mt-4 mb-2 text-left"
 								>Configuration (kuba.yaml):</ClickableHeadline
 							>
-							<pre><code
-									class="language-yaml"
-									data-language="yaml"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋"
-									>staging:
+							<CodeBlock
+								lang="yaml"
+								meta="path=kuba.yaml"
+								code={`staging:
   provider: azure
   env:
     STRIPE_API_KEY:
@@ -262,20 +230,17 @@ development:
     TWILIO_ACCOUNT_SID:
       secret-key: "twilio-account-sid"
     TWILIO_AUTH_TOKEN:
-      secret-key: "twilio-auth-token"</code
-								></pre>
+      secret-key: "twilio-auth-token"`}
+							/>
 
 							<ClickableHeadline
 								level={4}
 								id="external-api-integration-api-client-code"
 								className="font-bold mt-4 mb-2 text-left">API Client Code:</ClickableHeadline
 							>
-							<pre><code
-									class="language-python"
-									data-language="python"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋"
-									>import os
+							<CodeBlock
+								lang="python"
+								code={`import os
 import stripe
 import sendgrid
 from twilio.rest import Client
@@ -292,8 +257,8 @@ twilio_client = Client(
 
 print("Stripe API key configured:", bool(stripe.api_key))
 print("SendGrid API key configured:", bool(os.environ.get('SENDGRID_API_KEY')))
-print("Twilio credentials configured:", bool(os.environ.get('TWILIO_ACCOUNT_SID')))</code
-								></pre>
+print("Twilio credentials configured:", bool(os.environ.get('TWILIO_ACCOUNT_SID')))`}
+							/>
 						</div>
 					</div>
 				</div>
@@ -313,41 +278,36 @@ print("Twilio credentials configured:", bool(os.environ.get('TWILIO_ACCOUNT_SID'
 								>Docker Container with Secrets</ClickableHeadline
 							>
 							<p class="mb-4">Run Docker containers with environment variables from Kuba:</p>
-							<pre><code
-									class="language-bash"
-									data-language="bash"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋"
-									># Build image with secrets available during build
-kuba run --env production -- docker build \
-  --build-arg DATABASE_URL \
-  --build-arg API_KEY \
+							<CodeBlock
+								lang="bash"
+								code={`# Build image with secrets available during build
+kuba run --env production -- docker build \\
+  --build-arg DATABASE_URL \\
+  --build-arg API_KEY \\
   -t myapp .
 
 # Run container with secrets as environment variables
-kuba run --env production -- docker run \
-  -e DATABASE_URL \
-  -e API_KEY \
-  -e REDIS_URL \
-  -p 3000:3000 \
+kuba run --env production -- docker run \\
+  -e DATABASE_URL \\
+  -e API_KEY \\
+  -e REDIS_URL \\
+  -p 3000:3000 \\
   myapp
 
 # Use --contain to avoid inheriting host environment
-docker run --env-file=&lt;(kuba run --env production --contain -- env) myapp
+docker run --env-file=<(kuba run --env production --contain -- env) myapp
 
 # or pass full host environment including Kuba-managed vars
-docker run --env-file=&lt;(kuba run --env production -- env) myapp
-							</code></pre>
+docker run --env-file=<(kuba run --env production -- env) myapp
+							`}
+							/>
 
 							<ClickableHeadline level={4} id="dockerfile" className="font-bold mt-4 mb-2 text-left"
 								>Dockerfile:</ClickableHeadline
 							>
-							<pre><code
-									class="language-docker"
-									data-language="docker"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋"
-									>FROM node:18-alpine
+							<CodeBlock
+								lang="docker"
+								code={`FROM node:18-alpine
 
 WORKDIR /app
 
@@ -366,8 +326,8 @@ ENV API_KEY=$API_KEY
 
 EXPOSE 3000
 
-CMD ["npm", "start"]</code
-								></pre>
+CMD ["npm", "start"]`}
+							/>
 						</div>
 					</div>
 
@@ -377,29 +337,24 @@ CMD ["npm", "start"]</code
 								>Docker Compose Integration</ClickableHeadline
 							>
 							<p class="mb-4">Use Kuba with Docker Compose for multi-service applications:</p>
-							<pre><code
-									class="language-bash"
-									data-language="bash"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋"
-									># Start all services with production secrets
+							<CodeBlock
+								lang="bash"
+								code={`# Start all services with production secrets
 kuba run --env production -- docker-compose up -d
 
 # Start specific service with development secrets
-kuba run --env development -- docker-compose up web</code
-								></pre>
+kuba run --env development -- docker-compose up web`}
+							/>
 
 							<ClickableHeadline
 								level={4}
 								id="docker-compose-yaml"
 								className="font-bold mt-4 mb-2 text-left">docker-compose.yml:</ClickableHeadline
 							>
-							<pre><code
-									class="language-yaml"
-									data-language="yaml"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋"
-									>version: '3.8'
+							<CodeBlock
+								lang="yaml"
+								meta="path=kuba.yaml"
+								code={`version: '3.8'
 services:
   web:
     build: .
@@ -428,8 +383,8 @@ services:
       - "6379:6379"
 
 volumes:
-  postgres_data:</code
-								></pre>
+  postgres_data:`}
+							/>
 						</div>
 					</div>
 				</div>
@@ -449,12 +404,10 @@ volumes:
 								>GitHub Actions</ClickableHeadline
 							>
 							<p class="mb-4">Integrate Kuba into GitHub Actions workflows:</p>
-							<pre><code
-									class="language-yaml"
-									data-language="yaml"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋"
-									>name: Deploy to Production
+							<CodeBlock
+								lang="yaml"
+								meta="path=kuba.yaml"
+								code={`name: Deploy to Production
 
 on:
   push:
@@ -478,15 +431,15 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: $&lbrace;&lbrace; secrets.AWS_ACCESS_KEY_ID &rbrace;&rbrace;
-          aws-secret-access-key: $&lbrace;&lbrace; secrets.AWS_SECRET_ACCESS_KEY &rbrace;&rbrace;
+          aws-access-key-id: \${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: \${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
       - name: Build and deploy
         run: |
           kuba run --env production -- npm run build
-          kuba run --env production -- npm run deploy</code
-								></pre>
+          kuba run --env production -- npm run deploy`}
+							/>
 						</div>
 					</div>
 
@@ -496,12 +449,10 @@ jobs:
 								>GitLab CI</ClickableHeadline
 							>
 							<p class="mb-4">Use Kuba in GitLab CI/CD pipelines:</p>
-							<pre><code
-									class="language-yaml"
-									data-language="yaml"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋"
-									>stages:
+							<CodeBlock
+								lang="yaml"
+								meta="path=kuba.yaml"
+								code={`stages:
   - test
   - deploy
 
@@ -526,8 +477,8 @@ deploy:
   script:
     - kuba run --env production -- npm run deploy
   only:
-    - main</code
-								></pre>
+    - main`}
+							/>
 						</div>
 					</div>
 				</div>
@@ -549,12 +500,9 @@ deploy:
 							<p class="mb-4">
 								Use Kuba for local development without managing <code>.env</code> files:
 							</p>
-							<pre><code
-									class="language-bash"
-									data-language="bash"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋"
-									># Start development server
+							<CodeBlock
+								lang="bash"
+								code={`# Start development server
 kuba run --env development -- npm run dev
 
 # Run tests
@@ -564,8 +512,8 @@ kuba run --env testing -- npm test
 kuba run --env development -- npm run migrate
 
 # Start background services
-kuba run --env development -- npm run start:services</code
-								></pre>
+kuba run --env development -- npm run start:services`}
+							/>
 
 							<ClickableHeadline
 								level={4}
@@ -573,12 +521,10 @@ kuba run --env development -- npm run start:services</code
 								className="font-bold mt-4 mb-2 text-left"
 								>Configuration (kuba.yaml):</ClickableHeadline
 							>
-							<pre><code
-									class="language-yaml"
-									data-language="yaml"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋"
-									>development:
+							<CodeBlock
+								lang="yaml"
+								meta="path=kuba.yaml"
+								code={`development:
   provider: gcp
   project: 1337
   env:
@@ -600,8 +546,8 @@ testing:
     API_KEY:
       secret-key: "test-api-key"
     NODE_ENV:
-      value: "test"</code
-								></pre>
+      value: "test"`}
+							/>
 						</div>
 					</div>
 
@@ -611,12 +557,10 @@ testing:
 								>Team Collaboration</ClickableHeadline
 							>
 							<p class="mb-4">Share configuration templates with your team:</p>
-							<pre><code
-									class="language-yaml"
-									data-language="yaml"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋"
-									># kuba.yaml (commit this to version control)
+							<CodeBlock
+								lang="yaml"
+								meta="path=kuba.yaml"
+								code={`# kuba.yaml (commit this to version control)
 default:
   provider: gcp
   project: 1337
@@ -626,7 +570,7 @@ default:
     API_KEY:
       secret-key: "api-key"
     REDIS_URL:
-      value: "redis://$&lbrace;REDIS_HOST:-localhost&rbrace;:6379"
+      value: "redis://\${REDIS_HOST:-localhost}:6379"
 
 development:
   provider: gcp
@@ -635,8 +579,8 @@ development:
     DATABASE_URL:
       secret-key: "dev-database-url"
     DEBUG:
-      value: "true"</code
-								></pre>
+      value: "true"`}
+							/>
 
 							<p class="mt-4">
 								<strong>Instructions for team members:</strong>
@@ -665,12 +609,10 @@ development:
 								className="card-title">Multi-Environment with Secret Paths</ClickableHeadline
 							>
 							<p class="mb-4">Use secret paths to bulk-load related secrets:</p>
-							<pre><code
-									class="language-yaml"
-									data-language="yaml"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋"
-									>production:
+							<CodeBlock
+								lang="yaml"
+								meta="path=kuba.yaml"
+								code={`production:
   provider: gcp
   project: 1337
   env:
@@ -692,11 +634,11 @@ development:
 
     # Interpolated connection strings
     DATABASE_URL:
-      value: "postgresql://$&lbrace;DB_USERNAME&rbrace;:$&lbrace;DB_PASSWORD&rbrace;@$&lbrace;DB_HOST&rbrace;:$&lbrace;DB_PORT&rbrace;/$&lbrace;DB_NAME&rbrace;"
+      value: "postgresql://\${DB_USERNAME}:\${DB_PASSWORD}@\${DB_HOST}:\${DB_PORT}/\${DB_NAME}"
 
     REDIS_URL:
-      value: "redis://$&lbrace;REDIS_HOST:-localhost&rbrace;:$&lbrace;REDIS_PORT:-6379&rbrace;/0"</code
-								></pre>
+      value: "redis://\${REDIS_HOST:-localhost}:\${REDIS_PORT:-6379}/0"`}
+							/>
 
 							<p class="mt-4 text-sm">
 								<strong>Note:</strong> This configuration will create environment variables like
@@ -712,12 +654,10 @@ development:
 								>Cross-Provider Configuration</ClickableHeadline
 							>
 							<p class="mb-4">Use different cloud providers for different types of secrets:</p>
-							<pre><code
-									class="language-yaml"
-									data-language="yaml"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋"
-									>production:
+							<CodeBlock
+								lang="yaml"
+								meta="path=kuba.yaml"
+								code={`production:
   provider: gcp
   project: 1337
   env:
@@ -745,8 +685,8 @@ development:
     APP_ENV:
       value: "production"
     DEBUG:
-      value: "false"</code
-								></pre>
+      value: "false"`}
+							/>
 						</div>
 					</div>
 				</div>

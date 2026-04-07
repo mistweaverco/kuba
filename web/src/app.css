@@ -1,64 +1,10 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 @plugin 'daisyui' {
 	themes: dracula --default;
 }
 
-div.code-toolbar {
-	position: relative;
-	display: grid;
-}
-
-div.code-toolbar > .toolbar {
-	position: absolute;
-	z-index: 10;
-	top: -16px;
-	right: -16px;
-	transition: opacity 0.3s ease-in-out;
-	opacity: 1;
-}
-
-div.code-toolbar > .toolbar > .toolbar-item {
-	display: inline-block;
-}
-
-div.code-toolbar > .toolbar > .toolbar-item > a {
-	cursor: pointer;
-}
-
-/* icon copy */
-div.code-toolbar > .toolbar > .toolbar-item > button {
-	font-size: 2rem;
-	color: #e6caa8;
-	background: none;
-}
-
-/* icon copy when clicked */
-div.code-toolbar > .toolbar span {
-	background-color: #50fa7b;
-}
-
-/* icon copy hover */
-div.code-toolbar > .toolbar > .toolbar-item > button:hover {
-	color: #f8f8f2;
-	background: none;
-}
-
-/* color of "Copied!" */
-.copy-to-clipboard-button[data-copy-state~='copy-success'] {
-	background-color: #50fa7b;
-}
-
-.copy-to-clipboard-button[data-copy-state~='copy-success'] > span {
-	background-color: #50fa7b;
-}
-
-/* default item color */
-div.code-toolbar > .toolbar > .toolbar-item {
-	color: #e6caa8;
-}
-
 div p code {
-	font-family: 'Courier New', Courier, monospace;
+	font-family: "Courier New", Courier, monospace;
 	font-size: 1.2rem;
 	line-height: 2.5rem;
 	overflow-x: auto;

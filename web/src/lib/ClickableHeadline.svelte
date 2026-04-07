@@ -2,10 +2,10 @@
 	import { onMount } from 'svelte';
 
 	export let level: 1 | 2 | 3 | 4 | 5 | 6 = 2;
-	export let id: string;
+	export let id: string = '';
 	export let className: string = '';
 
-	let element: HTMLElement;
+	let element: HTMLElement | null = null;
 	let showToast = false;
 	let toastTimeout: ReturnType<typeof setTimeout>;
 

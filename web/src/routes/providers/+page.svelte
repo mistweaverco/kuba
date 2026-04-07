@@ -1,7 +1,7 @@
 <script lang="ts">
 	import HeadComponent from '$lib/HeadComponent.svelte';
 	import ClickableHeadline from '$lib/ClickableHeadline.svelte';
-	import 'dracula-prism/dist/css/dracula-prism.css';
+	import CodeBlock from '$lib/CodeBlock.svelte';
 </script>
 
 <HeadComponent
@@ -108,14 +108,11 @@
 							<p class="mb-4">
 								Configure a Bitwarden Secrets Manager access token and organization ID:
 							</p>
-							<pre><code
-									class="language-bash"
-									data-language="bash"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋"
-									>export BITWARDEN_ACCESS_TOKEN="your-access-token"    # or ACCESS_TOKEN
-export BITWARDEN_ORGANIZATION_ID="your-organization-id"</code
-								></pre>
+							<CodeBlock
+								lang="bash"
+								code={`export BITWARDEN_ACCESS_TOKEN="your-access-token"    # or ACCESS_TOKEN
+export BITWARDEN_ORGANIZATION_ID="your-organization-id"`}
+							/>
 							<p class="mt-4 text-sm">
 								You can also set the organization ID in your <code>kuba.yaml</code> via the
 								<code>project</code> field when using the <code>bitwarden</code> provider; that value
@@ -132,26 +129,20 @@ export BITWARDEN_ORGANIZATION_ID="your-organization-id"</code
 							<p class="mb-4">
 								To use a self-hosted Bitwarden instance, configure the API and identity URLs:
 							</p>
-							<pre><code
-									class="language-bash"
-									data-language="bash"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋"
-									>export BITWARDEN_API_URL="https://your-bitwarden.example.com/api"
-export BITWARDEN_IDENTITY_URL="https://your-bitwarden.example.com/identity"</code
-								></pre>
+							<CodeBlock
+								lang="bash"
+								code={`export BITWARDEN_API_URL="https://your-bitwarden.example.com/api"
+export BITWARDEN_IDENTITY_URL="https://your-bitwarden.example.com/identity"`}
+							/>
 							<p class="mt-4 text-sm">
 								Optional: if you want the Bitwarden SDK to reuse its own state between Kuba runs
 								(for example, to avoid re-initializing some internal session data), you can point it
 								at a state file. The SDK will create and maintain this file itself:
 							</p>
-							<pre><code
-									class="language-bash"
-									data-language="bash"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋"
-									>export BITWARDEN_STATE_FILE="$HOME/.local/share/kuba/bitwarden_state.json"</code
-								></pre>
+							<CodeBlock
+								lang="bash"
+								code={`export BITWARDEN_STATE_FILE="$HOME/.local/share/kuba/bitwarden_state.json"`}
+							/>
 							<p class="mt-2 text-sm">
 								Treat this file as sensitive: keep it outside version control and in a user-scoped
 								data directory (for example, <code>~/.local/share/kuba</code> on Linux/macOS or
@@ -168,12 +159,10 @@ export BITWARDEN_IDENTITY_URL="https://your-bitwarden.example.com/identity"</cod
 								In your <code>kuba.yaml</code>, use the <code>bitwarden</code> provider. The
 								<code>secret-key</code> values must be Bitwarden <strong>secret IDs</strong>:
 							</p>
-							<pre><code
-									class="language-yaml"
-									data-language="yaml"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋"
-									>default:
+							<CodeBlock
+								lang="yaml"
+								meta="path=kuba.yaml"
+								code={`default:
   provider: bitwarden
   # Optional: if omitted, BITWARDEN_ORGANIZATION_ID must be set
   project: "your-bitwarden-organization-id"
@@ -183,8 +172,8 @@ export BITWARDEN_IDENTITY_URL="https://your-bitwarden.example.com/identity"</cod
     API_KEY:
       secret-key: "bitwarden-secret-id-for-api-key"
     SOME_HARD_CODED_ENV:
-      value: "hard-coded-value"</code
-								></pre>
+      value: "hard-coded-value"`}
+							/>
 							<p class="mt-4 text-sm">
 								<strong>Note:</strong> Bitwarden support in Kuba currently only supports
 								<code>secret-key</code> mappings (by secret ID). <code>secret-path</code> mappings
@@ -210,12 +199,7 @@ export BITWARDEN_IDENTITY_URL="https://your-bitwarden.example.com/identity"</cod
 								<div>
 									<h4 class="font-bold">Application Default Credentials</h4>
 									<p class="mb-2">Use gcloud for local development:</p>
-									<pre><code
-											class="language-bash"
-											data-language="bash"
-											data-toolbar-order="copy-to-clipboard"
-											data-prismjs-copy="📋">gcloud auth application-default login</code
-										></pre>
+									<CodeBlock lang="bash" code={`gcloud auth application-default login`} />
 								</div>
 								<div class="divider">OR</div>
 								<div>
@@ -223,13 +207,10 @@ export BITWARDEN_IDENTITY_URL="https://your-bitwarden.example.com/identity"</cod
 									<p class="mb-2">
 										Set the <code>GOOGLE_APPLICATION_CREDENTIALS</code> environment variable:
 									</p>
-									<pre><code
-											class="language-bash"
-											data-language="bash"
-											data-toolbar-order="copy-to-clipboard"
-											data-prismjs-copy="📋"
-											>export GOOGLE_APPLICATION_CREDENTIALS="/path/to/service-account-key.json"</code
-										></pre>
+									<CodeBlock
+										lang="bash"
+										code={`export GOOGLE_APPLICATION_CREDENTIALS="/path/to/service-account-key.json"`}
+									/>
 								</div>
 								<div class="divider">OR</div>
 								<div>
@@ -251,12 +232,10 @@ export BITWARDEN_IDENTITY_URL="https://your-bitwarden.example.com/identity"</cod
 							<div class="card-body">
 								<h3 class="card-title">2. Enable Secret Manager API</h3>
 								<p class="mb-4">Make sure the Secret Manager API is enabled in your GCP project:</p>
-								<pre><code
-										class="language-bash"
-										data-language="bash"
-										data-toolbar-order="copy-to-clipboard"
-										data-prismjs-copy="📋">gcloud services enable secretmanager.googleapis.com</code
-									></pre>
+								<CodeBlock
+									lang="bash"
+									code={`gcloud services enable secretmanager.googleapis.com`}
+								/>
 							</div>
 						</div>
 
@@ -266,34 +245,29 @@ export BITWARDEN_IDENTITY_URL="https://your-bitwarden.example.com/identity"</cod
 								<p class="mb-4">
 									Ensure your service account has the <code>Secret Manager Secret Accessor</code> role:
 								</p>
-								<pre><code
-										class="language-bash"
-										data-language="bash"
-										data-toolbar-order="copy-to-clipboard"
-										data-prismjs-copy="📋"
-										>gcloud projects add-iam-policy-binding PROJECT_ID \
-    --member="serviceAccount:YOUR_SERVICE_ACCOUNT@PROJECT_ID.iam.gserviceaccount.com" \
-    --role="roles/secretmanager.secretAccessor"</code
-									></pre>
+								<CodeBlock
+									lang="bash"
+									code={`gcloud projects add-iam-policy-binding PROJECT_ID \\
+    --member="serviceAccount:YOUR_SERVICE_ACCOUNT@PROJECT_ID.iam.gserviceaccount.com" \\
+    --role="roles/secretmanager.secretAccessor"`}
+								/>
 							</div>
 						</div>
 						<div class="card bg-base-200">
 							<div class="card-body">
 								<h3 class="card-title">4. Configuration Example</h3>
-								<pre><code
-										class="language-yaml"
-										data-language="yaml"
-										data-toolbar-order="copy-to-clipboard"
-										data-prismjs-copy="📋"
-										>default:
+								<CodeBlock
+									lang="yaml"
+									meta="path=kuba.yaml"
+									code={`default:
   provider: gcp
   project: 1337
   env:
     DATABASE_URL:
       secret-key: "database-connection-string"
     API_KEY:
-      secret-key: "external-api-key"</code
-									></pre>
+      secret-key: "external-api-key"`}
+								/>
 							</div>
 						</div>
 					</div>
@@ -314,28 +288,22 @@ export BITWARDEN_IDENTITY_URL="https://your-bitwarden.example.com/identity"</cod
 								<div>
 									<h4 class="font-bold">Environment Variables</h4>
 									<p class="mb-2">Set AWS credentials:</p>
-									<pre><code
-											class="language-bash"
-											data-language="bash"
-											data-toolbar-order="copy-to-clipboard"
-											data-prismjs-copy="📋"
-											>export AWS_ACCESS_KEY_ID="your-access-key"
+									<CodeBlock
+										lang="bash"
+										code={`export AWS_ACCESS_KEY_ID="your-access-key"
 export AWS_SECRET_ACCESS_KEY="your-secret-key"
-export AWS_REGION="us-east-1"</code
-										></pre>
+export AWS_REGION="us-east-1"`}
+									/>
 								</div>
 								<div class="divider">OR</div>
 								<div>
 									<h4 class="font-bold">AWS Profile</h4>
 									<p class="mb-2">Use a specific profile from your AWS credentials file:</p>
-									<pre><code
-											class="language-bash"
-											data-language="bash"
-											data-toolbar-order="copy-to-clipboard"
-											data-prismjs-copy="📋"
-											>export AWS_PROFILE="my-profile"
-export AWS_REGION="us-east-1"</code
-										></pre>
+									<CodeBlock
+										lang="bash"
+										code={`export AWS_PROFILE="my-profile"
+export AWS_REGION="us-east-1"`}
+									/>
 								</div>
 								<div class="divider">OR</div>
 								<div>
@@ -357,41 +325,36 @@ export AWS_REGION="us-east-1"</code
 							<p class="mb-4">
 								Ensure your AWS credentials have the <code>secretsmanager:GetSecretValue</code> permission:
 							</p>
-							<pre><code
-									class="language-json"
-									data-language="json"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋"
-									>&lbrace;
+							<CodeBlock
+								lang="json"
+								code={`{
   "Version": "2012-10-17",
   "Statement": [
-    &lbrace;
+    {
       "Effect": "Allow",
       "Action": "secretsmanager:GetSecretValue",
       "Resource": "arn:aws:secretsmanager:region:account:secret:secret-name-*"
-    &rbrace;
+    }
   ]
-&rbrace;</code
-								></pre>
+}`}
+							/>
 						</div>
 					</div>
 
 					<div class="card bg-base-200">
 						<div class="card-body">
 							<h3 class="card-title">3. Configuration Example</h3>
-							<pre><code
-									class="language-yaml"
-									data-language="yaml"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋"
-									>default:
+							<CodeBlock
+								lang="yaml"
+								meta="path=kuba.yaml"
+								code={`default:
   provider: aws
   env:
     DATABASE_URL:
       secret-key: "database-connection-string"
     API_KEY:
-      secret-key: "external-api-key"</code
-								></pre>
+      secret-key: "external-api-key"`}
+							/>
 						</div>
 					</div>
 				</div>
@@ -412,16 +375,13 @@ export AWS_REGION="us-east-1"</code
 								<div>
 									<h4 class="font-bold">Service Principal</h4>
 									<p class="mb-2">Set the following environment variables:</p>
-									<pre><code
-											class="language-bash"
-											data-language="bash"
-											data-toolbar-order="copy-to-clipboard"
-											data-prismjs-copy="📋"
-											>export AZURE_KEY_VAULT_URL="https://yourvault.vault.azure.net/"
+									<CodeBlock
+										lang="bash"
+										code={`export AZURE_KEY_VAULT_URL="https://yourvault.vault.azure.net/"
 export AZURE_TENANT_ID="your-tenant-id"
 export AZURE_CLIENT_ID="your-client-id"
-export AZURE_CLIENT_SECRET="your-client-secret"</code
-										></pre>
+export AZURE_CLIENT_SECRET="your-client-secret"`}
+									/>
 								</div>
 								<div class="divider">OR</div>
 								<div>
@@ -450,19 +410,17 @@ export AZURE_CLIENT_SECRET="your-client-secret"</code
 					<div class="card bg-base-200">
 						<div class="card-body">
 							<h3 class="card-title">3. Configuration Example</h3>
-							<pre><code
-									class="language-yaml"
-									data-language="yaml"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋"
-									>default:
+							<CodeBlock
+								lang="yaml"
+								meta="path=kuba.yaml"
+								code={`default:
   provider: azure
   env:
     DATABASE_URL:
       secret-key: "database-connection-string"
     API_KEY:
-      secret-key: "external-api-key"</code
-								></pre>
+      secret-key: "external-api-key"`}
+							/>
 						</div>
 					</div>
 				</div>
@@ -489,15 +447,12 @@ export AZURE_CLIENT_SECRET="your-client-secret"</code
 								className="card-title">2. Authentication Methods</ClickableHeadline
 							>
 							<p class="mb-4">Set up authentication using environment variables:</p>
-							<pre><code
-									class="language-bash"
-									data-language="bash"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋"
-									>export OPENBAO_ADDR="http://localhost:8200"  # Required: OpenBao server address
+							<CodeBlock
+								lang="bash"
+								code={`export OPENBAO_ADDR="http://localhost:8200"  # Required: OpenBao server address
 export OPENBAO_TOKEN="your-openbao-token"    # Optional: Authentication token
-export OPENBAO_NAMESPACE="your-namespace"     # Optional: Namespace (if using enterprise features)</code
-								></pre>
+export OPENBAO_NAMESPACE="your-namespace"     # Optional: Namespace (if using enterprise features)`}
+							/>
 						</div>
 					</div>
 
@@ -513,19 +468,17 @@ export OPENBAO_NAMESPACE="your-namespace"     # Optional: Namespace (if using en
 					<div class="card bg-base-200">
 						<div class="card-body">
 							<h3 class="card-title">4. Configuration Example</h3>
-							<pre><code
-									class="language-yaml"
-									data-language="yaml"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋"
-									>default:
+							<CodeBlock
+								lang="yaml"
+								meta="path=kuba.yaml"
+								code={`default:
   provider: openbao
   env:
     DATABASE_URL:
       secret-key: "secret/database-url"
     API_KEY:
-      secret-key: "secret/api-key"</code
-								></pre>
+      secret-key: "secret/api-key"`}
+							/>
 							<p class="mt-4 text-sm">
 								<strong>Note:</strong> OpenBao secrets are stored as key-value pairs. If a secret contains
 								multiple keys, Kuba will return the first string value it finds.
@@ -551,19 +504,17 @@ export OPENBAO_NAMESPACE="your-namespace"     # Optional: Namespace (if using en
 					<div class="card bg-base-200">
 						<div class="card-body">
 							<h3 class="card-title">2. Configuration Example</h3>
-							<pre><code
-									class="language-yaml"
-									data-language="yaml"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋"
-									>default:
+							<CodeBlock
+								lang="yaml"
+								meta="path=kuba.yaml"
+								code={`default:
   provider: local
   env:
     LOG_ENV:
       value: "local"
     LOG_LEVEL:
-      value: "debug"</code
-								></pre>
+      value: "debug"`}
+							/>
 						</div>
 					</div>
 				</div>
@@ -576,12 +527,10 @@ export OPENBAO_NAMESPACE="your-namespace"     # Optional: Namespace (if using en
 					<div class="card-body">
 						<h3 class="card-title">Using Multiple Providers</h3>
 						<p class="mb-4">You can use different cloud providers in the same configuration:</p>
-						<pre><code
-								class="language-yaml"
-								data-language="yaml"
-								data-toolbar-order="copy-to-clipboard"
-								data-prismjs-copy="📋"
-								>default:
+						<CodeBlock
+							lang="yaml"
+							meta="path=kuba.yaml"
+							code={`default:
   provider: gcp
   project: 1337
   env:
@@ -601,8 +550,8 @@ export OPENBAO_NAMESPACE="your-namespace"     # Optional: Namespace (if using en
     BITWARDEN_DATABASE:
       # Bitwarden secrets are addressed by secret ID; this maps a single secret ID
       secret-key: "bitwarden-secret-id-for-database-url"
-      provider: bitwarden</code
-							></pre>
+      provider: bitwarden`}
+						/>
 					</div>
 				</div>
 			</section>
@@ -700,12 +649,7 @@ export OPENBAO_NAMESPACE="your-namespace"     # Optional: Namespace (if using en
 							<p class="mb-4">
 								Enable debug mode to see detailed information about authentication and API calls:
 							</p>
-							<pre><code
-									class="language-bash"
-									data-language="bash"
-									data-toolbar-order="copy-to-clipboard"
-									data-prismjs-copy="📋">kuba run --debug -- echo "Testing connection"</code
-								></pre>
+							<CodeBlock lang="bash" code={`kuba run --debug -- echo "Testing connection"`} />
 						</div>
 					</div>
 				</div>
