@@ -281,23 +281,23 @@ print("Twilio credentials configured:", bool(os.environ.get('TWILIO_ACCOUNT_SID'
 							<CodeBlock
 								lang="bash"
 								code={`# Build image with secrets available during build
-kuba run --env production -- docker build \\
-  --build-arg DATABASE_URL \\
-  --build-arg API_KEY \\
+kuba run --env production -- docker build \
+  --build-arg DATABASE_URL \
+  --build-arg API_KEY \
   -t myapp .
 
 # Run container with secrets as environment variables
-kuba run --env production -- docker run \\
-  -e DATABASE_URL \\
-  -e API_KEY \\
-  -e REDIS_URL \\
-  -p 3000:3000 \\
+kuba run --env production -- docker run \
+  -e DATABASE_URL \
+  -e API_KEY \
+  -e REDIS_URL \
+  -p 3000:3000 \
   myapp
 
-# Use --contain to avoid inheriting host environment
-docker run --env-file=<(kuba run --env production --contain -- env) myapp
+# Only pass kuba-managed environment variables (not host environment)
+docker run --env-file=<(kuba show --output dotenv --env production) myapp
 
-# or pass full host environment including Kuba-managed vars
+# or pass full host environment including kuba-managed vars
 docker run --env-file=<(kuba run --env production -- env) myapp
 							`}
 							/>

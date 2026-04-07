@@ -247,8 +247,8 @@ export BITWARDEN_IDENTITY_URL="https://your-bitwarden.example.com/identity"`}
 								</p>
 								<CodeBlock
 									lang="bash"
-									code={`gcloud projects add-iam-policy-binding PROJECT_ID \\
-    --member="serviceAccount:YOUR_SERVICE_ACCOUNT@PROJECT_ID.iam.gserviceaccount.com" \\
+									code={`gcloud projects add-iam-policy-binding PROJECT_ID \
+    --member="serviceAccount:YOUR_SERVICE_ACCOUNT@PROJECT_ID.iam.gserviceaccount.com" \
     --role="roles/secretmanager.secretAccessor"`}
 								/>
 							</div>

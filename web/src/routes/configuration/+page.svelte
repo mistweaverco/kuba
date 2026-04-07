@@ -97,10 +97,10 @@
 									<h4 class="font-bold mb-2">GCP (Cloud Run)</h4>
 									<CodeBlock
 										lang="bash"
-										code={`kuba convert --from ksvc \\
-  --provider gcp \\
-  --project 1337 \\
-  --name my-service \\
+										code={`kuba convert --from ksvc \
+  --provider gcp \
+  --project 1337 \
+  --name my-service \
   --env production`}
 									/>
 								</div>
@@ -113,10 +113,10 @@
 									</p>
 									<CodeBlock
 										lang="bash"
-										code={`kuba convert --from ksvc \\
-  --provider aws \\
-  --project 123456789012 \\
-  --name my-service.us-east-1 \\
+										code={`kuba convert --from ksvc \
+  --provider aws \
+  --project 123456789012 \
+  --name my-service.us-east-1 \
   --env production`}
 									/>
 								</div>
@@ -129,10 +129,10 @@
 									</p>
 									<CodeBlock
 										lang="bash"
-										code={`kuba convert --from ksvc \\
-  --provider azure \\
-  --project 00000000-0000-0000-0000-000000000000 \\
-  --name my-app.my-resource-group \\
+										code={`kuba convert --from ksvc \
+  --provider azure \
+  --project 00000000-0000-0000-0000-000000000000 \
+  --name my-app.my-resource-group \
   --env production`}
 									/>
 								</div>

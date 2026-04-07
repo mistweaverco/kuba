@@ -51,7 +51,7 @@
 							>Running Commands with Kuba</ClickableHeadline
 						>
 						<p class="mb-4">The basic syntax for running a one-of command with Kuba is:</p>
-						<CodeBlock lang="bash" code={`kuba run --command "echo \\$SOME_SECRET"`} />
+						<CodeBlock lang="bash" code={`kuba run --command "echo \$SOME_SECRET"`} />
 						<p class="mt-4">
 							This will fetch all secrets defined in your <code>kuba.yaml</code> file and pass them as
 							environment variables to your command. By default, these secrets are merged with your current
@@ -92,10 +92,7 @@
 						<CodeBlock
 							lang="bash"
 							code={`# Only use environment variables from kuba.yaml
-kuba run --contain -- node dist/server.js
-
-# Useful for Docker containers to avoid inheriting host environment
-docker run --env-file=<(kuba run --contain -- env) myapp`}
+kuba run --contain -- node dist/server.js`}
 						/>
 					</div>
 				</div>
@@ -120,7 +117,7 @@ docker run --env-file=<(kuba run --contain -- env) myapp`}
 							<h3 class="card-title">Docker Container</h3>
 							<CodeBlock
 								lang="bash"
-								code={`docker run --env-file=<(kuba run --contain -- env) myapp`}
+								code={`docker run --env-file=<(kuba show --output dotenv --env default) myapp`}
 							/>
 						</div>
 					</div>
@@ -183,7 +180,7 @@ kuba test --config ./config/kuba.yaml --env production`}
 						<CodeBlock lang="bash" code={`kuba run --env staging -- python app.py`} />
 						<CodeBlock
 							lang="bash"
-							code={`docker run --env-file=<(kuba run --env production --contain -- env) myapp`}
+							code={`docker run --env-file=<(kuba show --output dotenv --env production) myapp`}
 						/>
 					</div>
 				</div>
@@ -260,8 +257,7 @@ kuba run -- docker run -e DATABASE_URL -e API_KEY myapp
 # Build container with secrets available during build
 kuba run -- docker build --build-arg DATABASE_URL --build-arg API_KEY .
 
-# Use --contain to avoid inheriting host environment
-docker run --env-file=<(kuba run --contain -- env) myapp`}
+docker run --env-file=<(kuba show --output dotenv) myapp`}
 							/>
 						</div>
 					</div>
