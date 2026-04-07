@@ -72,6 +72,7 @@
 							>
 							<CodeBlock
 								lang="javascript"
+								meta="path=app.js"
 								code={`const express = require('express');
 const app = express();
 
@@ -130,6 +131,7 @@ app.listen(3000, () => {
 							>
 							<CodeBlock
 								lang="python"
+								meta="path=app.py"
 								code={`from flask import Flask
 import os
 
@@ -240,6 +242,7 @@ development:
 							>
 							<CodeBlock
 								lang="python"
+								meta="path=api_client.py"
 								code={`import os
 import stripe
 import sendgrid
@@ -307,6 +310,7 @@ docker run --env-file=<(kuba run --env production -- env) myapp
 							>
 							<CodeBlock
 								lang="docker"
+								meta="path=Dockerfile"
 								code={`FROM node:18-alpine
 
 WORKDIR /app
@@ -406,7 +410,7 @@ volumes:
 							<p class="mb-4">Integrate Kuba into GitHub Actions workflows:</p>
 							<CodeBlock
 								lang="yaml"
-								meta="path=kuba.yaml"
+								meta="path=.github/workflows/deploy.yaml"
 								code={`name: Deploy to Production
 
 on:
@@ -451,7 +455,7 @@ jobs:
 							<p class="mb-4">Use Kuba in GitLab CI/CD pipelines:</p>
 							<CodeBlock
 								lang="yaml"
-								meta="path=kuba.yaml"
+								meta="path=.gitlab-ci.yml"
 								code={`stages:
   - test
   - deploy
