@@ -59,7 +59,6 @@ do_gh_release() {
 }
 
 release() {
-  set_release_action
   merge_all_platform_files
   check_files_exist
   do_gh_release
