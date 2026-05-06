@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"runtime"
+	"strings"
 
 	"github.com/mistweaverco/kuba/internal/config"
 	"github.com/mistweaverco/kuba/internal/lib/log"
@@ -108,6 +111,20 @@ func runCommand(args []string) error {
 	}
 	logger.Debug("Secrets retrieved successfully", "count", len(secrets))
 
+	// Prepare environment variables (used for both execution modes)
+	var cmdEnv []string
+	if contain {
+		// Only use secrets from kuba.yaml, do not merge with OS environment
+		cmdEnv = make([]string, 0, len(secrets))
+	} else {
+		// Default behavior: merge OS environment with secrets
+		cmdEnv = os.Environ()
+	}
+	for key, value := range secrets {
+		cmdEnv = append(cmdEnv, fmt.Sprintf("%s=%s", key, value))
+	}
+	logger.Debug("Environment variables set", "secrets_count", len(secrets), "total_env_vars", len(cmdEnv))
+
 	// Prepare command execution
 	var cmd *exec.Cmd
 	if commandFlag != "" {
@@ -119,29 +136,25 @@ func runCommand(args []string) error {
 		logger.Debug("Preparing shell command execution", "shell", shell, "command", commandFlag)
 		cmd = exec.Command(shell, "-c", commandFlag)
 	} else {
-		// Execute command directly (existing behavior)
+		// Execute command directly.
+		//
+		// Important: when the command is a bare name (e.g. "turbo"), Go resolves it
+		// using the current process PATH, not cmd.Env. If kuba injects/overrides PATH
+		// via secrets, `kuba run --command ...` will see it (shell), but `kuba run -- ...`
+		// would fail to find the executable unless we resolve it using the final env.
 		command := args[0]
 		commandArgs := args[1:]
-		logger.Debug("Preparing command execution", "command", command, "args", commandArgs)
-		cmd = exec.Command(command, commandArgs...)
+		resolvedCommand, err := lookPathWithEnv(command, cmdEnv)
+		if err != nil {
+			return fmt.Errorf("failed to find command %q in PATH: %w", command, err)
+		}
+		logger.Debug("Preparing command execution", "command", resolvedCommand, "args", commandArgs)
+		cmd = exec.Command(resolvedCommand, commandArgs...)
 	}
+	cmd.Env = cmdEnv
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-
-	// Set environment variables
-	if contain {
-		// Only use secrets from kuba.yaml, do not merge with OS environment
-		cmd.Env = make([]string, 0, len(secrets))
-	} else {
-		// Default behavior: merge OS environment with secrets
-		cmd.Env = os.Environ()
-	}
-
-	for key, value := range secrets {
-		cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, value))
-	}
-	logger.Debug("Environment variables set", "secrets_count", len(secrets), "total_env_vars", len(cmd.Env))
 
 	// Execute command
 	logger.Debug("Executing command")
@@ -155,4 +168,88 @@ func runCommand(args []string) error {
 
 	logger.Debug("Command executed successfully")
 	return nil
+}
+
+func lookPathWithEnv(file string, env []string) (string, error) {
+	// If the user provided an explicit path, just use it.
+	if strings.ContainsRune(file, os.PathSeparator) || (runtime.GOOS == "windows" && strings.Contains(file, `\`)) {
+		return file, nil
+	}
+
+	pathVal := getEnvVar(env, "PATH")
+	if pathVal == "" {
+		pathVal = os.Getenv("PATH")
+	}
+
+	if runtime.GOOS == "windows" {
+		return lookPathWithEnvWindows(file, pathVal, getEnvVar(env, "PATHEXT"))
+	}
+
+	for _, dir := range filepath.SplitList(pathVal) {
+		if dir == "" {
+			continue
+		}
+		candidate := filepath.Join(dir, file)
+		if isExecutableFile(candidate) {
+			return candidate, nil
+		}
+	}
+	return "", exec.ErrNotFound
+}
+
+func getEnvVar(env []string, key string) string {
+	prefix := key + "="
+	for i := len(env) - 1; i >= 0; i-- {
+		if strings.HasPrefix(env[i], prefix) {
+			return strings.TrimPrefix(env[i], prefix)
+		}
+	}
+	return ""
+}
+
+func isExecutableFile(path string) bool {
+	info, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	if info.IsDir() {
+		return false
+	}
+	return info.Mode()&0111 != 0
+}
+
+func lookPathWithEnvWindows(file, pathVal, pathext string) (string, error) {
+	// Minimal Windows lookup that respects PATH and PATHEXT.
+	exts := []string{""}
+	if filepath.Ext(file) == "" {
+		if pathext == "" {
+			pathext = os.Getenv("PATHEXT")
+		}
+		if pathext != "" {
+			exts = []string{}
+			for _, e := range strings.Split(pathext, ";") {
+				e = strings.TrimSpace(e)
+				if e == "" {
+					continue
+				}
+				exts = append(exts, strings.ToLower(e))
+			}
+		}
+	}
+
+	for _, dir := range filepath.SplitList(pathVal) {
+		if dir == "" {
+			continue
+		}
+		for _, ext := range exts {
+			candidate := filepath.Join(dir, file)
+			if ext != "" && strings.ToLower(filepath.Ext(candidate)) != ext {
+				candidate += ext
+			}
+			if isExecutableFile(candidate) {
+				return candidate, nil
+			}
+		}
+	}
+	return "", exec.ErrNotFound
 }
