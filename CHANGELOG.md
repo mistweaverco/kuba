@@ -1,6 +1,9 @@
+## <small>1.11.2 (2026-05-06)</small>
+
+* fix(ci+scripts): update release workflow and changelog generation (#75) ([49b2766](https://github.com/mistweaverco/kuba/commit/49b2766)), closes [#75](https://github.com/mistweaverco/kuba/issues/75)
+
 ## <small>1.11.1 (2026-05-06)</small>
 
-* fix(ci): remove call to undefined function in release script ([ba8a3d3](https://github.com/mistweaverco/kuba/commit/ba8a3d3))
 * fix(ci): update package.json and pnpm-lock.yaml ([2bf13e7](https://github.com/mistweaverco/kuba/commit/2bf13e7))
 * fix(examples): fix file-name for docker-compose.yml code-block ([7e2a206](https://github.com/mistweaverco/kuba/commit/7e2a206))
 * fix(run): inject full path into `kuba run -- <cmd>` (#74) ([b31aa01](https://github.com/mistweaverco/kuba/commit/b31aa01)), closes [#74](https://github.com/mistweaverco/kuba/issues/74)
