@@ -1,8 +1,22 @@
+## <small>1.11.1 (2026-05-06)</small>
+
+* fix(ci): remove call to undefined function in release script ([ba8a3d3](https://github.com/mistweaverco/kuba/commit/ba8a3d3))
+* fix(ci): update package.json and pnpm-lock.yaml ([2bf13e7](https://github.com/mistweaverco/kuba/commit/2bf13e7))
+* fix(examples): fix file-name for docker-compose.yml code-block ([7e2a206](https://github.com/mistweaverco/kuba/commit/7e2a206))
+* fix(run): inject full path into `kuba run -- <cmd>` (#74) ([b31aa01](https://github.com/mistweaverco/kuba/commit/b31aa01)), closes [#74](https://github.com/mistweaverco/kuba/issues/74)
+* fix(web): code-blocks having wrong syntax ([2f010e0](https://github.com/mistweaverco/kuba/commit/2f010e0))
+* fix(web): fix path in code-blocks ([1211d6a](https://github.com/mistweaverco/kuba/commit/1211d6a))
+* chore(docs): add AI-POLICY.md ([c2ddbd0](https://github.com/mistweaverco/kuba/commit/c2ddbd0))
+* feat(dx): silence builds in production ([9e86dba](https://github.com/mistweaverco/kuba/commit/9e86dba))
+* feat(web): silent builds ([a458049](https://github.com/mistweaverco/kuba/commit/a458049))
+* feat(dx+ux): move to vite+ and add shiki code blocks (#73) ([8a07172](https://github.com/mistweaverco/kuba/commit/8a07172)), closes [#73](https://github.com/mistweaverco/kuba/issues/73)
+
 ## 1.11.0 (2026-03-31)
 
+* chore(docs): update changelog ([3012e6d](https://github.com/mistweaverco/kuba/commit/3012e6d))
+* chore(docs): update changelog ([530ad54](https://github.com/mistweaverco/kuba/commit/530ad54))
 * feat(tui): make tui match vhs-era theme (#72) ([1c91920](https://github.com/mistweaverco/kuba/commit/1c91920)), closes [#72](https://github.com/mistweaverco/kuba/issues/72)
 * feat(web): add nodejs to searchIndex ([7d0acdb](https://github.com/mistweaverco/kuba/commit/7d0acdb))
-* chore(docs): update changelog ([530ad54](https://github.com/mistweaverco/kuba/commit/530ad54))
 * fix(ci): enable force deploy in web workflow ([ce3cbd1](https://github.com/mistweaverco/kuba/commit/ce3cbd1))
 * fix(ci): update aur commit format ([c262196](https://github.com/mistweaverco/kuba/commit/c262196))
 

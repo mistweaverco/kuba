@@ -10,17 +10,24 @@ echo "{\"version\": \"$VERSION\", \"date\": \"$(date +%Y-%m-%d)\"}" > "$TEMP_CON
 echo "Generating changelog for version: ${VERSION}"
 echo "Using PKG_VERSION: ${PKG_VERSION}"
 
+should_workaround_detached_head=""
 if [[ -n "$CI" ]]; then
-  # HACK:
-  # In CI environments,
-  # we might have a detached HEAD state
-  # This will cause conventional-changelog to
-  # only generate a changelog for previous version
-  # and see the current version unreleased
-  # To fix this, we remove the existing tag for
-  # the current version (if it exists)
-  # and restore it after generating the changelog
-  git tag -d "v$VERSION" 2>/dev/null
+  should_workaround_detached_head="1"
+elif [[ "$(git rev-parse --abbrev-ref HEAD 2>/dev/null)" == "HEAD" ]]; then
+  # Local reproduction of CI behavior: detached HEAD (often at a tag).
+  # conventional-changelog can treat the current tag as "unreleased" and
+  # only emit notes up to the previous tag unless we temporarily remove it.
+  should_workaround_detached_head="1"
+fi
+
+tag_name="v$VERSION"
+tag_target=""
+tag_was_deleted=""
+if [[ -n "$should_workaround_detached_head" ]]; then
+  if git rev-parse "$tag_name" >/dev/null 2>&1; then
+    tag_target="$(git rev-list -n 1 "$tag_name" 2>/dev/null || true)"
+    git tag -d "$tag_name" 2>/dev/null && tag_was_deleted="1"
+  fi
 fi
 
 ./node_modules/.bin/conventional-changelog \
@@ -33,13 +40,12 @@ fi
 
 rm "$TEMP_CONFIG"
 
-if [[ -n "$CI" ]]; then
-  # HACK:
-  # Restore the tag for the current version after generating the changelog
-  if git rev-parse "v$VERSION" >/dev/null 2>&1; then
-    echo "Tag v$VERSION already exists, skipping tag creation"
+if [[ -n "$tag_was_deleted" ]]; then
+  # Restore the tag to its original target (do not retag HEAD).
+  if [[ -n "$tag_target" ]]; then
+    git tag "$tag_name" "$tag_target" 2>/dev/null || true
   else
-    git tag "v$VERSION" 2>/dev/null
+    git tag "$tag_name" 2>/dev/null || true
   fi
 fi
 
