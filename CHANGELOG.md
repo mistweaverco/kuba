@@ -1,3 +1,8 @@
+## <small>1.11.3 (2026-05-11)</small>
+
+* fix(run): wrong run shell and binary lookup in windows (#76) ([2824de0](https://github.com/mistweaverco/kuba/commit/2824de0)), closes [#76](https://github.com/mistweaverco/kuba/issues/76)
+* chore(docs): update CHANGELOG.md ([655e8ec](https://github.com/mistweaverco/kuba/commit/655e8ec))
+
 ## <small>1.11.2 (2026-05-06)</small>
 
 * fix(ci+scripts): update release workflow and changelog generation (#75) ([49b2766](https://github.com/mistweaverco/kuba/commit/49b2766)), closes [#75](https://github.com/mistweaverco/kuba/issues/75)
