@@ -128,13 +128,25 @@ func runCommand(args []string) error {
 	// Prepare command execution
 	var cmd *exec.Cmd
 	if commandFlag != "" {
-		// Execute command string in a shell
-		shell := os.Getenv("SHELL")
-		if shell == "" {
-			shell = "/bin/sh"
+		// Execute command string in a shell.
+		//
+		// On Unix, prefer $SHELL and fall back to "sh" (PATH-based).
+		// On Windows, use COMSPEC/cmd.exe so we don't depend on /bin/sh.
+		if runtime.GOOS == "windows" {
+			shell := os.Getenv("COMSPEC")
+			if shell == "" {
+				shell = "cmd.exe"
+			}
+			logger.Debug("Preparing shell command execution", "shell", shell, "command", commandFlag)
+			cmd = exec.Command(shell, "/C", commandFlag)
+		} else {
+			shell := os.Getenv("SHELL")
+			if shell == "" {
+				shell = "sh"
+			}
+			logger.Debug("Preparing shell command execution", "shell", shell, "command", commandFlag)
+			cmd = exec.Command(shell, "-c", commandFlag)
 		}
-		logger.Debug("Preparing shell command execution", "shell", shell, "command", commandFlag)
-		cmd = exec.Command(shell, "-c", commandFlag)
 	} else {
 		// Execute command directly.
 		//
@@ -214,6 +226,12 @@ func isExecutableFile(path string) bool {
 	}
 	if info.IsDir() {
 		return false
+	}
+	// Windows doesn't use POSIX executable bits; existence + extension is what matters.
+	// Extension handling is done by lookPathWithEnvWindows via PATHEXT, so here we just
+	// require the file to exist and not be a directory.
+	if runtime.GOOS == "windows" {
+		return true
 	}
 	return info.Mode()&0111 != 0
 }
