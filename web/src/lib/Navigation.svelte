@@ -1,7 +1,16 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { browser } from '$app/environment';
 	import { page } from '$app/stores';
 	import { SEARCH_INDEX } from '$lib/searchIndex';
+
+	const gotoWrapper = (href: string) => {
+		if (browser) {
+			window.location.href = href;
+		} else {
+			goto(href);
+		}
+	};
 
 	$: currentPath = $page.url.pathname;
 
@@ -35,9 +44,9 @@
 		const idx = selectedIndex >= 0 ? selectedIndex : 0;
 		if (idx >= searchResults.length) return;
 		const href = searchResults[idx].href;
+		gotoWrapper(href);
 		searchQuery = '';
 		closeSearch();
-		goto(href);
 	}
 
 	const navItems = [
@@ -141,8 +150,7 @@
 									href={r.href}
 									class={idx === selectedIndex ? 'bg-primary text-primary-content active' : ''}
 									on:click={() => {
-										searchQuery = '';
-										closeSearch();
+										openSelected();
 									}}
 									on:mouseenter={() => {
 										selectedIndex = idx;

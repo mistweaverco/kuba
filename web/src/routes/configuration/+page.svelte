@@ -57,7 +57,7 @@
 
 				<div class="card bg-base-200 mb-6">
 					<div class="card-body">
-						<h3 class="card-title">Import from dotenv (<code>.env*</code>)</h3>
+						<ClickableHeadline level={3} id="import-from-dotenv" className="card-title" >Import from dotenv (.env*)</ClickableHeadline>
 						<p class="mb-4">
 							You can also create a configuration file by importing existing environment variables
 							from a <code>.env</code> file using the following command:
@@ -73,9 +73,7 @@
 
 				<div class="card bg-base-200 mb-6">
 					<div class="card-body">
-						<h3 class="card-title">
-							Import from Knative Service (<code>ksvc</code>)
-						</h3>
+						<ClickableHeadline level={3} id="import-from-knative-service-ksvc" className="card-title" >Import from Knative Services (ksvc)</ClickableHeadline>
 						<p class="mb-4">
 							If you're running on Cloud Run / Knative, you can generate a <code>kuba.yaml</code>
 							from an existing Knative Service manifest. Kuba will read the container
@@ -86,6 +84,7 @@
 							lang="bash"
 							code={`kuba convert --from ksvc --infile service.yaml --env production`}
 						/>
+						<ClickableHeadline level={4} id="import-from-knative-service-ksvc-from-deployed-service" className="card-title mt-4" >Import from already deployed service</ClickableHeadline>
 						<p class="mt-4">
 							You can also import a deployed service directly from your cloud provider (no
 							<code>--infile</code> required). This is useful when you want to bootstrap a
@@ -94,7 +93,7 @@
 						<div class="grid md:grid-cols-1 gap-6 mt-4">
 							<div class="card bg-base-300">
 								<div class="card-body">
-									<h4 class="font-bold mb-2">GCP (Cloud Run)</h4>
+									<ClickableHeadline level={4} id="import-from-deployed-gcp-cloud-run-knative-service-ksvc" className="card-title" >GCP (Cloud Run)</ClickableHeadline>
 									<CodeBlock
 										lang="bash"
 										code={`kuba convert --from ksvc \
@@ -107,7 +106,7 @@
 							</div>
 							<div class="card bg-base-300">
 								<div class="card-body">
-									<h4 class="font-bold mb-2">AWS (App Runner)</h4>
+									<ClickableHeadline level={4} id="import-from-deployed-aws-app-runner-knative-service-ksvc" className="card-title" >AWS (App Runner)</ClickableHeadline>
 									<p class="text-sm mb-2">
 										For AWS, <code>--name</code> expects <code>service.region</code>.
 									</p>
@@ -123,7 +122,7 @@
 							</div>
 							<div class="card bg-base-300">
 								<div class="card-body">
-									<h4 class="font-bold mb-2">Azure (Container Apps)</h4>
+									<ClickableHeadline level={4} id="import-from-deployed-azure-container-apps-knative-service-ksvc" className="card-title" >Azure (Container Apps)</ClickableHeadline>
 									<p class="text-sm mb-2">
 										For Azure, <code>--name</code> expects <code>app.resource-group</code>.
 									</p>
@@ -242,7 +241,7 @@ production:
 				<div class="space-y-6">
 					<div class="card bg-base-200">
 						<div class="card-body">
-							<h3 class="card-title">Individual Secrets (secret-key)</h3>
+							<ClickableHeadline level={3} id="kuba-yaml-env-individual-secrets" className="card-title" >Individual Secrets (secret-key)</ClickableHeadline>
 							<p class="mb-4">Fetch a single secret from your cloud provider:</p>
 							<CodeBlock
 								lang="yaml"
@@ -258,7 +257,7 @@ production:
 
 					<div class="card bg-base-200">
 						<div class="card-body">
-							<h3 class="card-title">Secret Paths (secret-path)</h3>
+							<ClickableHeadline level={3} id="kuba-yaml-env-secret-paths" className="card-title" >Secret Paths (secret-path)</ClickableHeadline>
 							<p class="mb-4">Fetch all secrets under a specific path prefix:</p>
 							<CodeBlock
 								lang="yaml"
@@ -278,7 +277,7 @@ production:
 
 					<div class="card bg-base-200">
 						<div class="card-body">
-							<h3 class="card-title">Hard-coded Values (value)</h3>
+							<ClickableHeadline level={3} id="kuba-yaml-env-hard-coded-values" className="card-title" >Hard-coded Values (value)</ClickableHeadline>
 							<p class="mb-4">Set static environment variables:</p>
 							<CodeBlock
 								lang="yaml"
@@ -303,7 +302,7 @@ production:
 
 				<div class="card bg-base-200 mb-6">
 					<div class="card-body">
-						<h3 class="card-title">Basic Interpolation</h3>
+						<ClickableHeadline level={3} id="kuba-yaml-env-basic-interpolation" className="card-title" >Basic Interpolation</ClickableHeadline>
 						<p class="mb-4">
 							Kuba supports environment variable interpolation using <code
 								>$&lbrace;VAR_NAME&rbrace;</code
@@ -327,6 +326,7 @@ production:
 					<div class="card bg-base-200">
 						<div class="card-body">
 							<h3 class="card-title">System Environment Variables</h3>
+							<ClickableHeadline level={3} id="kuba-yaml-env-system-environment-variables" className="card-title" >System Environment Variables</ClickableHeadline>
 							<p>Reference system environment variables:</p>
 							<CodeBlock
 								lang="yaml"
@@ -339,7 +339,7 @@ production:
 
 					<div class="card bg-base-200">
 						<div class="card-body">
-							<h3 class="card-title">Default Values</h3>
+							<ClickableHeadline level={3} id="kuba-yaml-env-environment-variables-default-values" className="card-title" >Default Values</ClickableHeadline>
 							<p>Provide fallback values with <code>$&lbrace;VAR:-default&rbrace;</code> syntax:</p>
 							<CodeBlock
 								lang="yaml"
@@ -480,10 +480,70 @@ production:
 			<section>
 				<ClickableHeadline
 					level={2}
-					id="kuba-global-config-cache"
-					className="text-3xl font-bold mb-6">Cache</ClickableHeadline
+					id="kuba-global-templates"
+					className="text-3xl font-bold mb-6">Kuba templates</ClickableHeadline
 				>
+				<div class="card bg-base-200">
+					<div class="card-body">
+						<p class="mb-4">
+							You can configure the default template that Kuba uses when you run <code>kuba init</code>
+							without a template name.
+							To set the default template, run the following command:
+						</p>
+						<CodeBlock
+							lang="bash"
+							code={`kuba create template default
+`}
+						/>
+						<p class="mb-4">
+						You can also create templates with different names and
+						specify the template to use when running
+						<code>kuba init my-template-name</code>:
+						</p>
+						<CodeBlock
+							lang="bash"
+							code={`kuba create template my-template-name
+`}
+						/>
+						<p class="mb-4">
+						You can also create templates with different names and
+						specify the template to use when running
+						<code>kuba init my-template-name</code>:
+						</p>
+					</div>
+				</div>
 
+				<ClickableHeadline
+					level={2}
+					id="kuba-global-config-defaults"
+					className="text-3xl font-bold mb-6 mt-6">Kuba defaults</ClickableHeadline
+				>
+				<div class="card bg-base-200">
+					<div class="card-body">
+						<p class="mb-4">
+							There are no defaults set by default. To set defaults for a provider, run the following command:
+						</p>
+						<CodeBlock
+							lang="bash"
+							code={`kuba config defaults set --provider gcp --regions europe-west3
+`}
+						/>
+						<p class="mb-4">
+							This will set the default provider to GCP and the default region to <code>europe-west3</code>.
+							So, when you're using <code>kuba tui</code> and add a secret, it will default to using <code>europe-west3</code>
+							as the region for GCP secrets.
+						</p>
+						<p class="mb-4">
+							Check <code>kuba config defaults get --help</code> for more options related to managing the defaults.
+						</p>
+					</div>
+				</div>
+
+				<ClickableHeadline
+					level={2}
+					id="kuba-global-config-cache"
+					className="text-3xl font-bold mb-6 mt-6">Cache</ClickableHeadline
+				>
 				<div class="card bg-base-200">
 					<div class="card-body">
 						<p class="mb-4">
