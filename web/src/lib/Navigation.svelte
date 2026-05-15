@@ -77,7 +77,9 @@
 		</div>
 		<a href="/" class="btn btn-ghost text-xl">
 			<img src="/logo.svg" alt="Kuba" class="w-8 h-8 mr-2" />
+			<span class="hidden sm:inline">
 			Kuba
+			</span>
 		</a>
 	</div>
 	<div class="navbar-center hidden lg:flex">
@@ -92,9 +94,9 @@
 		</ul>
 	</div>
 	<div class="navbar-end">
-		<div class="hidden md:flex items-center mr-2 relative">
+		<div class="flex items-center mr-2 relative">
 			<input
-				class="input input-bordered input-sm w-56"
+				class="input input-bordered input-sm max-w-56"
 				type="search"
 				placeholder="Search docs…"
 				bind:value={searchQuery}
