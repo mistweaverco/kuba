@@ -90,7 +90,6 @@
 							<code>--infile</code> required). This is useful when you want to bootstrap a
 							<code>kuba.yaml</code> from an existing service definition.
 						</p>
-						<div class="grid md:grid-cols-1 gap-6 mt-4">
 							<div class="card bg-base-300">
 								<div class="card-body">
 									<ClickableHeadline level={4} id="import-from-deployed-gcp-cloud-run-knative-service-ksvc" className="card-title" >GCP (Cloud Run)</ClickableHeadline>
@@ -136,7 +135,6 @@
 									/>
 								</div>
 							</div>
-						</div>
 						<p class="mt-4">
 							For Knative Services running on GCP, the environment will default to provider
 							<code>gcp</code> and use the Service's <code>metadata.namespace</code> as the
@@ -322,10 +320,8 @@ production:
 					</div>
 				</div>
 
-				<div class="grid md:grid-cols-2 gap-6">
 					<div class="card bg-base-200">
 						<div class="card-body">
-							<h3 class="card-title">System Environment Variables</h3>
 							<ClickableHeadline level={3} id="kuba-yaml-env-system-environment-variables" className="card-title" >System Environment Variables</ClickableHeadline>
 							<p>Reference system environment variables:</p>
 							<CodeBlock
@@ -349,7 +345,6 @@ production:
 							/>
 						</div>
 					</div>
-				</div>
 
 				<div class="alert alert-info mt-6">
 					<i class="fa-solid fa-info-circle mr-2"></i>
