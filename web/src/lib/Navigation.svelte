@@ -125,8 +125,17 @@
 					}
 				}}
 				on:blur={() => {
-					// Allow clicks on results before closing.
+					// only close if the new focused element isn't part of the search results
 					setTimeout(() => {
+						const activeEl = document.activeElement;
+						if (
+							activeEl &&
+							(activeEl.id === 'doc-search-results' ||
+							activeEl.closest('#doc-search-results')?.contains(activeEl)
+							)
+						) {
+							return;
+						}
 						closeSearch();
 					}, 100);
 				}}
@@ -149,10 +158,12 @@
 									id={`doc-search-option-${idx}`}
 									href={r.href}
 									class={idx === selectedIndex ? 'bg-primary text-primary-content active' : ''}
-									on:click={() => {
+									on:click={(evt) => {
+										evt.preventDefault();
 										openSelected();
 									}}
 									on:mouseenter={() => {
+										console.log('hover', idx);
 										selectedIndex = idx;
 									}}
 									role="option"
